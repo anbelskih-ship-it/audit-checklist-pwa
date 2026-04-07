@@ -27,6 +27,8 @@ describe('audits', () => {
 
   it('lists audits sorted by updated desc', async () => {
     await createAudit('First', 'АСП', 'a@b.com', 'v1')
+    // small delay to ensure different timestamps
+    await new Promise(r => setTimeout(r, 10))
     await createAudit('Second', 'НА', 'a@b.com', 'v1')
     const list = await listAudits()
     expect(list).toHaveLength(2)
