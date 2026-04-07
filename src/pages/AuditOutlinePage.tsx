@@ -3,6 +3,11 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { useAudit } from '../hooks/useAudit'
 import { useStructure } from '../hooks/useStructure'
 import ProgressBar from '../components/ProgressBar'
+import { pdf } from '@react-pdf/renderer'
+import { AuditPdfReport } from '../export/pdf-report'
+import { generateFilledXlsx } from '../export/xlsx-export'
+import { downloadFile } from '../drive/drive-api'
+import * as XLSX from 'xlsx'
 
 export default function AuditOutlinePage() {
   const { auditId } = useParams<{ auditId: string }>()
@@ -10,6 +15,35 @@ export default function AuditOutlinePage() {
   const { structure, loading: structLoading } = useStructure(audit?.type || 'АСП')
   const [expandedSheet, setExpandedSheet] = useState<string | null>(null)
   const navigate = useNavigate()
+
+  const handleExportXlsx = async () => {
+    if (!structure || !audit) return
+    try {
+      const buffer = await downloadFile(structure.driveFileId)
+      const templateWb = XLSX.read(buffer, { type: 'array' })
+      const result = generateFilledXlsx(templateWb, structure, audit)
+      const blob = new Blob([result], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' })
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `${audit.name}.xlsx`
+      a.click()
+      URL.revokeObjectURL(url)
+    } catch (e) {
+      alert('Для экспорта xlsx нужна авторизация Google Drive')
+    }
+  }
+
+  const handleExportPdf = async () => {
+    if (!structure || !audit) return
+    const blob = await pdf(<AuditPdfReport structure={structure} audit={audit} />).toBlob()
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `${audit.name}.pdf`
+    a.click()
+    URL.revokeObjectURL(url)
+  }
 
   if (auditLoading || structLoading) return <div style={{ padding: 16 }}>Загрузка...</div>
   if (!audit || !structure) return <div style={{ padding: 16 }}>Аудит не найден</div>
@@ -65,6 +99,8 @@ export default function AuditOutlinePage() {
 
       <div style={{ marginTop: 16, display: 'flex', gap: 8 }}>
         <button onClick={() => navigate(`/audit/${auditId}/view`)}>Просмотр для клиента</button>
+        <button onClick={handleExportPdf}>Скачать PDF</button>
+        <button onClick={handleExportXlsx}>Выгрузить xlsx</button>
         <button onClick={() => navigate('/')}>← Назад</button>
       </div>
     </div>
