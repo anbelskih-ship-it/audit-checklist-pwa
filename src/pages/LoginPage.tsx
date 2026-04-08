@@ -1,37 +1,29 @@
-import { useEffect, useState } from 'react'
-import { useNavigate, useSearchParams } from 'react-router-dom'
-import { getLoginUrl, exchangeCode } from '../drive/auth'
+import { useAuth } from '../hooks/useAuth'
 
 export default function LoginPage() {
-  const [searchParams] = useSearchParams()
-  const [error, setError] = useState('')
-  const [loading, setLoading] = useState(false)
-  const navigate = useNavigate()
+  const { login, loading } = useAuth()
 
-  useEffect(() => {
-    const code = searchParams.get('code')
-    if (code) {
-      setLoading(true)
-      exchangeCode(code)
-        .then(() => navigate('/'))
-        .catch(e => { setError(e.message); setLoading(false) })
-    }
-  }, [searchParams, navigate])
-
-  if (loading) return <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>Авторизация...</div>
+  if (loading) {
+    return (
+      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100dvh', color: '#999' }}>
+        Загрузка...
+      </div>
+    )
+  }
 
   return (
-    <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
-      <div style={{ textAlign: 'center' }}>
-        <h1>Аудит Чек-лист</h1>
-        <p>Войдите через Google для синхронизации с Drive</p>
-        {error && <p style={{ color: 'red' }}>{error}</p>}
-        <a href={getLoginUrl()} style={{ display: 'inline-block', padding: '12px 24px', fontSize: 16, background: '#4285f4', color: '#fff', borderRadius: 8, textDecoration: 'none' }}>
+    <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100dvh', background: '#f8f9fa' }}>
+      <div style={{ textAlign: 'center', padding: 32 }}>
+        <div style={{ fontSize: 48, marginBottom: 16 }}>📋</div>
+        <h1 style={{ fontSize: 24, fontWeight: 700, marginBottom: 8 }}>Аудит Чек-лист</h1>
+        <p style={{ color: '#888', marginBottom: 32, fontSize: 15 }}>Инструмент аудита дилерских центров</p>
+        <button
+          className="btn-primary btn-full"
+          onClick={login}
+          style={{ maxWidth: 320, padding: '14px 24px', fontSize: 16 }}
+        >
           Войти через Google
-        </a>
-        <p style={{ marginTop: 16, fontSize: 13, color: '#888' }}>
-          Или <a href="/" style={{ color: '#666' }}>продолжить без синхронизации</a>
-        </p>
+        </button>
       </div>
     </div>
   )

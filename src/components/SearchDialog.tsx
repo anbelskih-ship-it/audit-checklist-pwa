@@ -30,22 +30,25 @@ export default function SearchDialog({ structure, open, onClose, onSelect }: Pro
   if (!open) return null
 
   return (
-    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 100 }} onClick={onClose}>
-      <div style={{ background: '#fff', margin: '10vh auto', maxWidth: 500, borderRadius: 12, padding: 16, maxHeight: '70vh', overflow: 'auto' }} onClick={e => e.stopPropagation()}>
-        <input
-          autoFocus
-          value={query}
-          onChange={e => setQuery(e.target.value)}
-          placeholder="Поиск по пунктам..."
-          style={{ width: '100%', padding: 12, fontSize: 16, border: '1px solid #ddd', borderRadius: 8 }}
-        />
+    <div className="overlay" onClick={onClose}>
+      <div className="search-panel" onClick={e => e.stopPropagation()}>
+        <div style={{ marginBottom: 12 }}>
+          <input
+            autoFocus
+            value={query}
+            onChange={e => setQuery(e.target.value)}
+            placeholder="Поиск по пунктам..."
+          />
+        </div>
         {results.map(r => (
-          <div key={r.id} onClick={() => { onSelect(r.id); onClose() }}
-            style={{ padding: 10, borderBottom: '1px solid #f0f0f0', cursor: 'pointer' }}>
-            <div style={{ fontSize: 14 }}>{r.text}</div>
-            <div style={{ fontSize: 11, color: '#999' }}>{r.path}</div>
+          <div key={r.id} className="search-result" onClick={() => { onSelect(r.id); onClose() }}>
+            <div style={{ fontSize: 15 }}>{r.text}</div>
+            <div style={{ fontSize: 12, color: '#999', marginTop: 2 }}>{r.path}</div>
           </div>
         ))}
+        {query.length >= 2 && results.length === 0 && (
+          <div style={{ padding: 20, textAlign: 'center', color: '#999' }}>Ничего не найдено</div>
+        )}
       </div>
     </div>
   )

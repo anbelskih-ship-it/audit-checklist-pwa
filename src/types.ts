@@ -27,26 +27,24 @@ export interface CheckItem {
 
 // Заполненный аудит
 export interface Audit {
-  id: string           // uuid
-  name: string         // "Башавтоком — июнь 2026"
+  id: string           // Firestore doc ID
+  name: string         // авто: "Башавтоком — АСП — апр 2026"
   type: 'АСП' | 'НА'
-  author: string       // email
+  dealership: string   // Название ДЦ
+  city: string         // Город
+  authorUid: string    // Firebase Auth uid
+  authorName: string   // Имя из Google-аккаунта
+  authorEmail: string  // Email
   created: string      // ISO date
   updated: string      // ISO date
+  plannedEnd: string   // Плановая дата окончания
+  comment: string      // Комментарий
   structureVersion: string
   answers: Record<string, Answer>
   status: 'draft' | 'completed'
-  synced: boolean
 }
 
 export interface Answer {
   value: 0 | 1 | null  // null = not answered yet
   comment: string
-}
-
-// Навигация
-export interface NavPosition {
-  sheetIndex: number
-  sectionIndex: number
-  itemIndex: number
 }

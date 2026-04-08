@@ -1,5 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
-import { getAudit, saveAnswer as dbSaveAnswer } from '../db/audits'
+import { doc, onSnapshot } from 'firebase/firestore'
+import { db } from '../firebase'
+import { saveAnswer as dbSaveAnswer } from '../db/audits'
 import type { Audit, Answer } from '../types'
 
 export function useAudit(auditId: string) {
@@ -7,15 +9,14 @@ export function useAudit(auditId: string) {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    getAudit(auditId).then(a => {
-      setAudit(a || null)
+    return onSnapshot(doc(db, 'audits', auditId), (snap) => {
+      setAudit(snap.exists() ? (snap.data() as Audit) : null)
       setLoading(false)
     })
   }, [auditId])
 
   const saveAnswer = useCallback(async (itemId: string, answer: Answer) => {
     await dbSaveAnswer(auditId, itemId, answer)
-    setAudit(prev => prev ? { ...prev, answers: { ...prev.answers, [itemId]: answer } } : null)
   }, [auditId])
 
   return { audit, loading, saveAnswer }

@@ -5,9 +5,9 @@ interface Props {
 
 export default function Breadcrumbs({ parts, counter }: Props) {
   return (
-    <div style={{ fontSize: 12, color: '#888', marginBottom: 8, display: 'flex', justifyContent: 'space-between' }}>
-      <span>{parts.join(' > ')}</span>
-      {counter && <span style={{ fontWeight: 500 }}>{counter}</span>}
+    <div className="breadcrumbs">
+      <span className="breadcrumbs-path">{parts.join(' > ')}</span>
+      {counter && <span className="breadcrumbs-counter">{counter}</span>}
     </div>
   )
 }

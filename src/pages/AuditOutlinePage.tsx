@@ -45,15 +45,16 @@ export default function AuditOutlinePage() {
     URL.revokeObjectURL(url)
   }
 
-  if (auditLoading || structLoading) return <div style={{ padding: 16 }}>Загрузка...</div>
-  if (!audit || !structure) return <div style={{ padding: 16 }}>Аудит не найден</div>
+  if (auditLoading || structLoading) return <div className="page" style={{ paddingTop: 40, textAlign: 'center', color: '#999' }}>Загрузка...</div>
+  if (!audit || !structure) return <div className="page" style={{ paddingTop: 40, textAlign: 'center', color: '#999' }}>Аудит не найден</div>
 
   const getSheetProgress = (sheetId: string) => {
     const sheet = structure.sheets.find(s => s.id === sheetId)
     if (!sheet) return { filled: 0, total: 0 }
     let filled = 0, total = 0
     for (const section of sheet.sections) {
-      for (const item of section.items) {
+      const evalItems = section.items.slice(1) // skip section header
+      for (const item of evalItems) {
         total++
         if (audit.answers[item.id]?.value !== null && audit.answers[item.id]?.value !== undefined) filled++
       }
@@ -62,46 +63,57 @@ export default function AuditOutlinePage() {
   }
 
   return (
-    <div style={{ maxWidth: 600, margin: '0 auto', padding: 16 }}>
-      <h1 style={{ fontSize: 18 }}>{audit.name}</h1>
-      <p style={{ color: '#888', fontSize: 13 }}>{audit.type} · {audit.status === 'completed' ? 'Завершён' : 'Черновик'}</p>
+    <div className="page">
+      <div className="page-header">
+        <button className="btn-ghost" onClick={() => navigate('/')}>← Назад</button>
+      </div>
+
+      <h1 className="page-title">{audit.name}</h1>
+      <div className="card-subtitle" style={{ marginBottom: 16 }}>
+        {audit.type} · {audit.status === 'completed' ? 'Завершён' : 'Черновик'}
+      </div>
 
       {structure.sheets.map(sheet => {
         const { filled, total } = getSheetProgress(sheet.id)
         const isExpanded = expandedSheet === sheet.id
 
         return (
-          <div key={sheet.id} style={{ marginBottom: 8 }}>
-            <div onClick={() => setExpandedSheet(isExpanded ? null : sheet.id)}
-              style={{ padding: 12, background: '#f5f5f5', borderRadius: 8, cursor: 'pointer' }}>
-              <div style={{ fontWeight: 500 }}>{sheet.name}</div>
-              {sheet.estimatedTime && <div style={{ fontSize: 11, color: '#999' }}>{sheet.estimatedTime}</div>}
+          <div key={sheet.id}>
+            <div className="card" onClick={() => setExpandedSheet(isExpanded ? null : sheet.id)}>
+              <div className="card-title">{sheet.name}</div>
+              {sheet.estimatedTime && <div className="card-subtitle">{sheet.estimatedTime}</div>}
               <ProgressBar filled={filled} total={total} />
             </div>
 
             {isExpanded && (
-              <div style={{ paddingLeft: 16, marginTop: 4 }}>
-                {sheet.sections.map(section => (
-                  <div key={section.id}
-                    onClick={() => navigate(`/audit/${auditId}/fill/${section.items[0]?.id}`)}
-                    style={{ padding: 8, cursor: 'pointer', borderLeft: '2px solid #ddd' }}>
-                    <span style={{ fontSize: 14 }}>{section.name}</span>
-                    <span style={{ fontSize: 12, color: '#999', marginLeft: 8 }}>
-                      ({section.items.filter(i => audit.answers[i.id]?.value !== null && audit.answers[i.id]?.value !== undefined).length}/{section.items.length})
-                    </span>
-                  </div>
-                ))}
+              <div style={{ marginBottom: 8 }}>
+                {sheet.sections.map(section => {
+                  const evalItems = section.items.slice(1)
+                  const answered = evalItems.filter(i => audit.answers[i.id]?.value !== null && audit.answers[i.id]?.value !== undefined).length
+                  return (
+                    <div key={section.id} className="section-item"
+                      onClick={() => navigate(`/audit/${auditId}/fill/${(section.items[1] || section.items[0])?.id}`)}>
+                      <span style={{ fontSize: 14 }}>{section.name}</span>
+                      <span style={{ fontSize: 13, color: '#999' }}>
+                        {answered}/{evalItems.length}
+                      </span>
+                    </div>
+                  )
+                })}
               </div>
             )}
           </div>
         )
       })}
 
-      <div style={{ marginTop: 16, display: 'flex', gap: 8 }}>
-        <button onClick={() => navigate(`/audit/${auditId}/view`)}>Просмотр для клиента</button>
-        <button onClick={handleExportPdf}>Скачать PDF</button>
-        <button onClick={handleExportXlsx}>Выгрузить xlsx</button>
-        <button onClick={() => navigate('/')}>← Назад</button>
+      <div className="btn-group" style={{ marginTop: 16 }}>
+        <button className="btn-primary" onClick={() => navigate(`/audit/${auditId}/view`)} style={{ flex: 1 }}>
+          Просмотр для клиента
+        </button>
+      </div>
+      <div className="btn-group" style={{ marginTop: 8 }}>
+        <button onClick={handleExportPdf} style={{ flex: 1 }}>Скачать PDF</button>
+        <button onClick={handleExportXlsx} style={{ flex: 1 }}>Выгрузить xlsx</button>
       </div>
     </div>
   )

@@ -1,6 +1,7 @@
 import { getAccessToken } from './auth'
 
 const DRIVE_API = 'https://www.googleapis.com/drive/v3'
+const API_KEY = 'AIzaSyCrwBoqSBQDVFq5qf43WNBhoyA5NkboXQE'
 
 async function driveRequest(path: string, options: RequestInit = {}): Promise<Response> {
   const token = await getAccessToken()
@@ -11,13 +12,31 @@ async function driveRequest(path: string, options: RequestInit = {}): Promise<Re
   })
 }
 
+/** Read-only request using API Key (no OAuth needed) */
+function drivePublicRequest(path: string): Promise<Response> {
+  const separator = path.includes('?') ? '&' : '?'
+  return fetch(`${DRIVE_API}${path}${separator}key=${API_KEY}`)
+}
+
 export async function getFileMetadata(fileId: string): Promise<{ modifiedTime: string; name: string }> {
-  const resp = await driveRequest(`/files/${fileId}?fields=modifiedTime,name`)
+  const token = await getAccessToken()
+  const resp = token
+    ? await driveRequest(`/files/${fileId}?fields=modifiedTime,name`)
+    : await drivePublicRequest(`/files/${fileId}?fields=modifiedTime,name`)
   return resp.json()
 }
 
 export async function downloadFile(fileId: string): Promise<ArrayBuffer> {
-  const resp = await driveRequest(`/files/${fileId}?alt=media`)
+  const token = await getAccessToken()
+  if (token) {
+    const resp = await driveRequest(`/files/${fileId}?alt=media`)
+    return resp.arrayBuffer()
+  }
+  // Google Sheets: export as xlsx via API Key
+  const resp = await drivePublicRequest(
+    `/files/${fileId}/export?mimeType=application/vnd.openxmlformats-officedocument.spreadsheetml.sheet`
+  )
+  if (!resp.ok) throw new Error(`Download failed: ${resp.status}`)
   return resp.arrayBuffer()
 }
 

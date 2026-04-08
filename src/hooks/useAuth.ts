@@ -1,18 +1,20 @@
 import { useState, useEffect } from 'react'
-import { getStoredTokens, getAccessToken, clearTokens } from '../drive/auth'
+import { onAuthStateChanged, signInWithPopup, signOut, type User } from 'firebase/auth'
+import { auth, googleProvider } from '../firebase'
 
 export function useAuth() {
-  const [isLoggedIn, setIsLoggedIn] = useState(!!getStoredTokens())
+  const [user, setUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    getAccessToken().then(token => {
-      setIsLoggedIn(!!token)
+    return onAuthStateChanged(auth, (u) => {
+      setUser(u)
       setLoading(false)
     })
   }, [])
 
-  const logout = () => { clearTokens(); setIsLoggedIn(false) }
+  const login = () => signInWithPopup(auth, googleProvider)
+  const logout = () => signOut(auth)
 
-  return { isLoggedIn, loading, logout }
+  return { user, loading, login, logout }
 }
