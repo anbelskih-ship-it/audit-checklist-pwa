@@ -3,11 +3,13 @@ import { useNavigate } from 'react-router-dom'
 import { listAudits, createAudit } from '../db/audits'
 import { getStructure } from '../db/structures'
 import { useAuth } from '../hooks/useAuth'
+import { useAppUser } from '../App'
 import type { Audit } from '../types'
 import ProgressBar from '../components/ProgressBar'
 
 export default function AuditListPage() {
-  const { user, logout } = useAuth()
+  const { logout } = useAuth()
+  const appUser = useAppUser()
   const [audits, setAudits] = useState<Audit[]>([])
   const [filter, setFilter] = useState<'all' | 'my'>('all')
   const [showNew, setShowNew] = useState(false)
@@ -23,8 +25,8 @@ export default function AuditListPage() {
     listAudits().then(setAudits)
   }, [])
 
-  const filtered = filter === 'my' && user
-    ? audits.filter(a => a.authorUid === user.uid)
+  const filtered = filter === 'my' && appUser
+    ? audits.filter(a => a.authorUid === appUser.uid)
     : audits
 
   const drafts = filtered.filter(a => a.status === 'draft')
@@ -38,7 +40,7 @@ export default function AuditListPage() {
   }
 
   const handleCreate = async () => {
-    if (!newDealership.trim() || !user) return
+    if (!newDealership.trim() || !appUser) return
     setCreating(true)
     const structure = await getStructure(newType)
     const version = structure?.version || 'unknown'
@@ -48,9 +50,9 @@ export default function AuditListPage() {
       city: newCity.trim(),
       plannedEnd: newPlannedEnd,
       comment: newComment.trim(),
-      authorUid: user.uid,
-      authorName: user.displayName || '',
-      authorEmail: user.email || '',
+      authorUid: appUser.uid,
+      authorName: appUser.displayName,
+      authorEmail: appUser.email,
       structureVersion: version,
     })
     setCreating(false)
@@ -75,14 +77,21 @@ export default function AuditListPage() {
       {/* Header */}
       <div className="page-header">
         <h1 className="page-title">Аудиты</h1>
-        <button className="btn-ghost" onClick={logout} style={{ fontSize: 13 }}>
-          Выйти
-        </button>
+        <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+          {appUser?.role === 'admin' && (
+            <button className="btn-ghost" onClick={() => navigate('/admin/users')} style={{ fontSize: 13 }}>
+              Пользователи
+            </button>
+          )}
+          <button className="btn-ghost" onClick={logout} style={{ fontSize: 13 }}>
+            Выйти
+          </button>
+        </div>
       </div>
 
       {/* User info */}
       <div style={{ fontSize: 13, color: '#999', marginBottom: 12 }}>
-        {user?.displayName || user?.email}
+        {appUser?.displayName} · {appUser?.role === 'admin' ? 'Админ' : appUser?.role === 'auditor' ? 'Аудитор' : 'Гость'}
       </div>
 
       {/* Filter */}
@@ -132,8 +141,8 @@ export default function AuditListPage() {
         </div>
       )}
 
-      {/* Create form */}
-      {!showNew ? (
+      {/* Create form (hidden for guests) */}
+      {appUser?.role === 'guest' ? null : !showNew ? (
         <button className="btn-primary btn-full" onClick={() => setShowNew(true)} style={{ marginTop: 16 }}>
           + Новый аудит
         </button>
@@ -166,7 +175,7 @@ export default function AuditListPage() {
               placeholder="Дополнительная информация..." rows={2} style={{ minHeight: 60 }} />
           </div>
           <div style={{ fontSize: 13, color: '#999', marginBottom: 12 }}>
-            Ответственный: <strong>{user?.displayName || user?.email}</strong>
+            Ответственный: <strong>{appUser?.displayName}</strong>
           </div>
           <div className="btn-group">
             <button className="btn-primary" onClick={handleCreate} disabled={creating || !newDealership.trim()} style={{ flex: 1 }}>

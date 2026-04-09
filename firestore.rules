@@ -1,0 +1,53 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Helper: get user's role from allowedUsers
+    function getUserRole() {
+      return get(/databases/$(database)/documents/allowedUsers/$(request.auth.token.email)).data.role;
+    }
+
+    // Helper: is user in whitelist?
+    function isAllowed() {
+      return request.auth != null
+        && exists(/databases/$(database)/documents/allowedUsers/$(request.auth.token.email));
+    }
+
+    // Helper: is admin?
+    function isAdmin() {
+      return isAllowed() && getUserRole() == 'admin';
+    }
+
+    // Helper: is at least auditor?
+    function isAuditor() {
+      return isAllowed() && getUserRole() in ['admin', 'auditor'];
+    }
+
+    // allowedUsers collection — only admin can manage
+    match /allowedUsers/{email} {
+      allow read: if isAllowed();
+      allow write: if isAdmin();
+    }
+
+    // audits collection
+    match /audits/{auditId} {
+      // All allowed users can read all audits
+      allow read: if isAllowed();
+
+      // Auditors and admins can create audits
+      allow create: if isAuditor();
+
+      // Author or admin can update their audit
+      allow update: if isAuditor()
+        && (resource.data.authorUid == request.auth.uid || isAdmin());
+
+      // Only admin can delete
+      allow delete: if isAdmin();
+    }
+
+    // Deny everything else
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
