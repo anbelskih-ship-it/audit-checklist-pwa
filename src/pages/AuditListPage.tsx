@@ -6,6 +6,7 @@ import { useAuth } from '../hooks/useAuth'
 import { useAppUser } from '../App'
 import type { Audit } from '../types'
 import ProgressBar from '../components/ProgressBar'
+import ThemeToggle from '../components/ThemeToggle'
 
 export default function AuditListPage() {
   const { logout } = useAuth()
@@ -77,36 +78,35 @@ export default function AuditListPage() {
       {/* Header */}
       <div className="page-header">
         <h1 className="page-title">Аудиты</h1>
-        <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+        <div className="flex-center gap-sm">
+          <ThemeToggle />
           {appUser?.role === 'admin' && (
-            <button className="btn-ghost" onClick={() => navigate('/admin/users')} style={{ fontSize: 13 }}>
+            <button className="btn-ghost" onClick={() => navigate('/admin/users')}>
               Пользователи
             </button>
           )}
-          <button className="btn-ghost" onClick={logout} style={{ fontSize: 13 }}>
+          <button className="btn-ghost" onClick={logout}>
             Выйти
           </button>
         </div>
       </div>
 
       {/* User info */}
-      <div style={{ fontSize: 13, color: '#999', marginBottom: 12 }}>
+      <div className="user-info">
         {appUser?.displayName} · {appUser?.role === 'admin' ? 'Админ' : appUser?.role === 'auditor' ? 'Аудитор' : 'Гость'}
       </div>
 
       {/* Filter */}
-      <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
+      <div className="filter-row">
         <button
           className={filter === 'all' ? 'btn-primary' : ''}
           onClick={() => setFilter('all')}
-          style={{ flex: 1, minHeight: 36, fontSize: 14 }}
         >
           Все
         </button>
         <button
           className={filter === 'my' ? 'btn-primary' : ''}
           onClick={() => setFilter('my')}
-          style={{ flex: 1, minHeight: 36, fontSize: 14 }}
         >
           Мои
         </button>
@@ -115,9 +115,7 @@ export default function AuditListPage() {
       {/* Drafts */}
       {drafts.length > 0 && (
         <>
-          <div style={{ fontSize: 13, fontWeight: 600, color: '#999', marginBottom: 8, textTransform: 'uppercase', letterSpacing: 0.5 }}>
-            В работе
-          </div>
+          <div className="section-heading">В работе</div>
           {drafts.map(renderCard)}
         </>
       )}
@@ -125,25 +123,23 @@ export default function AuditListPage() {
       {/* Completed */}
       {completed.length > 0 && (
         <>
-          <div style={{ fontSize: 13, fontWeight: 600, color: '#999', marginTop: 16, marginBottom: 8, textTransform: 'uppercase', letterSpacing: 0.5 }}>
-            Завершённые
-          </div>
+          <div className="section-heading section-heading--spaced">Завершённые</div>
           {completed.map(renderCard)}
         </>
       )}
 
       {/* Empty state */}
       {filtered.length === 0 && !showNew && (
-        <div style={{ textAlign: 'center', padding: '40px 20px', color: '#999' }}>
-          <div style={{ fontSize: 40, marginBottom: 12 }}>📋</div>
-          <div style={{ fontSize: 15 }}>Пока нет аудитов</div>
-          <div style={{ fontSize: 13, marginTop: 4 }}>Создайте первый аудит, чтобы начать</div>
+        <div className="empty-state">
+          <div className="empty-state-icon">📋</div>
+          <div className="empty-state-text">Пока нет аудитов</div>
+          <div className="empty-state-hint">Создайте первый аудит, чтобы начать</div>
         </div>
       )}
 
       {/* Create form (hidden for guests) */}
       {appUser?.role === 'guest' ? null : !showNew ? (
-        <button className="btn-primary btn-full" onClick={() => setShowNew(true)} style={{ marginTop: 16 }}>
+        <button className="btn-primary btn-full mt-md" onClick={() => setShowNew(true)}>
           + Новый аудит
         </button>
       ) : (
@@ -172,16 +168,16 @@ export default function AuditListPage() {
           <div className="form-group">
             <label className="form-label">Комментарий</label>
             <textarea value={newComment} onChange={e => setNewComment(e.target.value)}
-              placeholder="Дополнительная информация..." rows={2} style={{ minHeight: 60 }} />
+              placeholder="Дополнительная информация..." rows={2} className="textarea-sm" />
           </div>
-          <div style={{ fontSize: 13, color: '#999', marginBottom: 12 }}>
+          <div className="user-info">
             Ответственный: <strong>{appUser?.displayName}</strong>
           </div>
           <div className="btn-group">
-            <button className="btn-primary" onClick={handleCreate} disabled={creating || !newDealership.trim()} style={{ flex: 1 }}>
+            <button className="btn-primary flex-1" onClick={handleCreate} disabled={creating || !newDealership.trim()}>
               {creating ? 'Создаю...' : 'Создать'}
             </button>
-            <button onClick={() => setShowNew(false)} style={{ flex: 1 }}>Отмена</button>
+            <button className="flex-1" onClick={() => setShowNew(false)}>Отмена</button>
           </div>
         </div>
       )}

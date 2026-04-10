@@ -45,8 +45,8 @@ export default function AuditOutlinePage() {
     URL.revokeObjectURL(url)
   }
 
-  if (auditLoading || structLoading) return <div className="page" style={{ paddingTop: 40, textAlign: 'center', color: '#999' }}>Загрузка...</div>
-  if (!audit || !structure) return <div className="page" style={{ paddingTop: 40, textAlign: 'center', color: '#999' }}>Аудит не найден</div>
+  if (auditLoading || structLoading) return <div className="page center-content" style={{ color: 'var(--color-text-disabled)' }}>Загрузка...</div>
+  if (!audit || !structure) return <div className="page center-content" style={{ color: 'var(--color-text-disabled)' }}>Аудит не найден</div>
 
   const getSheetProgress = (sheetId: string) => {
     const sheet = structure.sheets.find(s => s.id === sheetId)
@@ -69,7 +69,7 @@ export default function AuditOutlinePage() {
       </div>
 
       <h1 className="page-title">{audit.name}</h1>
-      <div className="card-subtitle" style={{ marginBottom: 16 }}>
+      <div className="card-subtitle mb-md">
         {audit.type} · {audit.status === 'completed' ? 'Завершён' : 'Черновик'}
       </div>
 
@@ -86,7 +86,7 @@ export default function AuditOutlinePage() {
             </div>
 
             {isExpanded && (
-              <div style={{ marginBottom: 8 }}>
+              <div className="mb-sm">
                 {sheet.sections.map(section => {
                   const evalItems = section.items.slice(1)
                   const answered = evalItems.filter(i => audit.answers[i.id]?.value !== null && audit.answers[i.id]?.value !== undefined).length
@@ -95,8 +95,8 @@ export default function AuditOutlinePage() {
                   return (
                     <div key={section.id} className="section-item"
                       onClick={() => navigate(`/audit/${auditId}/fill/${firstEvalItem.id}`)}>
-                      <span style={{ fontSize: 14 }}>{section.name}</span>
-                      <span style={{ fontSize: 13, color: '#999' }}>
+                      <span className="search-result-text">{section.name}</span>
+                      <span className="search-result-path">
                         {answered}/{evalItems.length}
                       </span>
                     </div>
@@ -108,14 +108,14 @@ export default function AuditOutlinePage() {
         )
       })}
 
-      <div className="btn-group" style={{ marginTop: 16 }}>
-        <button className="btn-primary" onClick={() => navigate(`/audit/${auditId}/view`)} style={{ flex: 1 }}>
+      <div className="btn-group mt-md">
+        <button className="btn-primary flex-1" onClick={() => navigate(`/audit/${auditId}/view`)}>
           Просмотр для клиента
         </button>
       </div>
-      <div className="btn-group" style={{ marginTop: 8 }}>
-        <button onClick={handleExportPdf} style={{ flex: 1 }}>Скачать PDF</button>
-        <button onClick={handleExportXlsx} style={{ flex: 1 }}>Выгрузить xlsx</button>
+      <div className="btn-group mt-sm">
+        <button className="flex-1" onClick={handleExportPdf}>Скачать PDF</button>
+        <button className="flex-1" onClick={handleExportXlsx}>Выгрузить xlsx</button>
       </div>
     </div>
   )

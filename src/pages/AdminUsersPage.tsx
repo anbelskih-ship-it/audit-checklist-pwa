@@ -37,39 +37,36 @@ export default function AdminUsersPage() {
     load()
   }
 
-  if (loading) return <div className="page" style={{ paddingTop: 40, textAlign: 'center', color: '#999' }}>Загрузка...</div>
+  if (loading) return <div className="page center-content" style={{ color: 'var(--color-text-disabled)' }}>Загрузка...</div>
 
   return (
     <div className="page">
       <div className="page-header">
         <button className="btn-ghost" onClick={() => navigate('/')}>← Назад</button>
-        <h1 style={{ fontSize: 18, fontWeight: 700 }}>Пользователи</h1>
+        <h1 className="admin-title">Пользователи</h1>
         <div style={{ width: 60 }} />
       </div>
 
       {/* Current users */}
       {users.map(u => (
-        <div key={u.email} className="card" style={{ cursor: 'default' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div key={u.email} className="card card--static">
+          <div className="flex-between">
             <div>
-              <div className="card-title" style={{ fontSize: 15 }}>{u.name || u.email}</div>
+              <div className="card-title">{u.name || u.email}</div>
               <div className="card-subtitle">{u.email}</div>
             </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <div className="flex-center gap-sm">
               <select
+                className="select-compact"
                 value={u.role}
                 onChange={e => handleRoleChange(u.email, e.target.value as UserRole)}
-                style={{ minHeight: 36, fontSize: 13, padding: '4px 8px', width: 'auto' }}
               >
                 <option value="admin">Админ</option>
                 <option value="auditor">Аудитор</option>
                 <option value="guest">Гость</option>
               </select>
               {u.role !== 'admin' && (
-                <button
-                  onClick={() => handleRemove(u.email)}
-                  style={{ minHeight: 36, padding: '4px 10px', fontSize: 13, color: '#f44336', background: '#ffebee' }}
-                >
+                <button className="btn-sm-danger" onClick={() => handleRemove(u.email)}>
                   ×
                 </button>
               )}
@@ -79,8 +76,8 @@ export default function AdminUsersPage() {
       ))}
 
       {/* Add new user */}
-      <div className="new-audit-form" style={{ marginTop: 16 }}>
-        <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 12 }}>Добавить пользователя</div>
+      <div className="new-audit-form mt-md">
+        <div className="fill-section-name mb-sm">Добавить пользователя</div>
         <div className="form-group">
           <label className="form-label">Email *</label>
           <input value={newEmail} onChange={e => setNewEmail(e.target.value)}
@@ -104,7 +101,7 @@ export default function AdminUsersPage() {
         </button>
       </div>
 
-      <div style={{ marginTop: 16, padding: 12, fontSize: 13, color: '#999', lineHeight: 1.5 }}>
+      <div className="info-block">
         <strong>Роли:</strong><br />
         Админ — полный доступ, управление пользователями<br />
         Аудитор — создание и заполнение аудитов<br />

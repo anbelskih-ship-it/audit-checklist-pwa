@@ -75,7 +75,7 @@ export default function App() {
 
   if (loading || roleLoading) {
     return (
-      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100dvh', color: '#999' }}>
+      <div className="center-screen" style={{ color: 'var(--color-text-disabled)' }}>
         Загрузка...
       </div>
     )
@@ -87,14 +87,14 @@ export default function App() {
 
   if (denied) {
     return (
-      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100dvh', background: '#f8f9fa' }}>
-        <div style={{ textAlign: 'center', padding: 32 }}>
-          <div style={{ fontSize: 48, marginBottom: 16 }}>🔒</div>
-          <h1 style={{ fontSize: 20, fontWeight: 700, marginBottom: 8 }}>Доступ ограничен</h1>
-          <p style={{ color: '#888', marginBottom: 8, fontSize: 15 }}>
+      <div className="center-screen">
+        <div className="auth-card">
+          <div className="auth-icon">🔒</div>
+          <h1 className="auth-title">Доступ ограничен</h1>
+          <p className="auth-subtitle">
             Аккаунт <strong>{user.email}</strong> не добавлен в список пользователей.
           </p>
-          <p style={{ color: '#999', marginBottom: 24, fontSize: 13 }}>
+          <p className="auth-hint">
             Обратитесь к администратору для получения доступа.
           </p>
           <button className="btn-primary" onClick={logout}>Выйти</button>

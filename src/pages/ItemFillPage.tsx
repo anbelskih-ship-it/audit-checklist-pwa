@@ -55,7 +55,7 @@ export default function ItemFillPage() {
     setComment(currentAnswer?.comment || '')
   }, [itemId, currentAnswer?.comment])
 
-  if (!current || !audit || !structure) return <div className="page" style={{ paddingTop: 40, textAlign: 'center', color: '#999' }}>Загрузка...</div>
+  if (!current || !audit || !structure) return <div className="page center-content" style={{ color: 'var(--color-text-disabled)' }}>Загрузка...</div>
 
   const handleScore = async (value: 0 | 1) => {
     await saveAnswer(current.item.id, { value, comment })
@@ -91,6 +91,12 @@ export default function ItemFillPage() {
     ? Math.round((onesCount / evalItems.length) * 100)
     : null
 
+  const progressColor = sectionPct !== null && sectionPct >= 80
+    ? 'var(--color-success)'
+    : sectionPct !== null && sectionPct >= 50
+    ? 'var(--color-warning)'
+    : 'var(--color-primary)'
+
   return (
     <div className="page" style={{ display: 'flex', flexDirection: 'column' }}>
       <div className="page-header">
@@ -99,36 +105,30 @@ export default function ItemFillPage() {
       </div>
 
       {/* Section header card */}
-      <div style={{ background: '#fff', borderRadius: 12, padding: '12px 16px', marginBottom: 16, boxShadow: '0 1px 3px rgba(0,0,0,0.06)' }}>
-        <div style={{ fontSize: 13, color: '#999', marginBottom: 2 }}>{current.sheetName}</div>
-        <div style={{ fontSize: 16, fontWeight: 600, marginBottom: 4 }}>{current.section.name}</div>
-        <div style={{ fontSize: 14, color: '#555', marginBottom: 8 }}>{sectionHeader.text}</div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <div style={{ flex: 1, height: 6, background: '#e8e8e8', borderRadius: 3, overflow: 'hidden' }}>
-            <div style={{
-              width: `${sectionPct ?? 0}%`,
-              height: '100%',
-              background: sectionPct !== null && sectionPct >= 80 ? '#4caf50' : sectionPct !== null && sectionPct >= 50 ? '#ff9800' : '#1976d2',
-              borderRadius: 3,
-              transition: 'width 0.3s',
-            }} />
+      <div className="fill-section-card">
+        <div className="search-result-path">{current.sheetName}</div>
+        <div className="fill-section-name">{current.section.name}</div>
+        <div className="search-result-text" style={{ color: 'var(--color-text-secondary)', marginBottom: 'var(--space-4)' }}>{sectionHeader.text}</div>
+        <div className="progress">
+          <div className="progress-bar">
+            <div className="progress-fill" style={{ width: `${sectionPct ?? 0}%`, background: progressColor }} />
           </div>
-          <span style={{ fontSize: 15, fontWeight: 700, color: sectionPct !== null ? '#1a1a1a' : '#ccc', minWidth: 40, textAlign: 'right' }}>
+          <span className="fill-counter" style={{ fontSize: 'var(--font-size-body)', minWidth: 40, textAlign: 'right', color: sectionPct !== null ? 'var(--color-text)' : 'var(--color-input-border)' }}>
             {sectionPct !== null ? `${sectionPct}%` : '—'}
           </span>
-          <span style={{ fontSize: 12, color: '#999', whiteSpace: 'nowrap' }}>
+          <span className="search-result-path" style={{ whiteSpace: 'nowrap' }}>
             {current.sectionItemIndex + 1} из {current.sectionEvalCount}
           </span>
         </div>
       </div>
 
       {/* Item content */}
-      <div style={{ flex: 1 }}>
-        <div style={{ fontSize: 12, color: '#999', marginBottom: 6, textAlign: 'right' }}>
+      <div className="flex-1">
+        <div className="search-result-path" style={{ marginBottom: 'var(--space-3)', textAlign: 'right' }}>
           {currentIndex + 1} / {allItems.length}
         </div>
 
-        <h2 style={{ fontSize: 17, fontWeight: 600, lineHeight: 1.4, marginBottom: 12 }}>{current.item.text}</h2>
+        <h2 className="fill-question">{current.item.text}</h2>
         {current.item.criteria && (
           <div className="criteria">{current.item.criteria}</div>
         )}

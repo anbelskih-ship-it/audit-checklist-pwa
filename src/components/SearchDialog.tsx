@@ -32,7 +32,7 @@ export default function SearchDialog({ structure, open, onClose, onSelect }: Pro
   return (
     <div className="overlay" onClick={onClose}>
       <div className="search-panel" onClick={e => e.stopPropagation()}>
-        <div style={{ marginBottom: 12 }}>
+        <div className="mb-sm">
           <input
             autoFocus
             value={query}
@@ -42,12 +42,12 @@ export default function SearchDialog({ structure, open, onClose, onSelect }: Pro
         </div>
         {results.map(r => (
           <div key={r.id} className="search-result" onClick={() => { onSelect(r.id); onClose() }}>
-            <div style={{ fontSize: 15 }}>{r.text}</div>
-            <div style={{ fontSize: 12, color: '#999', marginTop: 2 }}>{r.path}</div>
+            <div className="search-result-text">{r.text}</div>
+            <div className="search-result-path">{r.path}</div>
           </div>
         ))}
         {query.length >= 2 && results.length === 0 && (
-          <div style={{ padding: 20, textAlign: 'center', color: '#999' }}>Ничего не найдено</div>
+          <div className="empty-state">Ничего не найдено</div>
         )}
       </div>
     </div>

@@ -12,7 +12,7 @@ export default function AuditViewPage() {
   const [expandedSheet, setExpandedSheet] = useState<string | null>(null)
   const navigate = useNavigate()
 
-  if (!audit || !structure) return <div className="page" style={{ paddingTop: 40, textAlign: 'center', color: '#999' }}>Загрузка...</div>
+  if (!audit || !structure) return <div className="page center-content" style={{ color: 'var(--color-text-disabled)' }}>Загрузка...</div>
 
   let totalItems = 0, totalFilled = 0, totalPassed = 0
   for (const sheet of structure.sheets) {
@@ -40,7 +40,7 @@ export default function AuditViewPage() {
 
       <div className="stats-row">
         <div className="stat-card">
-          <div className="stat-value" style={{ color: '#1976d2' }}>
+          <div className="stat-value stat-value--primary">
             {totalFilled > 0 ? Math.round(totalPassed / totalFilled * 100) : 0}%
           </div>
           <div className="stat-label">Результат</div>
@@ -50,12 +50,12 @@ export default function AuditViewPage() {
           <div className="stat-label">Заполнено</div>
         </div>
         <div className="stat-card">
-          <div className="stat-value" style={{ color: '#f44336' }}>{totalFilled - totalPassed}</div>
+          <div className="stat-value stat-value--danger">{totalFilled - totalPassed}</div>
           <div className="stat-label">Зон роста</div>
         </div>
       </div>
 
-      <label className="check-label" style={{ marginBottom: 16 }}>
+      <label className="check-label mb-md">
         <input type="checkbox" checked={showOnlyIssues} onChange={e => setShowOnlyIssues(e.target.checked)} />
         Показать только зоны роста
       </label>
@@ -80,11 +80,11 @@ export default function AuditViewPage() {
         if (showOnlyIssues && issues.length === 0) return null
 
         return (
-          <div key={sheet.id} style={{ marginBottom: 8 }}>
+          <div key={sheet.id} className="mb-sm">
             <div className="card" onClick={() => setExpandedSheet(expandedSheet === sheet.id ? null : sheet.id)}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div className="flex-between">
                 <span className="card-title">{sheet.name}</span>
-                {issues.length > 0 && <span style={{ color: '#f44336', fontSize: 13, fontWeight: 500 }}>{issues.length}</span>}
+                {issues.length > 0 && <span style={{ color: 'var(--color-danger)', fontSize: 'var(--font-size-caption)', fontWeight: 500 }}>{issues.length}</span>}
               </div>
               <ProgressBar filled={sheetPassed} total={sheetFilled || sheetTotal} />
             </div>
@@ -100,9 +100,9 @@ export default function AuditViewPage() {
                   }))
                 )).map((item, i) => (
                   <div key={i} className={`issue-item ${'value' in item && item.value === 1 ? 'issue-item--pass' : 'issue-item--fail'}`}>
-                    <div style={{ fontSize: 12, color: '#999' }}>{item.sectionName}</div>
-                    <div style={{ fontSize: 14 }}>{item.text}</div>
-                    {item.comment && <div style={{ fontSize: 13, color: '#666', fontStyle: 'italic', marginTop: 4 }}>{item.comment}</div>}
+                    <div className="issue-item-section">{item.sectionName}</div>
+                    <div className="issue-item-text">{item.text}</div>
+                    {item.comment && <div className="issue-item-comment">{item.comment}</div>}
                   </div>
                 ))}
               </div>

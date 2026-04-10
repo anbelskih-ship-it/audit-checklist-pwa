@@ -5,7 +5,7 @@ interface Props {
 
 export default function ProgressBar({ filled, total }: Props) {
   const pct = total > 0 ? Math.round((filled / total) * 100) : 0
-  const color = pct >= 80 ? '#4caf50' : pct >= 50 ? '#ff9800' : '#f44336'
+  const color = pct >= 80 ? 'var(--color-success)' : pct >= 50 ? 'var(--color-warning)' : 'var(--color-danger)'
 
   return (
     <div className="progress">
