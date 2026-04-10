@@ -62,9 +62,15 @@ export default function AuditListPage() {
 
   const renderCard = (a: Audit) => {
     const { filled, total } = countProgress(a)
+    const pct = total > 0 ? Math.round((filled / total) * 100) : 0
     return (
       <div key={a.id} className="card" onClick={() => navigate(`/audit/${a.id}`)}>
-        <div className="card-title">{a.name}</div>
+        <div className="flex-between mb-sm">
+          <div className="card-title">{a.name}</div>
+          <span className={`badge ${a.status === 'completed' ? 'badge--success' : 'badge--default'}`}>
+            {a.status === 'completed' ? 'Завершён' : `${pct}%`}
+          </span>
+        </div>
         <div className="card-subtitle">
           {a.city && `${a.city} · `}{a.authorName || a.authorEmail} · {new Date(a.updated).toLocaleDateString('ru')}
         </div>

@@ -1,43 +1,43 @@
 /* === Design Tokens === */
 :root {
-  /* Palette (raw values) */
-  --palette-blue-600: #1976d2;
-  --palette-blue-700: #1565c0;
+  /* Palette (raw values) — Авто.ру Бизнес style */
+  --palette-red-500: #E53935;
+  --palette-red-600: #D32F2F;
+  --palette-red-700: #C62828;
+  --palette-red-800: #B71C1C;
   --palette-green-500: #4caf50;
+  --palette-green-600: #43a047;
   --palette-green-700: #2e7d32;
-  --palette-green-800: #388e3c;
   --palette-orange-500: #ff9800;
-  --palette-red-500: #f44336;
-  --palette-red-700: #d32f2f;
-  --palette-red-800: #c62828;
 
   /* Semantic colors */
-  --color-primary: var(--palette-blue-600);
-  --color-primary-active: var(--palette-blue-700);
+  --color-primary: var(--palette-red-500);
+  --color-primary-active: var(--palette-red-600);
   --color-success: var(--palette-green-500);
   --color-success-dark: var(--palette-green-700);
-  --color-success-darker: var(--palette-green-800);
+  --color-success-darker: var(--palette-green-600);
   --color-warning: var(--palette-orange-500);
   --color-danger: var(--palette-red-500);
-  --color-danger-dark: var(--palette-red-700);
-  --color-danger-darker: var(--palette-red-800);
+  --color-danger-dark: var(--palette-red-600);
+  --color-danger-darker: var(--palette-red-700);
 
   /* Surfaces */
-  --color-bg: #f8f9fa;
+  --color-bg: #f4f4f4;
   --color-surface: #fff;
-  --color-surface-hover: #f5f5f5;
-  --color-surface-active: #f8f8f8;
-  --color-border: #e8e8e8;
-  --color-border-light: #f0f0f0;
-  --color-bg-criteria: #f0f4f8;
+  --color-surface-hover: #f7f7f7;
+  --color-surface-active: #f0f0f0;
+  --color-border: #e5e5e5;
+  --color-border-light: #efefef;
+  --color-bg-criteria: #fafafa;
   --color-bg-success: #e8f5e9;
   --color-bg-danger: #ffebee;
   --color-bg-warning: #fff3e0;
-  --color-input-border: #ddd;
-  --color-btn-default: #f0f0f0;
+  --color-input-border: #d9d9d9;
+  --color-btn-default: transparent;
+  --color-btn-default-border: #d9d9d9;
 
   /* Text */
-  --color-text: #1a1a1a;
+  --color-text: #222;
   --color-text-secondary: #555;
   --color-text-hint: #666;
   --color-text-muted: #888;
@@ -45,9 +45,9 @@
   --color-text-on-primary: #fff;
 
   /* Shadows */
-  --shadow-card: 0 1px 3px rgba(0,0,0,0.06);
-  --shadow-elevated: 0 2px 8px rgba(0,0,0,0.1);
-  --shadow-focus: 0 0 0 3px rgba(25,118,210,0.12);
+  --shadow-card: 0 1px 4px rgba(0,0,0,0.08);
+  --shadow-elevated: 0 4px 12px rgba(0,0,0,0.12);
+  --shadow-focus: 0 0 0 3px rgba(229,57,53,0.15);
   --shadow-overlay: rgba(0,0,0,0.4);
 
   /* Typography */
@@ -59,8 +59,8 @@
   --font-size-body: 15px;
   --font-size-base: 16px;
   --font-size-body-lg: 17px;
-  --font-size-title: 22px;
-  --font-size-display: 26px;
+  --font-size-title: 20px;
+  --font-size-display: 24px;
 
   /* Spacing */
   --space-1: 2px;
@@ -100,22 +100,23 @@
   --color-surface-active: #252525;
   --color-border: #333;
   --color-border-light: #2a2a2a;
-  --color-bg-criteria: #1a2332;
+  --color-bg-criteria: #1e1e1e;
   --color-bg-success: #1a2e1a;
   --color-bg-danger: #2e1a1a;
   --color-bg-warning: #2e2a1a;
   --color-input-border: #444;
-  --color-btn-default: #2a2a2a;
+  --color-btn-default: transparent;
+  --color-btn-default-border: #444;
 
   --color-text: #e0e0e0;
   --color-text-secondary: #aaa;
   --color-text-hint: #999;
   --color-text-muted: #777;
-  --color-text-disabled: #666;
+  --color-text-disabled: #555;
 
-  --shadow-card: 0 1px 3px rgba(0,0,0,0.3);
-  --shadow-elevated: 0 2px 8px rgba(0,0,0,0.4);
-  --shadow-focus: 0 0 0 3px rgba(100,180,255,0.2);
+  --shadow-card: 0 1px 4px rgba(0,0,0,0.3);
+  --shadow-elevated: 0 4px 12px rgba(0,0,0,0.5);
+  --shadow-focus: 0 0 0 3px rgba(229,57,53,0.25);
 }
 
 @media (prefers-color-scheme: dark) {
@@ -126,22 +127,23 @@
     --color-surface-active: #252525;
     --color-border: #333;
     --color-border-light: #2a2a2a;
-    --color-bg-criteria: #1a2332;
+    --color-bg-criteria: #1e1e1e;
     --color-bg-success: #1a2e1a;
     --color-bg-danger: #2e1a1a;
     --color-bg-warning: #2e2a1a;
     --color-input-border: #444;
-    --color-btn-default: #2a2a2a;
+    --color-btn-default: transparent;
+    --color-btn-default-border: #444;
 
     --color-text: #e0e0e0;
     --color-text-secondary: #aaa;
     --color-text-hint: #999;
     --color-text-muted: #777;
-    --color-text-disabled: #666;
+    --color-text-disabled: #555;
 
-    --shadow-card: 0 1px 3px rgba(0,0,0,0.3);
-    --shadow-elevated: 0 2px 8px rgba(0,0,0,0.4);
-    --shadow-focus: 0 0 0 3px rgba(100,180,255,0.2);
+    --shadow-card: 0 1px 4px rgba(0,0,0,0.3);
+    --shadow-elevated: 0 4px 12px rgba(0,0,0,0.5);
+    --shadow-focus: 0 0 0 3px rgba(229,57,53,0.25);
   }
 }
 
@@ -185,7 +187,7 @@ body {
 
 .page-title {
   font-size: var(--font-size-title);
-  font-weight: 700;
+  font-weight: 800;
   letter-spacing: -0.3px;
 }
 
@@ -198,48 +200,53 @@ button, .btn {
   padding: var(--space-5) var(--space-9);
   font-size: var(--font-size-body);
   font-weight: 500;
-  border: none;
-  border-radius: var(--radius-lg);
+  border: 1.5px solid var(--color-btn-default-border);
+  border-radius: var(--radius-xl);
   cursor: pointer;
   background: var(--color-btn-default);
   color: var(--color-text);
-  transition: background 0.15s, transform 0.1s;
+  transition: background 0.15s, border-color 0.15s, opacity 0.15s;
   -webkit-user-select: none;
   user-select: none;
   touch-action: manipulation;
 }
 
 button:active {
-  transform: scale(0.97);
+  opacity: 0.8;
 }
 
 button:disabled {
-  opacity: 0.4;
+  opacity: 0.35;
   pointer-events: none;
 }
 
 .btn-primary {
   background: var(--color-primary);
   color: var(--color-text-on-primary);
+  border-color: var(--color-primary);
 }
 
 .btn-primary:active {
   background: var(--color-primary-active);
+  border-color: var(--color-primary-active);
 }
 
 .btn-success {
   background: var(--color-success);
   color: var(--color-text-on-primary);
+  border-color: var(--color-success);
 }
 
 .btn-danger {
   background: var(--color-danger);
   color: var(--color-text-on-primary);
+  border-color: var(--color-danger);
 }
 
 .btn-ghost {
   background: transparent;
   color: var(--color-primary);
+  border-color: transparent;
   padding: var(--space-5) var(--space-6);
 }
 
@@ -263,7 +270,8 @@ button:disabled {
   padding: var(--space-6) var(--space-8);
   padding-bottom: calc(var(--space-6) + env(safe-area-inset-bottom, 0));
   background: var(--color-surface);
-  border-top: 1px solid var(--color-border);
+  border-top: none;
+  box-shadow: 0 -2px 8px rgba(0,0,0,0.06);
   z-index: var(--z-bottom-bar);
 }
 
@@ -275,7 +283,7 @@ button:disabled {
 .card {
   background: var(--color-surface);
   border-radius: var(--radius-xl);
-  padding: var(--space-7) var(--space-8);
+  padding: var(--space-8);
   margin-bottom: var(--space-4);
   cursor: pointer;
   transition: background 0.15s;
@@ -346,39 +354,42 @@ select {
 /* === Score Toggle === */
 .score-toggle {
   display: flex;
-  gap: var(--space-5);
+  gap: var(--space-4);
   margin: var(--space-8) 0;
 }
 
 .score-btn {
   flex: 1;
   min-height: 56px;
-  font-size: var(--font-size-body-lg);
+  font-size: 18px;
   font-weight: 700;
-  border-radius: var(--radius-xl);
+  border-radius: var(--radius-2xl);
   border: 2px solid transparent;
+  gap: var(--space-3);
 }
 
 .score-btn--yes {
   background: var(--color-bg-success);
   color: var(--color-success-dark);
+  border-color: var(--color-bg-success);
 }
 
 .score-btn--yes.active {
   background: var(--color-success);
   color: var(--color-text-on-primary);
-  border-color: var(--color-success-darker);
+  border-color: var(--color-success);
 }
 
 .score-btn--no {
   background: var(--color-bg-danger);
   color: var(--color-danger-darker);
+  border-color: var(--color-bg-danger);
 }
 
 .score-btn--no.active {
   background: var(--color-danger);
   color: var(--color-text-on-primary);
-  border-color: var(--color-danger-dark);
+  border-color: var(--color-danger);
 }
 
 /* === Progress === */
@@ -443,8 +454,40 @@ select {
   padding: var(--space-6);
   border-radius: var(--radius-lg);
   margin-bottom: var(--space-8);
-  line-height: 1.5;
+  line-height: 1.6;
   border-left: 3px solid var(--color-primary);
+}
+
+/* === Status badges === */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-1) var(--space-4);
+  border-radius: var(--radius-pill);
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+  line-height: 1.4;
+}
+
+.badge--default {
+  background: var(--color-border-light);
+  color: var(--color-text-secondary);
+}
+
+.badge--success {
+  background: var(--color-bg-success);
+  color: var(--color-success-dark);
+}
+
+.badge--danger {
+  background: var(--color-bg-danger);
+  color: var(--color-danger-darker);
+}
+
+.badge--warning {
+  background: var(--color-bg-warning);
+  color: #e65100;
 }
 
 /* === Stats cards === */
@@ -691,8 +734,9 @@ select {
 
 .filter-row > button {
   flex: 1;
-  min-height: 36px;
+  min-height: 38px;
   font-size: var(--font-size-body-sm);
+  border-radius: var(--radius-xl);
 }
 
 .user-info {
@@ -778,10 +822,17 @@ select {
   min-height: 36px;
   min-width: 36px;
   padding: 0;
-  background: var(--color-btn-default);
-  border-radius: var(--radius-pill);
-  font-size: 18px;
+  background: var(--color-surface);
+  border: 1.5px solid var(--color-border);
+  border-radius: 50%;
+  font-size: 16px;
   line-height: 1;
+  color: var(--color-text-muted);
+}
+
+.theme-toggle svg {
+  width: 18px;
+  height: 18px;
 }
 
 .flex-between {
