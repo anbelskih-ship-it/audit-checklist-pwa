@@ -1,18 +1,19 @@
 /* === Design Tokens === */
 :root {
-  /* Palette (raw values) — Авто.ру Бизнес style */
-  --palette-red-500: #E53935;
-  --palette-red-600: #D32F2F;
-  --palette-red-700: #C62828;
-  --palette-red-800: #B71C1C;
+  /* Palette (raw values) */
+  --palette-blue-500: #2979FF;
+  --palette-blue-600: #2962FF;
   --palette-green-500: #4caf50;
   --palette-green-600: #43a047;
   --palette-green-700: #2e7d32;
   --palette-orange-500: #ff9800;
+  --palette-red-500: #f44336;
+  --palette-red-600: #e53935;
+  --palette-red-700: #d32f2f;
 
   /* Semantic colors */
-  --color-primary: var(--palette-red-500);
-  --color-primary-active: var(--palette-red-600);
+  --color-primary: var(--palette-blue-500);
+  --color-primary-active: var(--palette-blue-600);
   --color-success: var(--palette-green-500);
   --color-success-dark: var(--palette-green-700);
   --color-success-darker: var(--palette-green-600);
@@ -47,7 +48,7 @@
   /* Shadows */
   --shadow-card: 0 1px 4px rgba(0,0,0,0.08);
   --shadow-elevated: 0 4px 12px rgba(0,0,0,0.12);
-  --shadow-focus: 0 0 0 3px rgba(229,57,53,0.15);
+  --shadow-focus: 0 0 0 3px rgba(41,121,255,0.15);
   --shadow-overlay: rgba(0,0,0,0.4);
 
   /* Typography */
@@ -116,7 +117,7 @@
 
   --shadow-card: 0 1px 4px rgba(0,0,0,0.3);
   --shadow-elevated: 0 4px 12px rgba(0,0,0,0.5);
-  --shadow-focus: 0 0 0 3px rgba(229,57,53,0.25);
+  --shadow-focus: 0 0 0 3px rgba(41,121,255,0.25);
 }
 
 @media (prefers-color-scheme: dark) {
@@ -143,7 +144,7 @@
 
     --shadow-card: 0 1px 4px rgba(0,0,0,0.3);
     --shadow-elevated: 0 4px 12px rgba(0,0,0,0.5);
-    --shadow-focus: 0 0 0 3px rgba(229,57,53,0.25);
+    --shadow-focus: 0 0 0 3px rgba(41,121,255,0.25);
   }
 }
 
