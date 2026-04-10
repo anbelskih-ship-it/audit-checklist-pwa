@@ -90,9 +90,11 @@ export default function AuditOutlinePage() {
                 {sheet.sections.map(section => {
                   const evalItems = section.items.slice(1)
                   const answered = evalItems.filter(i => audit.answers[i.id]?.value !== null && audit.answers[i.id]?.value !== undefined).length
+                  const firstEvalItem = evalItems[0]
+                  if (!firstEvalItem) return null // skip sections with only a header
                   return (
                     <div key={section.id} className="section-item"
-                      onClick={() => navigate(`/audit/${auditId}/fill/${(section.items[1] || section.items[0])?.id}`)}>
+                      onClick={() => navigate(`/audit/${auditId}/fill/${firstEvalItem.id}`)}>
                       <span style={{ fontSize: 14 }}>{section.name}</span>
                       <span style={{ fontSize: 13, color: '#999' }}>
                         {answered}/{evalItems.length}

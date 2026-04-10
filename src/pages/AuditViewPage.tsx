@@ -17,7 +17,8 @@ export default function AuditViewPage() {
   let totalItems = 0, totalFilled = 0, totalPassed = 0
   for (const sheet of structure.sheets) {
     for (const section of sheet.sections) {
-      for (const item of section.items) {
+      const evalItems = section.items.slice(1) // skip section header
+      for (const item of evalItems) {
         totalItems++
         const a = audit.answers[item.id]
         if (a?.value !== null && a?.value !== undefined) {
@@ -64,7 +65,8 @@ export default function AuditViewPage() {
         const issues: { text: string; comment: string; sectionName: string }[] = []
 
         for (const section of sheet.sections) {
-          for (const item of section.items) {
+          const evalItems = section.items.slice(1) // skip section header
+          for (const item of evalItems) {
             sheetTotal++
             const a = audit.answers[item.id]
             if (a?.value !== null && a?.value !== undefined) {
@@ -90,7 +92,7 @@ export default function AuditViewPage() {
             {expandedSheet === sheet.id && (
               <div style={{ padding: '4px 0' }}>
                 {(showOnlyIssues ? issues : sheet.sections.flatMap(sec =>
-                  sec.items.map(item => ({
+                  sec.items.slice(1).map(item => ({
                     text: item.text,
                     comment: audit.answers[item.id]?.comment || '',
                     sectionName: sec.name,

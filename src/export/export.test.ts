@@ -19,8 +19,11 @@ describe('generateFilledXlsx', () => {
       }]
     }
     const audit: Audit = {
-      id: 'a1', name: 'Test', type: 'АСП', author: 'x', created: '', updated: '',
-      structureVersion: 'v1', status: 'completed', synced: false,
+      id: 'a1', name: 'Test', type: 'АСП',
+      dealership: 'TestDC', city: 'Москва',
+      authorUid: 'uid1', authorName: 'Tester', authorEmail: 'test@email.com',
+      created: '', updated: '', plannedEnd: '', comment: '',
+      structureVersion: 'v1', status: 'completed',
       answers: {
         '01.1.1': { value: 1, comment: '' },
         '01.1.2': { value: 0, comment: 'Проблема' },

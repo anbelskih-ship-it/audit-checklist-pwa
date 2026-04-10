@@ -62,6 +62,7 @@ export default function ItemFillPage() {
   }
 
   const handleCommentBlur = async () => {
+    if (comment === (currentAnswer?.comment || '')) return // no change
     const val = currentAnswer?.value ?? null
     await saveAnswer(current.item.id, { value: val, comment })
   }
