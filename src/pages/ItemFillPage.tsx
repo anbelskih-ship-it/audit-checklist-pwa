@@ -1,17 +1,19 @@
-import { useState, useMemo, useEffect } from 'react'
+import { useState, useMemo, useEffect, useCallback } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useAudit } from '../hooks/useAudit'
 import { useStructure } from '../hooks/useStructure'
+import { useSwipe } from '../hooks/useSwipe'
 import ScoreToggle from '../components/ScoreToggle'
 import SearchDialog from '../components/SearchDialog'
+import ProgressBar from '../components/ProgressBar'
 import type { CheckItem, Section } from '../types'
 
 interface FillItem {
   item: CheckItem
   sheetName: string
   section: Section
-  sectionItemIndex: number   // index among evaluable items (excluding header)
-  sectionEvalCount: number   // total evaluable items in section
+  sectionItemIndex: number
+  sectionEvalCount: number
   globalIndex: number
 }
 
@@ -20,23 +22,21 @@ export default function ItemFillPage() {
   const { audit, saveAnswer } = useAudit(auditId!)
   const { structure } = useStructure(audit?.type || 'АСП')
   const [searchOpen, setSearchOpen] = useState(false)
+  const [sectionJumpOpen, setSectionJumpOpen] = useState(false)
   const [comment, setComment] = useState('')
   const navigate = useNavigate()
 
-  // Build list of EVALUABLE items (skip first item of each section — it's the section header)
   const allItems = useMemo(() => {
     if (!structure) return []
     const items: FillItem[] = []
     let idx = 0
     for (const sheet of structure.sheets) {
       for (const section of sheet.sections) {
-        const evalItems = section.items.slice(1) // skip first item (section header)
+        const evalItems = section.items.slice(1)
         let sectionIdx = 0
         for (const item of evalItems) {
           items.push({
-            item,
-            sheetName: sheet.name,
-            section,
+            item, sheetName: sheet.name, section,
             sectionItemIndex: sectionIdx++,
             sectionEvalCount: evalItems.length,
             globalIndex: idx++,
@@ -47,6 +47,29 @@ export default function ItemFillPage() {
     return items
   }, [structure])
 
+  // All sections for quick jump
+  const allSections = useMemo(() => {
+    if (!structure) return []
+    return structure.sheets.flatMap(sheet =>
+      sheet.sections
+        .filter(s => s.items.length > 1)
+        .map(section => {
+          const evalItems = section.items.slice(1)
+          const answered = evalItems.filter(i =>
+            audit?.answers[i.id]?.value !== null && audit?.answers[i.id]?.value !== undefined
+          ).length
+          return {
+            id: section.id,
+            name: section.name,
+            sheetName: sheet.name,
+            firstItemId: evalItems[0].id,
+            answered,
+            total: evalItems.length,
+          }
+        })
+    )
+  }, [structure, audit?.answers])
+
   const currentIndex = allItems.findIndex(i => i.item.id === itemId)
   const current = allItems[currentIndex]
   const currentAnswer = audit?.answers[itemId!]
@@ -55,6 +78,17 @@ export default function ItemFillPage() {
     setComment(currentAnswer?.comment || '')
   }, [itemId, currentAnswer?.comment])
 
+  const goTo = useCallback((idx: number) => {
+    if (idx >= 0 && idx < allItems.length) {
+      navigate(`/audit/${auditId}/fill/${allItems[idx].item.id}`, { replace: true })
+    }
+  }, [allItems, auditId, navigate])
+
+  const goNext = useCallback(() => goTo(currentIndex + 1), [goTo, currentIndex])
+  const goPrev = useCallback(() => goTo(currentIndex - 1), [goTo, currentIndex])
+
+  const swipe = useSwipe(goNext, goPrev)
+
   if (!current || !audit || !structure) return <div className="page center-content" style={{ color: 'var(--color-text-disabled)' }}>Загрузка...</div>
 
   const handleScore = async (value: 0 | 1) => {
@@ -62,24 +96,14 @@ export default function ItemFillPage() {
   }
 
   const handleCommentBlur = async () => {
-    if (comment === (currentAnswer?.comment || '')) return // no change
+    if (comment === (currentAnswer?.comment || '')) return
     const val = currentAnswer?.value ?? null
     await saveAnswer(current.item.id, { value: val, comment })
   }
 
-  const goTo = (idx: number) => {
-    if (idx >= 0 && idx < allItems.length) {
-      navigate(`/audit/${auditId}/fill/${allItems[idx].item.id}`, { replace: true })
-    }
-  }
-
-  // Section header = first item of section
   const sectionHeader = current.section.items[0]
-
-  // Calculate section score: sum of 1s / number of evaluable items
   const evalItems = current.section.items.slice(1)
-  let onesCount = 0
-  let answeredCount = 0
+  let onesCount = 0, answeredCount = 0
   for (const item of evalItems) {
     const a = audit.answers[item.id]
     if (a?.value !== null && a?.value !== undefined) {
@@ -87,40 +111,61 @@ export default function ItemFillPage() {
       if (a.value === 1) onesCount++
     }
   }
-  const sectionPct = evalItems.length > 0 && answeredCount > 0
-    ? Math.round((onesCount / evalItems.length) * 100)
-    : null
-
-  const progressColor = sectionPct !== null && sectionPct >= 80
-    ? 'var(--color-success)'
-    : sectionPct !== null && sectionPct >= 50
-    ? 'var(--color-warning)'
-    : 'var(--color-primary)'
+  const sectionScorePct = answeredCount > 0 ? Math.round((onesCount / answeredCount) * 100) : null
 
   return (
-    <div className="page" style={{ display: 'flex', flexDirection: 'column' }}>
+    <div className="page" style={{ display: 'flex', flexDirection: 'column' }}
+      {...swipe}
+    >
       <div className="page-header">
         <button className="btn-ghost" onClick={() => navigate(`/audit/${auditId}`)}>← Оглавление</button>
         <button className="btn-ghost" onClick={() => setSearchOpen(true)} style={{ fontSize: 20 }}>🔍</button>
       </div>
 
-      {/* Section header card */}
-      <div className="fill-section-card">
+      {/* Section header card — clickable for quick jump */}
+      <div className="fill-section-card" onClick={() => setSectionJumpOpen(!sectionJumpOpen)}>
         <div className="search-result-path">{current.sheetName}</div>
-        <div className="fill-section-name">{current.section.name}</div>
+        <div className="flex-between">
+          <div className="fill-section-name">{current.section.name}</div>
+          <span className="search-result-path">▾</span>
+        </div>
         <div className="search-result-text" style={{ color: 'var(--color-text-secondary)', marginBottom: 'var(--space-4)' }}>{sectionHeader.text}</div>
-        <div className="progress">
-          <div className="progress-bar">
-            <div className="progress-fill" style={{ width: `${sectionPct ?? 0}%`, background: progressColor }} />
+        <div className="metrics-row">
+          <div className="metrics-bar">
+            <ProgressBar filled={onesCount} total={answeredCount || 1} hideLabel />
+            {sectionScorePct !== null && (
+              <div className="metrics-score">Результат: <strong>{sectionScorePct}%</strong></div>
+            )}
           </div>
-          <span className="fill-counter" style={{ fontSize: 'var(--font-size-body)', minWidth: 40, textAlign: 'right', color: sectionPct !== null ? 'var(--color-text)' : 'var(--color-input-border)' }}>
-            {sectionPct !== null ? `${sectionPct}%` : '—'}
-          </span>
-          <span className="search-result-path" style={{ whiteSpace: 'nowrap' }}>
-            {current.sectionItemIndex + 1} из {current.sectionEvalCount}
-          </span>
+          <div className="metrics-fill">
+            <div className="metrics-fill-count">{current.sectionItemIndex + 1} из {current.sectionEvalCount}</div>
+            <div className="metrics-fill-pct">{answeredCount}/{evalItems.length}</div>
+          </div>
         </div>
       </div>
+
+      {/* Section quick jump dropdown */}
+      {sectionJumpOpen && (
+        <div className="section-jump">
+          {allSections.map(s => (
+            <div
+              key={s.id}
+              className={`section-jump-item ${s.id === current.section.id ? 'section-jump-item--active' : ''}`}
+              onClick={() => {
+                setSectionJumpOpen(false)
+                navigate(`/audit/${auditId}/fill/${s.firstItemId}`, { replace: true })
+              }}
+            >
+              <div className="flex-between">
+                <span className="search-result-text">{s.name}</span>
+                <span className={`metrics-fill-count ${s.answered === s.total && s.total > 0 ? 'text-success' : ''}`}>
+                  {s.answered}/{s.total}
+                </span>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
 
       {/* Item content */}
       <div className="flex-1">
@@ -140,8 +185,8 @@ export default function ItemFillPage() {
       </div>
 
       <div className="btn-group-bottom">
-        <button onClick={() => goTo(currentIndex - 1)} disabled={currentIndex === 0}>← Назад</button>
-        <button className="btn-primary" onClick={() => goTo(currentIndex + 1)} disabled={currentIndex === allItems.length - 1}>Далее →</button>
+        <button onClick={goPrev} disabled={currentIndex === 0}>← Назад</button>
+        <button className="btn-primary" onClick={goNext} disabled={currentIndex === allItems.length - 1}>Далее →</button>
       </div>
 
       <SearchDialog structure={structure} open={searchOpen} onClose={() => setSearchOpen(false)}
