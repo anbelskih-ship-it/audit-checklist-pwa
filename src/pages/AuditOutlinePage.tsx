@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { useAudit } from '../hooks/useAudit'
 import { useStructure } from '../hooks/useStructure'
 import ProgressBar from '../components/ProgressBar'
+import { tempColor, tempBg } from '../utils/colors'
 import { pdf } from '@react-pdf/renderer'
 import { AuditPdfReport } from '../export/pdf-report'
 import { generateFilledXlsx } from '../export/xlsx-export'
@@ -131,9 +132,9 @@ export default function AuditOutlinePage() {
                     <div className="metrics-score">Результат: <strong>{scorePct}%</strong></div>
                   )}
                 </div>
-                <div className="metrics-fill">
-                  <div className="metrics-fill-count">{filled}/{total}</div>
-                  <div className="metrics-fill-pct">{fillPct}%</div>
+                <div className="metrics-fill" style={{ background: tempBg(fillPct), color: tempColor(fillPct) }}>
+                  <div className="metrics-fill-count" style={{ color: 'inherit' }}>{filled}/{total}</div>
+                  <div className="metrics-fill-pct" style={{ color: 'inherit', opacity: 0.7 }}>{fillPct}%</div>
                 </div>
               </div>
             </div>
@@ -161,9 +162,9 @@ export default function AuditOutlinePage() {
                               <div className="metrics-score">Результат: <strong>{sScore}%</strong></div>
                             )}
                           </div>
-                          <div className="metrics-fill">
-                            <div className="metrics-fill-count">{sFilled}/{sTotal}</div>
-                            <div className="metrics-fill-pct">{sFillPct}%</div>
+                          <div className="metrics-fill" style={{ background: tempBg(sFillPct), color: tempColor(sFillPct) }}>
+                            <div className="metrics-fill-count" style={{ color: 'inherit' }}>{sFilled}/{sTotal}</div>
+                            <div className="metrics-fill-pct" style={{ color: 'inherit', opacity: 0.7 }}>{sFillPct}%</div>
                           </div>
                         </div>
                       </div>
