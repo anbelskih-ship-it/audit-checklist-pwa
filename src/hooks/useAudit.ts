@@ -16,6 +16,15 @@ export function useAudit(auditId: string) {
   }, [auditId])
 
   const saveAnswer = useCallback(async (itemId: string, answer: Answer) => {
+    // Optimistic update — мгновенный отклик UI
+    setAudit(prev => {
+      if (!prev) return prev
+      return {
+        ...prev,
+        answers: { ...prev.answers, [itemId]: answer },
+        updated: new Date().toISOString(),
+      }
+    })
     await dbSaveAnswer(auditId, itemId, answer)
   }, [auditId])
 
