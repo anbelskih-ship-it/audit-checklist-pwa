@@ -8,12 +8,17 @@ import { AuditPdfReport } from '../export/pdf-report'
 import { generateFilledXlsx } from '../export/xlsx-export'
 import { downloadFile } from '../drive/drive-api'
 import * as XLSX from 'xlsx'
+import type { Section } from '../types'
+
+type ViewMode = 'edit' | 'review'
 
 export default function AuditOutlinePage() {
   const { auditId } = useParams<{ auditId: string }>()
   const { audit, loading: auditLoading } = useAudit(auditId!)
   const { structure, loading: structLoading } = useStructure(audit?.type || 'АСП')
   const [expandedSheet, setExpandedSheet] = useState<string | null>(null)
+  const [expandedSection, setExpandedSection] = useState<string | null>(null)
+  const [viewMode, setViewMode] = useState<ViewMode>('edit')
   const navigate = useNavigate()
 
   const handleExportXlsx = async () => {
@@ -53,13 +58,31 @@ export default function AuditOutlinePage() {
     if (!sheet) return { filled: 0, total: 0 }
     let filled = 0, total = 0
     for (const section of sheet.sections) {
-      const evalItems = section.items.slice(1) // skip section header
+      const evalItems = section.items.slice(1)
       for (const item of evalItems) {
         total++
         if (audit.answers[item.id]?.value !== null && audit.answers[item.id]?.value !== undefined) filled++
       }
     }
     return { filled, total }
+  }
+
+  const getSectionProgress = (section: Section) => {
+    const evalItems = section.items.slice(1)
+    let filled = 0
+    for (const item of evalItems) {
+      if (audit.answers[item.id]?.value !== null && audit.answers[item.id]?.value !== undefined) filled++
+    }
+    return { filled, total: evalItems.length }
+  }
+
+  const handleSectionClick = (section: Section) => {
+    if (viewMode === 'review') {
+      setExpandedSection(expandedSection === section.id ? null : section.id)
+    } else {
+      const firstEvalItem = section.items.slice(1)[0]
+      if (firstEvalItem) navigate(`/audit/${auditId}/fill/${firstEvalItem.id}`)
+    }
   }
 
   return (
@@ -69,8 +92,24 @@ export default function AuditOutlinePage() {
       </div>
 
       <h1 className="page-title">{audit.name}</h1>
-      <div className="card-subtitle mb-md">
+      <div className="card-subtitle mb-sm">
         {audit.type} · {audit.status === 'completed' ? 'Завершён' : 'Черновик'}
+      </div>
+
+      {/* Mode toggle */}
+      <div className="filter-row">
+        <button
+          className={viewMode === 'edit' ? 'btn-primary' : ''}
+          onClick={() => { setViewMode('edit'); setExpandedSection(null) }}
+        >
+          Заполнение
+        </button>
+        <button
+          className={viewMode === 'review' ? 'btn-primary' : ''}
+          onClick={() => setViewMode('review')}
+        >
+          Просмотр
+        </button>
       </div>
 
       {structure.sheets.map(sheet => {
@@ -89,16 +128,48 @@ export default function AuditOutlinePage() {
               <div className="mb-sm">
                 {sheet.sections.map(section => {
                   const evalItems = section.items.slice(1)
-                  const answered = evalItems.filter(i => audit.answers[i.id]?.value !== null && audit.answers[i.id]?.value !== undefined).length
-                  const firstEvalItem = evalItems[0]
-                  if (!firstEvalItem) return null // skip sections with only a header
+                  if (!evalItems.length) return null
+                  const { filled: sFilled, total: sTotal } = getSectionProgress(section)
+                  const isSecExpanded = viewMode === 'review' && expandedSection === section.id
+
                   return (
-                    <div key={section.id} className="section-item"
-                      onClick={() => navigate(`/audit/${auditId}/fill/${firstEvalItem.id}`)}>
-                      <span className="search-result-text">{section.name}</span>
-                      <span className="search-result-path">
-                        {answered}/{evalItems.length}
-                      </span>
+                    <div key={section.id}>
+                      <div
+                        className="section-item"
+                        onClick={() => handleSectionClick(section)}
+                      >
+                        <div className="flex-1" style={{ marginRight: 'var(--space-4)' }}>
+                          <div className="search-result-text">{section.name}</div>
+                          <ProgressBar filled={sFilled} total={sTotal} />
+                        </div>
+                        <span className="search-result-path" style={{ whiteSpace: 'nowrap' }}>
+                          {sFilled}/{sTotal}
+                        </span>
+                      </div>
+
+                      {/* Review mode: expanded section with questions */}
+                      {isSecExpanded && (
+                        <div className="review-items">
+                          {evalItems.map(item => {
+                            const answer = audit.answers[item.id]
+                            const hasValue = answer?.value !== null && answer?.value !== undefined
+                            return (
+                              <div key={item.id} className="review-item">
+                                <div className="review-item-row">
+                                  {hasValue && (
+                                    <span className={`review-dot ${answer!.value === 1 ? 'review-dot--yes' : 'review-dot--no'}`} />
+                                  )}
+                                  {!hasValue && <span className="review-dot" />}
+                                  <span className="review-item-text">{item.text}</span>
+                                </div>
+                                {answer?.comment && (
+                                  <div className="review-item-comment">{answer.comment}</div>
+                                )}
+                              </div>
+                            )
+                          })}
+                        </div>
+                      )}
                     </div>
                   )
                 })}

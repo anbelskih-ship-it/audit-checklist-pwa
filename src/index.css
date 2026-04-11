@@ -165,6 +165,8 @@ body {
   font-size: var(--font-size-base);
   line-height: 1.5;
   color: var(--color-text);
+  -webkit-user-select: none;
+  user-select: none;
   background: var(--color-bg);
   padding-bottom: env(safe-area-inset-bottom, 0);
 }
@@ -319,6 +321,8 @@ input, textarea, select {
   color: var(--color-text);
   -webkit-appearance: none;
   appearance: none;
+  -webkit-user-select: text;
+  user-select: text;
 }
 
 input:focus, textarea:focus, select:focus {
@@ -888,4 +892,56 @@ select {
 
 .textarea-sm {
   min-height: 60px;
+}
+
+/* === Review mode === */
+.review-items {
+  padding: 0 var(--space-4);
+  margin-bottom: var(--space-4);
+}
+
+.review-item {
+  padding: var(--space-3) var(--space-4);
+  border-bottom: 1px solid var(--color-border-light);
+}
+
+.review-item:last-child {
+  border-bottom: none;
+}
+
+.review-item-row {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+}
+
+.review-dot {
+  width: 8px;
+  height: 8px;
+  min-width: 8px;
+  border-radius: 50%;
+  background: var(--color-border);
+  margin-top: 5px;
+}
+
+.review-dot--yes {
+  background: var(--color-success);
+}
+
+.review-dot--no {
+  background: var(--color-danger);
+}
+
+.review-item-text {
+  font-size: var(--font-size-caption);
+  color: var(--color-text-secondary);
+  line-height: 1.4;
+}
+
+.review-item-comment {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-hint);
+  font-style: italic;
+  margin-top: var(--space-1);
+  padding-left: 17px;
 }
