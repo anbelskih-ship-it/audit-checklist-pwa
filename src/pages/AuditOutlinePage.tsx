@@ -53,27 +53,29 @@ export default function AuditOutlinePage() {
   if (auditLoading || structLoading) return <div className="page center-content" style={{ color: 'var(--color-text-disabled)' }}>Загрузка...</div>
   if (!audit || !structure) return <div className="page center-content" style={{ color: 'var(--color-text-disabled)' }}>Аудит не найден</div>
 
-  const getSheetProgress = (sheetId: string) => {
-    const sheet = structure.sheets.find(s => s.id === sheetId)
-    if (!sheet) return { filled: 0, total: 0 }
-    let filled = 0, total = 0
-    for (const section of sheet.sections) {
-      const evalItems = section.items.slice(1)
-      for (const item of evalItems) {
-        total++
-        if (audit.answers[item.id]?.value !== null && audit.answers[item.id]?.value !== undefined) filled++
+  const calcMetrics = (items: { id: string }[]) => {
+    let filled = 0, yesCount = 0
+    for (const item of items) {
+      const a = audit.answers[item.id]
+      if (a?.value !== null && a?.value !== undefined) {
+        filled++
+        if (a.value === 1) yesCount++
       }
     }
-    return { filled, total }
+    const total = items.length
+    const scorePct = filled > 0 ? Math.round((yesCount / filled) * 100) : null
+    return { filled, total, yesCount, scorePct }
   }
 
-  const getSectionProgress = (section: Section) => {
-    const evalItems = section.items.slice(1)
-    let filled = 0
-    for (const item of evalItems) {
-      if (audit.answers[item.id]?.value !== null && audit.answers[item.id]?.value !== undefined) filled++
-    }
-    return { filled, total: evalItems.length }
+  const getSheetMetrics = (sheetId: string) => {
+    const sheet = structure.sheets.find(s => s.id === sheetId)
+    if (!sheet) return { filled: 0, total: 0, yesCount: 0, scorePct: null }
+    const allItems = sheet.sections.flatMap(s => s.items.slice(1))
+    return calcMetrics(allItems)
+  }
+
+  const getSectionMetrics = (section: Section) => {
+    return calcMetrics(section.items.slice(1))
   }
 
   const handleSectionClick = (section: Section) => {
@@ -113,7 +115,7 @@ export default function AuditOutlinePage() {
       </div>
 
       {structure.sheets.map(sheet => {
-        const { filled, total } = getSheetProgress(sheet.id)
+        const { filled, total, scorePct } = getSheetMetrics(sheet.id)
         const isExpanded = expandedSheet === sheet.id
 
         return (
@@ -122,6 +124,9 @@ export default function AuditOutlinePage() {
               <div className="card-title">{sheet.name}</div>
               {sheet.estimatedTime && <div className="card-subtitle">{sheet.estimatedTime}</div>}
               <ProgressBar filled={filled} total={total} />
+              {scorePct !== null && (
+                <div className="card-score">Результат: <strong>{scorePct}%</strong></div>
+              )}
             </div>
 
             {isExpanded && (
@@ -129,22 +134,29 @@ export default function AuditOutlinePage() {
                 {sheet.sections.map(section => {
                   const evalItems = section.items.slice(1)
                   if (!evalItems.length) return null
-                  const { filled: sFilled, total: sTotal } = getSectionProgress(section)
+                  const { filled: sFilled, total: sTotal, scorePct: sScore } = getSectionMetrics(section)
                   const isSecExpanded = viewMode === 'review' && expandedSection === section.id
 
                   return (
                     <div key={section.id}>
                       <div
-                        className="section-item"
+                        className="section-item section-item--col"
                         onClick={() => handleSectionClick(section)}
                       >
-                        <div className="flex-1" style={{ marginRight: 'var(--space-4)' }}>
-                          <div className="search-result-text">{section.name}</div>
+                        <div className="flex-between" style={{ width: '100%' }}>
+                          <span className="search-result-text">{section.name}</span>
+                          <span className="search-result-path" style={{ whiteSpace: 'nowrap' }}>
+                            {sFilled}/{sTotal}
+                          </span>
+                        </div>
+                        <div style={{ width: '100%' }}>
                           <ProgressBar filled={sFilled} total={sTotal} />
                         </div>
-                        <span className="search-result-path" style={{ whiteSpace: 'nowrap' }}>
-                          {sFilled}/{sTotal}
-                        </span>
+                        {sScore !== null && (
+                          <div className="card-score" style={{ width: '100%' }}>
+                            Результат: <strong>{sScore}%</strong>
+                          </div>
+                        )}
                       </div>
 
                       {/* Review mode: expanded section with questions */}
