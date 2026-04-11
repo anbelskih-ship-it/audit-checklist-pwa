@@ -59,10 +59,11 @@ export async function listAudits(): Promise<Audit[]> {
 
 export async function saveAnswer(auditId: string, itemId: string, answer: Answer): Promise<void> {
   const ref = doc(db, AUDITS, auditId)
-  await updateDoc(ref, {
-    [`answers.${itemId}`]: answer,
+  // Use setDoc+merge to avoid Firestore interpreting dots in itemId as nested paths
+  await setDoc(ref, {
+    answers: { [itemId]: answer },
     updated: new Date().toISOString(),
-  })
+  }, { merge: true })
 }
 
 export async function setAuditStatus(auditId: string, status: 'draft' | 'completed'): Promise<void> {
