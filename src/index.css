@@ -309,6 +309,41 @@ button:disabled {
   margin-bottom: var(--space-3);
 }
 
+/* === Metrics layout === */
+.metrics-row {
+  display: flex;
+  gap: var(--space-4);
+  align-items: flex-end;
+}
+
+.metrics-bar {
+  flex: 1;
+  min-width: 0;
+}
+
+.metrics-fill {
+  text-align: right;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.metrics-fill-count {
+  font-size: var(--font-size-caption);
+  color: var(--color-text-muted);
+  font-weight: 500;
+}
+
+.metrics-fill-pct {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-disabled);
+}
+
+.metrics-score {
+  font-size: var(--font-size-caption);
+  color: var(--color-text);
+  margin-top: var(--space-1);
+}
+
 .card-score {
   font-size: var(--font-size-sm);
   color: var(--color-text-hint);

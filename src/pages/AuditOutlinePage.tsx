@@ -115,7 +115,8 @@ export default function AuditOutlinePage() {
       </div>
 
       {structure.sheets.map(sheet => {
-        const { filled, total, scorePct } = getSheetMetrics(sheet.id)
+        const { filled, total, yesCount, scorePct } = getSheetMetrics(sheet.id)
+        const fillPct = total > 0 ? Math.round((filled / total) * 100) : 0
         const isExpanded = expandedSheet === sheet.id
 
         return (
@@ -123,10 +124,18 @@ export default function AuditOutlinePage() {
             <div className="card" onClick={() => setExpandedSheet(isExpanded ? null : sheet.id)}>
               <div className="card-title">{sheet.name}</div>
               {sheet.estimatedTime && <div className="card-subtitle">{sheet.estimatedTime}</div>}
-              <ProgressBar filled={filled} total={total} />
-              {scorePct !== null && (
-                <div className="card-score">Результат: <strong>{scorePct}%</strong></div>
-              )}
+              <div className="metrics-row">
+                <div className="metrics-bar">
+                  <ProgressBar filled={yesCount} total={filled || 1} />
+                  {scorePct !== null && (
+                    <div className="metrics-score">Результат: <strong>{scorePct}%</strong></div>
+                  )}
+                </div>
+                <div className="metrics-fill">
+                  <div className="metrics-fill-count">{filled}/{total}</div>
+                  <div className="metrics-fill-pct">{fillPct}%</div>
+                </div>
+              </div>
             </div>
 
             {isExpanded && (
@@ -134,7 +143,8 @@ export default function AuditOutlinePage() {
                 {sheet.sections.map(section => {
                   const evalItems = section.items.slice(1)
                   if (!evalItems.length) return null
-                  const { filled: sFilled, total: sTotal, scorePct: sScore } = getSectionMetrics(section)
+                  const { filled: sFilled, total: sTotal, yesCount: sYes, scorePct: sScore } = getSectionMetrics(section)
+                  const sFillPct = sTotal > 0 ? Math.round((sFilled / sTotal) * 100) : 0
                   const isSecExpanded = viewMode === 'review' && expandedSection === section.id
 
                   return (
@@ -143,20 +153,19 @@ export default function AuditOutlinePage() {
                         className="section-item section-item--col"
                         onClick={() => handleSectionClick(section)}
                       >
-                        <div className="flex-between" style={{ width: '100%' }}>
-                          <span className="search-result-text">{section.name}</span>
-                          <span className="search-result-path" style={{ whiteSpace: 'nowrap' }}>
-                            {sFilled}/{sTotal}
-                          </span>
-                        </div>
-                        <div style={{ width: '100%' }}>
-                          <ProgressBar filled={sFilled} total={sTotal} />
-                        </div>
-                        {sScore !== null && (
-                          <div className="card-score" style={{ width: '100%' }}>
-                            Результат: <strong>{sScore}%</strong>
+                        <div className="metrics-row">
+                          <div className="metrics-bar">
+                            <div className="search-result-text">{section.name}</div>
+                            <ProgressBar filled={sYes} total={sFilled || 1} />
+                            {sScore !== null && (
+                              <div className="metrics-score">Результат: <strong>{sScore}%</strong></div>
+                            )}
                           </div>
-                        )}
+                          <div className="metrics-fill">
+                            <div className="metrics-fill-count">{sFilled}/{sTotal}</div>
+                            <div className="metrics-fill-pct">{sFillPct}%</div>
+                          </div>
+                        </div>
                       </div>
 
                       {/* Review mode: expanded section with questions */}
