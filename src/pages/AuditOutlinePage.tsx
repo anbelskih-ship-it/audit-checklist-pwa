@@ -126,7 +126,7 @@ export default function AuditOutlinePage() {
               {sheet.estimatedTime && <div className="card-subtitle">{sheet.estimatedTime}</div>}
               <div className="metrics-row">
                 <div className="metrics-bar">
-                  <ProgressBar filled={yesCount} total={filled || 1} />
+                  <ProgressBar filled={yesCount} total={filled || 1} hideLabel />
                   {scorePct !== null && (
                     <div className="metrics-score">Результат: <strong>{scorePct}%</strong></div>
                   )}
@@ -156,7 +156,7 @@ export default function AuditOutlinePage() {
                         <div className="metrics-row">
                           <div className="metrics-bar">
                             <div className="search-result-text">{section.name}</div>
-                            <ProgressBar filled={sYes} total={sFilled || 1} />
+                            <ProgressBar filled={sYes} total={sFilled || 1} hideLabel />
                             {sScore !== null && (
                               <div className="metrics-score">Результат: <strong>{sScore}%</strong></div>
                             )}

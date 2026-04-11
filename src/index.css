@@ -322,20 +322,24 @@ button:disabled {
 }
 
 .metrics-fill {
-  text-align: right;
+  text-align: center;
   white-space: nowrap;
   flex-shrink: 0;
+  background: var(--color-border-light);
+  border-radius: var(--radius-md);
+  padding: var(--space-2) var(--space-4);
+  min-width: 48px;
 }
 
 .metrics-fill-count {
   font-size: var(--font-size-caption);
-  color: var(--color-text-muted);
-  font-weight: 500;
+  color: var(--color-text-secondary);
+  font-weight: 600;
 }
 
 .metrics-fill-pct {
   font-size: var(--font-size-xs);
-  color: var(--color-text-disabled);
+  color: var(--color-text-muted);
 }
 
 .metrics-score {
