@@ -309,6 +309,12 @@ button:disabled {
   margin-bottom: var(--space-3);
 }
 
+.card-score {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-hint);
+  margin-top: var(--space-2);
+}
+
 /* === Form elements === */
 input, textarea, select {
   width: 100%;

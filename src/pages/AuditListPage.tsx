@@ -4,14 +4,25 @@ import { listAudits, createAudit } from '../db/audits'
 import { getStructure } from '../db/structures'
 import { useAuth } from '../hooks/useAuth'
 import { useAppUser } from '../App'
-import type { Audit } from '../types'
+import type { Audit, ChecklistStructure } from '../types'
 import ProgressBar from '../components/ProgressBar'
 import ThemeToggle from '../components/ThemeToggle'
+
+function countTotalItems(structure: ChecklistStructure): number {
+  let total = 0
+  for (const sheet of structure.sheets) {
+    for (const section of sheet.sections) {
+      total += section.items.length - 1 // skip section header
+    }
+  }
+  return total
+}
 
 export default function AuditListPage() {
   const { logout } = useAuth()
   const appUser = useAppUser()
   const [audits, setAudits] = useState<Audit[]>([])
+  const [structureTotals, setStructureTotals] = useState<Record<string, number>>({})
   const [filter, setFilter] = useState<'all' | 'my'>('all')
   const [showNew, setShowNew] = useState(false)
   const [newType, setNewType] = useState<'АСП' | 'НА'>('АСП')
@@ -24,6 +35,13 @@ export default function AuditListPage() {
 
   useEffect(() => {
     listAudits().then(setAudits)
+    // Load structure totals
+    Promise.all([getStructure('АСП'), getStructure('НА')]).then(([asp, na]) => {
+      const totals: Record<string, number> = {}
+      if (asp) totals['АСП'] = countTotalItems(asp)
+      if (na) totals['НА'] = countTotalItems(na)
+      setStructureTotals(totals)
+    })
   }, [])
 
   const filtered = filter === 'my' && appUser
@@ -33,11 +51,14 @@ export default function AuditListPage() {
   const drafts = filtered.filter(a => a.status === 'draft')
   const completed = filtered.filter(a => a.status === 'completed')
 
-  const countProgress = (audit: Audit) => {
+  const getMetrics = (audit: Audit) => {
     const answers = Object.values(audit.answers)
-    const filled = answers.filter(a => a.value !== null).length
-    const total = answers.length
-    return { filled, total: Math.max(total, 1) }
+    const answered = answers.filter(a => a.value !== null && a.value !== undefined).length
+    const yesCount = answers.filter(a => a.value === 1).length
+    const totalItems = structureTotals[audit.type] || Math.max(answered, 1)
+    const fillPct = totalItems > 0 ? Math.round((answered / totalItems) * 100) : 0
+    const scorePct = answered > 0 ? Math.round((yesCount / answered) * 100) : null
+    return { answered, totalItems, fillPct, scorePct }
   }
 
   const handleCreate = async () => {
@@ -61,20 +82,24 @@ export default function AuditListPage() {
   }
 
   const renderCard = (a: Audit) => {
-    const { filled, total } = countProgress(a)
-    const pct = total > 0 ? Math.round((filled / total) * 100) : 0
+    const { answered, totalItems, fillPct, scorePct } = getMetrics(a)
     return (
       <div key={a.id} className="card" onClick={() => navigate(`/audit/${a.id}`)}>
         <div className="flex-between mb-sm">
           <div className="card-title">{a.name}</div>
           <span className={`badge ${a.status === 'completed' ? 'badge--success' : 'badge--default'}`}>
-            {a.status === 'completed' ? 'Завершён' : `${pct}%`}
+            {a.status === 'completed' ? 'Завершён' : `${fillPct}%`}
           </span>
         </div>
         <div className="card-subtitle">
           {a.city && `${a.city} · `}{a.authorName || a.authorEmail} · {new Date(a.updated).toLocaleDateString('ru')}
         </div>
-        <ProgressBar filled={filled} total={total} />
+        <ProgressBar filled={answered} total={totalItems} />
+        {scorePct !== null && (
+          <div className="card-score">
+            Результат: <strong>{scorePct}%</strong>
+          </div>
+        )}
       </div>
     )
   }
