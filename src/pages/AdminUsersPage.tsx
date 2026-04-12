@@ -37,7 +37,7 @@ export default function AdminUsersPage() {
     load()
   }
 
-  if (loading) return <div className="page center-content" style={{ color: 'var(--color-text-disabled)' }}>Загрузка...</div>
+  if (loading) return <div className="page center-content text-disabled">Загрузка...</div>
 
   return (
     <div className="page">

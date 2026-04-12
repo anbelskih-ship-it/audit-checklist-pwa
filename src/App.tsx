@@ -67,15 +67,13 @@ export default function App() {
 
   useEffect(() => {
     if (navigator.onLine) {
-      syncStructures().then(({ updated }) => {
-        if (updated.length > 0) console.log('Synced structures:', updated)
-      })
+      syncStructures()
     }
   }, [])
 
   if (loading || roleLoading) {
     return (
-      <div className="center-screen" style={{ color: 'var(--color-text-disabled)' }}>
+      <div className="center-screen text-disabled">
         Загрузка...
       </div>
     )

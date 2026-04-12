@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { useAudit } from '../hooks/useAudit'
 import { useStructure } from '../hooks/useStructure'
 import ProgressBar from '../components/ProgressBar'
+import { calcMetrics } from '../utils/metrics'
 
 export default function AuditViewPage() {
   const { auditId } = useParams<{ auditId: string }>()
@@ -12,22 +13,10 @@ export default function AuditViewPage() {
   const [expandedSheet, setExpandedSheet] = useState<string | null>(null)
   const navigate = useNavigate()
 
-  if (!audit || !structure) return <div className="page center-content" style={{ color: 'var(--color-text-disabled)' }}>Загрузка...</div>
+  if (!audit || !structure) return <div className="page center-content text-disabled">Загрузка...</div>
 
-  let totalItems = 0, totalFilled = 0, totalPassed = 0
-  for (const sheet of structure.sheets) {
-    for (const section of sheet.sections) {
-      const evalItems = section.items.slice(1) // skip section header
-      for (const item of evalItems) {
-        totalItems++
-        const a = audit.answers[item.id]
-        if (a?.value !== null && a?.value !== undefined) {
-          totalFilled++
-          if (a.value === 1) totalPassed++
-        }
-      }
-    }
-  }
+  const allEvalItems = structure.sheets.flatMap(sh => sh.sections.flatMap(s => s.items.slice(1)))
+  const { filled: totalFilled, total: totalItems, yesCount: totalPassed } = calcMetrics(allEvalItems, audit.answers)
 
   return (
     <div className="page">

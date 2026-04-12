@@ -5,7 +5,7 @@ export default function LoginPage() {
 
   if (loading) {
     return (
-      <div className="center-screen" style={{ color: 'var(--color-text-disabled)' }}>
+      <div className="center-screen text-disabled">
         Загрузка...
       </div>
     )

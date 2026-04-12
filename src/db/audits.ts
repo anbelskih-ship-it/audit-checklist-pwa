@@ -1,5 +1,5 @@
 import {
-  collection, doc, setDoc, getDoc, getDocs, updateDoc,
+  collection, doc, setDoc, getDocs,
   query, orderBy, deleteDoc,
 } from 'firebase/firestore'
 import { db } from '../firebase'
@@ -46,11 +46,6 @@ export async function createAudit(params: CreateAuditParams): Promise<Audit> {
   return audit
 }
 
-export async function getAudit(id: string): Promise<Audit | undefined> {
-  const snap = await getDoc(doc(db, AUDITS, id))
-  return snap.exists() ? (snap.data() as Audit) : undefined
-}
-
 export async function listAudits(): Promise<Audit[]> {
   const q = query(collection(db, AUDITS), orderBy('updated', 'desc'))
   const snap = await getDocs(q)
@@ -64,10 +59,6 @@ export async function saveAnswer(auditId: string, itemId: string, answer: Answer
     answers: { [itemId]: answer },
     updated: new Date().toISOString(),
   }, { merge: true })
-}
-
-export async function setAuditStatus(auditId: string, status: 'draft' | 'completed'): Promise<void> {
-  await updateDoc(doc(db, AUDITS, auditId), { status, updated: new Date().toISOString() })
 }
 
 export async function deleteAudit(auditId: string): Promise<void> {

@@ -6,6 +6,7 @@ import { useSwipe } from '../hooks/useSwipe'
 import ScoreToggle from '../components/ScoreToggle'
 import SearchDialog from '../components/SearchDialog'
 import ProgressBar from '../components/ProgressBar'
+import { calcMetrics } from '../utils/metrics'
 import type { CheckItem, Section } from '../types'
 
 interface FillItem {
@@ -89,7 +90,7 @@ export default function ItemFillPage() {
 
   const swipe = useSwipe(goNext, goPrev)
 
-  if (!current || !audit || !structure) return <div className="page center-content" style={{ color: 'var(--color-text-disabled)' }}>Загрузка...</div>
+  if (!current || !audit || !structure) return <div className="page center-content text-disabled">Загрузка...</div>
 
   const handleScore = async (value: 0 | 1) => {
     await saveAnswer(current.item.id, { value, comment })
@@ -103,15 +104,7 @@ export default function ItemFillPage() {
 
   const sectionHeader = current.section.items[0]
   const evalItems = current.section.items.slice(1)
-  let onesCount = 0, answeredCount = 0
-  for (const item of evalItems) {
-    const a = audit.answers[item.id]
-    if (a?.value !== null && a?.value !== undefined) {
-      answeredCount++
-      if (a.value === 1) onesCount++
-    }
-  }
-  const sectionScorePct = answeredCount > 0 ? Math.round((onesCount / answeredCount) * 100) : null
+  const { filled: answeredCount, yesCount: onesCount, scorePct: sectionScorePct } = calcMetrics(evalItems, audit.answers)
 
   // Sheet navigation: find current sheet index + first items of prev/next sheets
   const currentSheetIndex = structure.sheets.findIndex(s =>

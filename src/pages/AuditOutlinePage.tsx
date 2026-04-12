@@ -4,6 +4,7 @@ import { useAudit } from '../hooks/useAudit'
 import { useStructure } from '../hooks/useStructure'
 import ProgressBar from '../components/ProgressBar'
 import { fillBadgeColor, fillBadgeBg } from '../utils/colors'
+import { calcMetrics } from '../utils/metrics'
 import { pdf } from '@react-pdf/renderer'
 import { AuditPdfReport } from '../export/pdf-report'
 import { generateFilledXlsx } from '../export/xlsx-export'
@@ -51,32 +52,18 @@ export default function AuditOutlinePage() {
     URL.revokeObjectURL(url)
   }
 
-  if (auditLoading || structLoading) return <div className="page center-content" style={{ color: 'var(--color-text-disabled)' }}>Загрузка...</div>
-  if (!audit || !structure) return <div className="page center-content" style={{ color: 'var(--color-text-disabled)' }}>Аудит не найден</div>
-
-  const calcMetrics = (items: { id: string }[]) => {
-    let filled = 0, yesCount = 0
-    for (const item of items) {
-      const a = audit.answers[item.id]
-      if (a?.value !== null && a?.value !== undefined) {
-        filled++
-        if (a.value === 1) yesCount++
-      }
-    }
-    const total = items.length
-    const scorePct = filled > 0 ? Math.round((yesCount / filled) * 100) : null
-    return { filled, total, yesCount, scorePct }
-  }
+  if (auditLoading || structLoading) return <div className="page center-content text-disabled">Загрузка...</div>
+  if (!audit || !structure) return <div className="page center-content text-disabled">Аудит не найден</div>
 
   const getSheetMetrics = (sheetId: string) => {
     const sheet = structure.sheets.find(s => s.id === sheetId)
     if (!sheet) return { filled: 0, total: 0, yesCount: 0, scorePct: null }
     const allItems = sheet.sections.flatMap(s => s.items.slice(1))
-    return calcMetrics(allItems)
+    return calcMetrics(allItems, audit.answers)
   }
 
   const getSectionMetrics = (section: Section) => {
-    return calcMetrics(section.items.slice(1))
+    return calcMetrics(section.items.slice(1), audit.answers)
   }
 
   const handleSectionClick = (section: Section) => {
