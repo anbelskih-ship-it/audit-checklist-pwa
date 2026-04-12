@@ -861,6 +861,51 @@ select {
   margin-bottom: var(--space-2);
 }
 
+/* Fill page progress row */
+.fill-progress-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+}
+
+.fill-progress-left {
+  flex: 1;
+  min-width: 0;
+}
+
+.fill-progress-left .progress {
+  margin-top: 0;
+}
+
+.fill-score-label {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+  margin-top: var(--space-1);
+}
+
+.fill-progress-badge {
+  text-align: center;
+  white-space: nowrap;
+  flex-shrink: 0;
+  background: var(--color-border-light);
+  border-radius: var(--radius-md);
+  padding: var(--space-3) var(--space-4);
+  min-width: 44px;
+}
+
+.fill-progress-badge-count {
+  font-size: var(--font-size-body-sm);
+  font-weight: 600;
+  line-height: 1.2;
+  color: var(--color-text);
+}
+
+.fill-progress-badge-sub {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
+  line-height: 1.2;
+}
+
 .fill-counter {
   font-size: var(--font-size-body-lg);
   font-weight: 700;

@@ -129,17 +129,17 @@ export default function ItemFillPage() {
           <div className="fill-section-name">{current.section.name}</div>
           <span className="search-result-path">▾</span>
         </div>
-        <div className="search-result-text" style={{ color: 'var(--color-text-secondary)', marginBottom: 'var(--space-4)' }}>{sectionHeader.text}</div>
-        <div className="metrics-row">
-          <div className="metrics-bar">
+        <div className="search-result-text" style={{ color: 'var(--color-text-secondary)', marginBottom: 'var(--space-3)' }}>{sectionHeader.text}</div>
+        <div className="fill-progress-row">
+          <div className="fill-progress-left">
             <ProgressBar filled={onesCount} total={answeredCount || 1} hideLabel />
-            {sectionScorePct !== null && (
-              <div className="metrics-score">Результат: <strong>{sectionScorePct}%</strong></div>
+            {sectionScorePct !== null && sectionScorePct > 0 && (
+              <div className="fill-score-label">Результат: <strong>{sectionScorePct}%</strong></div>
             )}
           </div>
-          <div className="metrics-fill">
-            <div className="metrics-fill-count">{current.sectionItemIndex + 1} из {current.sectionEvalCount}</div>
-            <div className="metrics-fill-pct">{answeredCount}/{evalItems.length}</div>
+          <div className="fill-progress-badge">
+            <div className="fill-progress-badge-count">{current.sectionItemIndex + 1} из {current.sectionEvalCount}</div>
+            <div className="fill-progress-badge-sub">{answeredCount}/{evalItems.length}</div>
           </div>
         </div>
       </div>
