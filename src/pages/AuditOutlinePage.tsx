@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { useAudit } from '../hooks/useAudit'
 import { useStructure } from '../hooks/useStructure'
 import ProgressBar from '../components/ProgressBar'
-import { tempColor, tempBg } from '../utils/colors'
+import { fillBadgeColor, fillBadgeBg } from '../utils/colors'
 import { pdf } from '@react-pdf/renderer'
 import { AuditPdfReport } from '../export/pdf-report'
 import { generateFilledXlsx } from '../export/xlsx-export'
@@ -123,19 +123,21 @@ export default function AuditOutlinePage() {
         return (
           <div key={sheet.id}>
             <div className="card" onClick={() => setExpandedSheet(isExpanded ? null : sheet.id)}>
-              <div className="card-title">{sheet.name}</div>
-              {sheet.estimatedTime && <div className="card-subtitle">{sheet.estimatedTime}</div>}
-              <div className="metrics-row">
-                <div className="metrics-bar">
-                  <ProgressBar filled={yesCount} total={filled || 1} hideLabel />
-                  {scorePct !== null && (
-                    <div className="metrics-score">Результат: <strong>{scorePct}%</strong></div>
-                  )}
+              <div className="card-header-row">
+                <div className="card-header-left">
+                  <div className="card-title">{sheet.name}</div>
+                  {sheet.estimatedTime && <div className="card-subtitle">{sheet.estimatedTime}</div>}
                 </div>
-                <div className="metrics-fill" style={{ background: tempBg(fillPct), color: tempColor(fillPct) }}>
+                <div className="metrics-fill" style={{ background: fillBadgeBg(fillPct), color: fillBadgeColor(fillPct) }}>
                   <div className="metrics-fill-count" style={{ color: 'inherit' }}>{filled}/{total}</div>
                   <div className="metrics-fill-pct" style={{ color: 'inherit', opacity: 0.7 }}>{fillPct}%</div>
                 </div>
+              </div>
+              <div className="metrics-bar">
+                <ProgressBar filled={yesCount} total={filled || 1} hideLabel />
+                {scorePct !== null && (
+                  <div className="metrics-score">Результат: <strong>{scorePct}%</strong></div>
+                )}
               </div>
             </div>
 
@@ -154,18 +156,20 @@ export default function AuditOutlinePage() {
                         className="section-item section-item--col"
                         onClick={() => handleSectionClick(section)}
                       >
-                        <div className="metrics-row">
-                          <div className="metrics-bar">
+                        <div className="card-header-row">
+                          <div className="card-header-left">
                             <div className="search-result-text">{section.name}</div>
-                            <ProgressBar filled={sYes} total={sFilled || 1} hideLabel />
-                            {sScore !== null && (
-                              <div className="metrics-score">Результат: <strong>{sScore}%</strong></div>
-                            )}
                           </div>
-                          <div className="metrics-fill" style={{ background: tempBg(sFillPct), color: tempColor(sFillPct) }}>
+                          <div className="metrics-fill" style={{ background: fillBadgeBg(sFillPct), color: fillBadgeColor(sFillPct) }}>
                             <div className="metrics-fill-count" style={{ color: 'inherit' }}>{sFilled}/{sTotal}</div>
                             <div className="metrics-fill-pct" style={{ color: 'inherit', opacity: 0.7 }}>{sFillPct}%</div>
                           </div>
+                        </div>
+                        <div className="metrics-bar">
+                          <ProgressBar filled={sYes} total={sFilled || 1} hideLabel />
+                          {sScore !== null && (
+                            <div className="metrics-score">Результат: <strong>{sScore}%</strong></div>
+                          )}
                         </div>
                       </div>
 
