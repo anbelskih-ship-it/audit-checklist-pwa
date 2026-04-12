@@ -21,13 +21,30 @@ function excelLerp(pct: number): [number, number, number] {
   return [r, g, b]
 }
 
-/** Temperature text color for score bar — darker version for readability */
+/**
+ * Classic traffic-light gradient for score bar, slightly muted:
+ *   0% → #ef5350 (soft red)
+ *  50% → #ffca28 (warm amber)
+ * 100% → #66bb6a (calm green)
+ */
 export function tempColor(pct: number): string {
-  const [r, g, b] = excelLerp(pct)
-  return `rgb(${Math.round(r * 0.55)},${Math.round(g * 0.55)},${Math.round(b * 0.55)})`
+  const t = Math.max(0, Math.min(100, pct)) / 100
+  let r: number, g: number, b: number
+  if (t <= 0.5) {
+    const p = t / 0.5
+    r = Math.round(239 + (255 - 239) * p)
+    g = Math.round(83 + (202 - 83) * p)
+    b = Math.round(80 + (40 - 80) * p)
+  } else {
+    const p = (t - 0.5) / 0.5
+    r = Math.round(255 + (102 - 255) * p)
+    g = Math.round(202 + (187 - 202) * p)
+    b = Math.round(40 + (106 - 40) * p)
+  }
+  return `rgb(${r},${g},${b})`
 }
 
-/** Temperature background for score bar — light pastel version */
+/** Temperature background for score bar — not used currently but kept for API */
 export function tempBg(pct: number): string {
   const [r, g, b] = excelLerp(pct)
   return `rgb(${Math.round(r * 0.3 + 255 * 0.7)},${Math.round(g * 0.3 + 255 * 0.7)},${Math.round(b * 0.3 + 255 * 0.7)})`
