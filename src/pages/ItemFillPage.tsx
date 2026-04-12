@@ -163,7 +163,7 @@ export default function ItemFillPage() {
         <div className="fill-progress-row">
           <div className="fill-progress-left">
             <ProgressBar filled={onesCount} total={answeredCount || 1} hideLabel />
-            {sectionScorePct !== null && sectionScorePct > 0 && (
+            {sectionScorePct !== null && (
               <div className="fill-score-label">Результат: <strong>{sectionScorePct}%</strong></div>
             )}
           </div>
