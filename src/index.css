@@ -298,15 +298,15 @@ button:disabled {
 }
 
 .card-title {
-  font-size: var(--font-size-base);
+  font-size: var(--font-size-body-sm);
   font-weight: 600;
-  margin-bottom: var(--space-1);
+  line-height: 1.2;
 }
 
 .card-subtitle {
-  font-size: var(--font-size-caption);
+  font-size: var(--font-size-sm);
   color: var(--color-text-muted);
-  margin-bottom: 0;
+  line-height: 1.2;
 }
 
 /* When subtitle is outside card-header-row, keep original spacing */
@@ -317,7 +317,7 @@ button:disabled {
 /* === Card header with fill badge === */
 .card-header-row {
   display: flex;
-  align-items: flex-start;
+  align-items: stretch;
   gap: var(--space-4);
   margin-bottom: var(--space-3);
 }
@@ -325,6 +325,9 @@ button:disabled {
 .card-header-left {
   flex: 1;
   min-width: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
 }
 
 /* === Metrics layout === */
@@ -345,21 +348,24 @@ button:disabled {
   flex-shrink: 0;
   background: var(--color-border-light);
   border-radius: var(--radius-md);
-  padding: var(--space-2) var(--space-3);
+  padding: var(--space-2) var(--space-4);
   min-width: 44px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
 }
 
 .metrics-fill-count {
-  font-size: var(--font-size-caption);
-  color: var(--color-text-secondary);
+  font-size: var(--font-size-body-sm);
   font-weight: 600;
   line-height: 1.2;
 }
 
 .metrics-fill-pct {
   font-size: var(--font-size-xs);
-  color: var(--color-text-muted);
   line-height: 1.2;
+  opacity: 0.7;
 }
 
 .metrics-score {
@@ -733,7 +739,7 @@ select {
 .section-item--col {
   flex-direction: column;
   align-items: stretch;
-  gap: var(--space-1);
+  gap: var(--space-2);
 }
 
 .section-item:active {
@@ -1040,6 +1046,7 @@ select {
   font-size: var(--font-size-caption);
   color: var(--color-text-secondary);
   line-height: 1.4;
+  text-align: justify;
 }
 
 .review-item-comment {
@@ -1048,4 +1055,5 @@ select {
   font-style: italic;
   margin-top: var(--space-1);
   padding-left: 17px;
+  text-align: justify;
 }

@@ -130,7 +130,7 @@ export default function AuditOutlinePage() {
                 </div>
                 <div className="metrics-fill" style={{ background: fillBadgeBg(fillPct), color: fillBadgeColor(fillPct) }}>
                   <div className="metrics-fill-count" style={{ color: 'inherit' }}>{filled}/{total}</div>
-                  <div className="metrics-fill-pct" style={{ color: 'inherit', opacity: 0.7 }}>{fillPct}%</div>
+                  <div className="metrics-fill-pct" style={{ color: 'inherit' }}>{fillPct}%</div>
                 </div>
               </div>
               <div className="metrics-bar">
@@ -162,7 +162,7 @@ export default function AuditOutlinePage() {
                           </div>
                           <div className="metrics-fill" style={{ background: fillBadgeBg(sFillPct), color: fillBadgeColor(sFillPct) }}>
                             <div className="metrics-fill-count" style={{ color: 'inherit' }}>{sFilled}/{sTotal}</div>
-                            <div className="metrics-fill-pct" style={{ color: 'inherit', opacity: 0.7 }}>{sFillPct}%</div>
+                            <div className="metrics-fill-pct" style={{ color: 'inherit' }}>{sFillPct}%</div>
                           </div>
                         </div>
                         <div className="metrics-bar">
