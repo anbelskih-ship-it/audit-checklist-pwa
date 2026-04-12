@@ -113,6 +113,22 @@ export default function ItemFillPage() {
   }
   const sectionScorePct = answeredCount > 0 ? Math.round((onesCount / answeredCount) * 100) : null
 
+  // Sheet navigation: find current sheet index + first items of prev/next sheets
+  const currentSheetIndex = structure.sheets.findIndex(s =>
+    s.sections.some(sec => sec.id === current.section.id)
+  )
+  const getSheetFirstItem = (sheetIdx: number): string | null => {
+    const sheet = structure.sheets[sheetIdx]
+    if (!sheet) return null
+    for (const sec of sheet.sections) {
+      const evals = sec.items.slice(1)
+      if (evals.length > 0) return evals[0].id
+    }
+    return null
+  }
+  const prevSheetItemId = currentSheetIndex > 0 ? getSheetFirstItem(currentSheetIndex - 1) : null
+  const nextSheetItemId = currentSheetIndex < structure.sheets.length - 1 ? getSheetFirstItem(currentSheetIndex + 1) : null
+
   return (
     <div className="page" style={{ display: 'flex', flexDirection: 'column' }}
       {...swipe}
@@ -122,9 +138,23 @@ export default function ItemFillPage() {
         <button className="btn-ghost" onClick={() => setSearchOpen(true)} style={{ fontSize: 20 }}>🔍</button>
       </div>
 
+      {/* Sheet name + nav */}
+      <div className="fill-sheet-nav">
+        <button
+          className="fill-sheet-arrow"
+          disabled={!prevSheetItemId}
+          onClick={() => prevSheetItemId && navigate(`/audit/${auditId}/fill/${prevSheetItemId}`, { replace: true })}
+        >‹</button>
+        <div className="fill-sheet-title">{current.sheetName}</div>
+        <button
+          className="fill-sheet-arrow"
+          disabled={!nextSheetItemId}
+          onClick={() => nextSheetItemId && navigate(`/audit/${auditId}/fill/${nextSheetItemId}`, { replace: true })}
+        >›</button>
+      </div>
+
       {/* Section header card — clickable for quick jump */}
       <div className="fill-section-card" onClick={() => setSectionJumpOpen(!sectionJumpOpen)}>
-        <div className="search-result-path">{current.sheetName}</div>
         <div className="flex-between">
           <div className="fill-section-name">{current.section.name}</div>
           <span className="search-result-path">▾</span>
