@@ -3,15 +3,39 @@ import { db } from '../firebase'
 
 const CONFIG_DOC = 'config/ai'
 
-export async function getGeminiApiKey(): Promise<string | null> {
+export type AiProvider = 'gemini' | 'deepseek'
+
+interface AiConfig {
+  provider: AiProvider
+  geminiApiKey: string | null
+  deepseekApiKey: string | null
+}
+
+export async function getAiConfig(): Promise<AiConfig> {
   try {
     const snap = await getDoc(doc(db, CONFIG_DOC))
-    return snap.exists() ? (snap.data().geminiApiKey ?? null) : null
+    if (!snap.exists()) return { provider: 'gemini', geminiApiKey: null, deepseekApiKey: null }
+    const data = snap.data()
+    return {
+      provider: data.provider || 'gemini',
+      geminiApiKey: data.geminiApiKey ?? null,
+      deepseekApiKey: data.deepseekApiKey ?? null,
+    }
   } catch {
-    return null
+    return { provider: 'gemini', geminiApiKey: null, deepseekApiKey: null }
   }
 }
 
+export async function saveAiConfig(config: Partial<AiConfig>): Promise<void> {
+  await setDoc(doc(db, CONFIG_DOC), config, { merge: true })
+}
+
+// Backward compat
+export async function getGeminiApiKey(): Promise<string | null> {
+  const cfg = await getAiConfig()
+  return cfg.geminiApiKey
+}
+
 export async function setGeminiApiKey(key: string): Promise<void> {
-  await setDoc(doc(db, CONFIG_DOC), { geminiApiKey: key }, { merge: true })
+  await saveAiConfig({ geminiApiKey: key })
 }

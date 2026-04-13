@@ -12,7 +12,8 @@ import { downloadFile } from '../drive/drive-api'
 import * as XLSX from 'xlsx'
 import { buildAuditPrompt } from '../ai/prompt-builder'
 import { callGemini } from '../ai/gemini'
-import { getGeminiApiKey } from '../db/config'
+import { callDeepSeek } from '../ai/deepseek'
+import { getAiConfig, type AiProvider } from '../db/config'
 import { saveAuditSummary } from '../db/audits'
 import type { Section } from '../types'
 
@@ -25,12 +26,16 @@ export default function AuditOutlinePage() {
   const [expandedSheet, setExpandedSheet] = useState<string | null>(null)
   const [expandedSection, setExpandedSection] = useState<string | null>(null)
   const [viewMode, setViewMode] = useState<ViewMode>('edit')
-  const [geminiKey, setGeminiKey] = useState<string | null>(null)
+  const [aiProvider, setAiProvider] = useState<AiProvider>('gemini')
+  const [aiKey, setAiKey] = useState<string | null>(null)
   const [summaryLoading, setSummaryLoading] = useState(false)
   const navigate = useNavigate()
 
   useEffect(() => {
-    getGeminiApiKey().then(setGeminiKey)
+    getAiConfig().then(cfg => {
+      setAiProvider(cfg.provider)
+      setAiKey(cfg.provider === 'deepseek' ? cfg.deepseekApiKey : cfg.geminiApiKey)
+    })
   }, [])
 
   const handleExportXlsx = async () => {
@@ -63,19 +68,21 @@ export default function AuditOutlinePage() {
   }
 
   const handleGenerateSummary = async () => {
-    if (!audit || !structure || !geminiKey) return
+    if (!audit || !structure || !aiKey) return
     setSummaryLoading(true)
     try {
       const prompt = buildAuditPrompt(audit, structure)
-      const result = await callGemini(prompt, geminiKey)
-      if (result) {
-        await saveAuditSummary(audit.id, result)
+      const { text, error } = aiProvider === 'deepseek'
+        ? await callDeepSeek(prompt, aiKey)
+        : await callGemini(prompt, aiKey)
+      if (text) {
+        await saveAuditSummary(audit.id, text)
         alert('Резюме сгенерировано и сохранено')
       } else {
-        alert('Не удалось сгенерировать резюме. Проверьте API-ключ.')
+        alert(`Не удалось сгенерировать: ${error}\n\nИспользуйте "Скопировать промпт" и вставьте в claude.ai`)
       }
     } catch {
-      alert('Ошибка при генерации резюме')
+      alert('Ошибка соединения. Используйте "Скопировать промпт".')
     } finally {
       setSummaryLoading(false)
     }
@@ -240,15 +247,14 @@ export default function AuditOutlinePage() {
       )}
 
       <div className="btn-group mt-md">
-        {geminiKey ? (
+        {aiKey && (
           <button className="btn-primary flex-1" onClick={handleGenerateSummary} disabled={summaryLoading}>
             {summaryLoading ? 'Генерация...' : (audit.summary ? 'Обновить резюме' : 'Сгенерировать резюме')}
           </button>
-        ) : (
-          <button className="btn-primary flex-1" onClick={handleCopyPrompt}>
-            Скопировать промпт для AI
-          </button>
         )}
+        <button className="flex-1" onClick={handleCopyPrompt}>
+          Скопировать промпт
+        </button>
       </div>
 
       <div className="btn-group mt-sm">

@@ -1,10 +1,11 @@
 const GEMINI_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent'
 
-/**
- * Вызов Gemini API (бесплатный тариф Flash).
- * Возвращает сгенерированный текст или null при ошибке.
- */
-export async function callGemini(prompt: string, apiKey: string): Promise<string | null> {
+export interface GeminiResult {
+  text: string | null
+  error: string | null
+}
+
+export async function callGemini(prompt: string, apiKey: string): Promise<GeminiResult> {
   try {
     const resp = await fetch(`${GEMINI_URL}?key=${apiKey}`, {
       method: 'POST',
@@ -20,14 +21,15 @@ export async function callGemini(prompt: string, apiKey: string): Promise<string
 
     if (!resp.ok) {
       const err = await resp.json().catch(() => null)
-      console.error('Gemini API error:', resp.status, err)
-      return null
+      const msg = err?.error?.message || `HTTP ${resp.status}`
+      return { text: null, error: msg }
     }
 
     const data = await resp.json()
-    return data?.candidates?.[0]?.content?.parts?.[0]?.text ?? null
+    const text = data?.candidates?.[0]?.content?.parts?.[0]?.text ?? null
+    return { text, error: text ? null : 'Пустой ответ от модели' }
   } catch (e) {
-    console.error('Gemini API call failed:', e)
-    return null
+    const msg = e instanceof Error ? e.message : 'Нет соединения'
+    return { text: null, error: msg }
   }
 }
