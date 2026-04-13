@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { listAllowedUsers, addAllowedUser, removeAllowedUser, updateUserRole, type AllowedUser, type UserRole } from '../db/users'
-import { getAiConfig, saveAiConfig, type AiProvider } from '../db/config'
 
 export default function AdminUsersPage() {
   const [users, setUsers] = useState<AllowedUser[]>([])
@@ -9,24 +8,13 @@ export default function AdminUsersPage() {
   const [newName, setNewName] = useState('')
   const [newRole, setNewRole] = useState<UserRole>('auditor')
   const [loading, setLoading] = useState(true)
-  const [aiProvider, setAiProvider] = useState<AiProvider>('gemini')
-  const [geminiKey, setGeminiKey] = useState('')
-  const [deepseekKey, setDeepseekKey] = useState('')
-  const [aiSaved, setAiSaved] = useState(false)
   const navigate = useNavigate()
 
   const load = () => {
     listAllowedUsers().then(u => { setUsers(u); setLoading(false) })
   }
 
-  useEffect(() => {
-    load()
-    getAiConfig().then(cfg => {
-      setAiProvider(cfg.provider)
-      if (cfg.geminiApiKey) setGeminiKey(cfg.geminiApiKey)
-      if (cfg.deepseekApiKey) setDeepseekKey(cfg.deepseekApiKey)
-    })
-  }, [])
+  useEffect(load, [])
 
   const handleAdd = async () => {
     const email = newEmail.trim().toLowerCase()
@@ -111,48 +99,6 @@ export default function AdminUsersPage() {
         <button className="btn-primary btn-full" onClick={handleAdd} disabled={!newEmail.trim()}>
           Добавить
         </button>
-      </div>
-
-      {/* AI Settings */}
-      <div className="new-audit-form mt-md">
-        <div className="fill-section-name mb-sm">AI-резюме</div>
-        <div className="form-group">
-          <label className="form-label">Провайдер</label>
-          <select value={aiProvider} onChange={e => { setAiProvider(e.target.value as AiProvider); setAiSaved(false) }}>
-            <option value="deepseek">DeepSeek (работает из РФ)</option>
-            <option value="gemini">Google Gemini</option>
-          </select>
-        </div>
-        {aiProvider === 'gemini' && (
-          <div className="form-group">
-            <label className="form-label">API-ключ Gemini</label>
-            <input value={geminiKey} onChange={e => { setGeminiKey(e.target.value); setAiSaved(false) }}
-              placeholder="AIzaSy..." type="password" />
-          </div>
-        )}
-        {aiProvider === 'deepseek' && (
-          <div className="form-group">
-            <label className="form-label">API-ключ DeepSeek</label>
-            <input value={deepseekKey} onChange={e => { setDeepseekKey(e.target.value); setAiSaved(false) }}
-              placeholder="sk-..." type="password" />
-          </div>
-        )}
-        <button
-          className="btn-primary btn-full"
-          onClick={async () => {
-            await saveAiConfig({
-              provider: aiProvider,
-              geminiApiKey: geminiKey.trim() || null,
-              deepseekApiKey: deepseekKey.trim() || null,
-            })
-            setAiSaved(true)
-          }}
-        >
-          {aiSaved ? 'Сохранено' : 'Сохранить'}
-        </button>
-        <div style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-text-muted)', marginTop: 'var(--space-3)' }}>
-          {aiProvider === 'deepseek' ? 'Ключ: platform.deepseek.com/api_keys' : 'Ключ: aistudio.google.com/apikey'}
-        </div>
       </div>
 
       <div className="info-block">

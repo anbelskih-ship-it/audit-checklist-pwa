@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useAudit } from '../hooks/useAudit'
 import { useStructure } from '../hooks/useStructure'
@@ -11,9 +11,6 @@ import { generateFilledXlsx } from '../export/xlsx-export'
 import { downloadFile } from '../drive/drive-api'
 import * as XLSX from 'xlsx'
 import { buildAuditPrompt } from '../ai/prompt-builder'
-import { callGemini } from '../ai/gemini'
-import { callDeepSeek } from '../ai/deepseek'
-import { getAiConfig, type AiProvider } from '../db/config'
 import { saveAuditSummary } from '../db/audits'
 import type { Section } from '../types'
 
@@ -26,19 +23,9 @@ export default function AuditOutlinePage() {
   const [expandedSheet, setExpandedSheet] = useState<string | null>(null)
   const [expandedSection, setExpandedSection] = useState<string | null>(null)
   const [viewMode, setViewMode] = useState<ViewMode>('edit')
-  const [aiProvider, setAiProvider] = useState<AiProvider>('gemini')
-  const [aiKey, setAiKey] = useState<string | null>(null)
-  const [summaryLoading, setSummaryLoading] = useState(false)
   const [showPasteField, setShowPasteField] = useState(false)
   const [pasteText, setPasteText] = useState('')
   const navigate = useNavigate()
-
-  useEffect(() => {
-    getAiConfig().then(cfg => {
-      setAiProvider(cfg.provider)
-      setAiKey(cfg.provider === 'deepseek' ? cfg.deepseekApiKey : cfg.geminiApiKey)
-    })
-  }, [])
 
   const handleExportXlsx = async () => {
     if (!structure || !audit) return
@@ -67,27 +54,6 @@ export default function AuditOutlinePage() {
     a.download = `${audit.name}.pdf`
     a.click()
     URL.revokeObjectURL(url)
-  }
-
-  const handleGenerateSummary = async () => {
-    if (!audit || !structure || !aiKey) return
-    setSummaryLoading(true)
-    try {
-      const prompt = buildAuditPrompt(audit, structure)
-      const { text, error } = aiProvider === 'deepseek'
-        ? await callDeepSeek(prompt, aiKey)
-        : await callGemini(prompt, aiKey)
-      if (text) {
-        await saveAuditSummary(audit.id, text)
-        alert('Резюме сгенерировано и сохранено')
-      } else {
-        alert(`Не удалось сгенерировать: ${error}\n\nИспользуйте "Скопировать промпт" и вставьте в claude.ai`)
-      }
-    } catch {
-      alert('Ошибка соединения. Используйте "Скопировать промпт".')
-    } finally {
-      setSummaryLoading(false)
-    }
   }
 
   const handleSavePastedSummary = async () => {
@@ -257,13 +223,8 @@ export default function AuditOutlinePage() {
       )}
 
       <div className="btn-group mt-md">
-        {aiKey && (
-          <button className="btn-primary flex-1" onClick={handleGenerateSummary} disabled={summaryLoading}>
-            {summaryLoading ? 'Генерация...' : (audit.summary ? 'Обновить резюме' : 'Сгенерировать резюме')}
-          </button>
-        )}
-        <button className="flex-1" onClick={() => { handleCopyPrompt(); setShowPasteField(true) }}>
-          Скопировать промпт
+        <button className="btn-primary flex-1" onClick={() => { handleCopyPrompt(); setShowPasteField(true) }}>
+          {audit.summary ? 'Обновить резюме (промпт)' : 'Скопировать промпт для AI'}
         </button>
       </div>
 
