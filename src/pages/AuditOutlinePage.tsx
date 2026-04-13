@@ -29,6 +29,8 @@ export default function AuditOutlinePage() {
   const [aiProvider, setAiProvider] = useState<AiProvider>('gemini')
   const [aiKey, setAiKey] = useState<string | null>(null)
   const [summaryLoading, setSummaryLoading] = useState(false)
+  const [showPasteField, setShowPasteField] = useState(false)
+  const [pasteText, setPasteText] = useState('')
   const navigate = useNavigate()
 
   useEffect(() => {
@@ -86,6 +88,14 @@ export default function AuditOutlinePage() {
     } finally {
       setSummaryLoading(false)
     }
+  }
+
+  const handleSavePastedSummary = async () => {
+    if (!audit || !pasteText.trim()) return
+    await saveAuditSummary(audit.id, pasteText.trim())
+    setShowPasteField(false)
+    setPasteText('')
+    alert('Резюме сохранено')
   }
 
   const handleCopyPrompt = () => {
@@ -252,10 +262,30 @@ export default function AuditOutlinePage() {
             {summaryLoading ? 'Генерация...' : (audit.summary ? 'Обновить резюме' : 'Сгенерировать резюме')}
           </button>
         )}
-        <button className="flex-1" onClick={handleCopyPrompt}>
+        <button className="flex-1" onClick={() => { handleCopyPrompt(); setShowPasteField(true) }}>
           Скопировать промпт
         </button>
       </div>
+
+      {showPasteField && (
+        <div className="card mt-sm">
+          <div className="card-title" style={{ marginBottom: 'var(--space-3)' }}>Вставьте ответ от AI</div>
+          <textarea
+            value={pasteText}
+            onChange={e => setPasteText(e.target.value)}
+            placeholder="Скопируйте ответ из claude.ai или другого AI-чата и вставьте сюда..."
+            rows={6}
+          />
+          <div className="btn-group mt-sm">
+            <button className="btn-primary flex-1" onClick={handleSavePastedSummary} disabled={!pasteText.trim()}>
+              Сохранить резюме
+            </button>
+            <button className="flex-1" onClick={() => { setShowPasteField(false); setPasteText('') }}>
+              Отмена
+            </button>
+          </div>
+        </div>
+      )}
 
       <div className="btn-group mt-sm">
         <button className="flex-1" onClick={() => navigate(`/audit/${auditId}/view`)}>
