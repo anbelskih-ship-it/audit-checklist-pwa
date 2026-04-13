@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useAudit } from '../hooks/useAudit'
 import { useStructure } from '../hooks/useStructure'
@@ -10,6 +10,10 @@ import { AuditPdfReport } from '../export/pdf-report'
 import { generateFilledXlsx } from '../export/xlsx-export'
 import { downloadFile } from '../drive/drive-api'
 import * as XLSX from 'xlsx'
+import { buildAuditPrompt } from '../ai/prompt-builder'
+import { callGemini } from '../ai/gemini'
+import { getGeminiApiKey } from '../db/config'
+import { saveAuditSummary } from '../db/audits'
 import type { Section } from '../types'
 
 type ViewMode = 'edit' | 'review'
@@ -21,7 +25,13 @@ export default function AuditOutlinePage() {
   const [expandedSheet, setExpandedSheet] = useState<string | null>(null)
   const [expandedSection, setExpandedSection] = useState<string | null>(null)
   const [viewMode, setViewMode] = useState<ViewMode>('edit')
+  const [geminiKey, setGeminiKey] = useState<string | null>(null)
+  const [summaryLoading, setSummaryLoading] = useState(false)
   const navigate = useNavigate()
+
+  useEffect(() => {
+    getGeminiApiKey().then(setGeminiKey)
+  }, [])
 
   const handleExportXlsx = async () => {
     if (!structure || !audit) return
@@ -50,6 +60,33 @@ export default function AuditOutlinePage() {
     a.download = `${audit.name}.pdf`
     a.click()
     URL.revokeObjectURL(url)
+  }
+
+  const handleGenerateSummary = async () => {
+    if (!audit || !structure || !geminiKey) return
+    setSummaryLoading(true)
+    try {
+      const prompt = buildAuditPrompt(audit, structure)
+      const result = await callGemini(prompt, geminiKey)
+      if (result) {
+        await saveAuditSummary(audit.id, result)
+        alert('Резюме сгенерировано и сохранено')
+      } else {
+        alert('Не удалось сгенерировать резюме. Проверьте API-ключ.')
+      }
+    } catch {
+      alert('Ошибка при генерации резюме')
+    } finally {
+      setSummaryLoading(false)
+    }
+  }
+
+  const handleCopyPrompt = () => {
+    if (!audit || !structure) return
+    const prompt = buildAuditPrompt(audit, structure)
+    navigator.clipboard.writeText(prompt).then(() => {
+      alert('Промпт скопирован в буфер обмена. Вставьте в claude.ai или другой AI-чат.')
+    })
   }
 
   if (auditLoading || structLoading) return <div className="page center-content text-disabled">Загрузка...</div>
@@ -192,8 +229,30 @@ export default function AuditOutlinePage() {
         )
       })}
 
+      {/* AI Summary section */}
+      {audit.summary && (
+        <div className="card mt-md">
+          <div className="card-title" style={{ marginBottom: 'var(--space-4)' }}>AI-резюме</div>
+          <div style={{ fontSize: 'var(--font-size-caption)', color: 'var(--color-text-secondary)', lineHeight: 1.5, whiteSpace: 'pre-line' }}>
+            {audit.summary}
+          </div>
+        </div>
+      )}
+
       <div className="btn-group mt-md">
-        <button className="btn-primary flex-1" onClick={() => navigate(`/audit/${auditId}/view`)}>
+        {geminiKey ? (
+          <button className="btn-primary flex-1" onClick={handleGenerateSummary} disabled={summaryLoading}>
+            {summaryLoading ? 'Генерация...' : (audit.summary ? 'Обновить резюме' : 'Сгенерировать резюме')}
+          </button>
+        ) : (
+          <button className="btn-primary flex-1" onClick={handleCopyPrompt}>
+            Скопировать промпт для AI
+          </button>
+        )}
+      </div>
+
+      <div className="btn-group mt-sm">
+        <button className="flex-1" onClick={() => navigate(`/audit/${auditId}/view`)}>
           Просмотр для клиента
         </button>
       </div>

@@ -61,6 +61,11 @@ export async function saveAnswer(auditId: string, itemId: string, answer: Answer
   }, { merge: true })
 }
 
+export async function saveAuditSummary(auditId: string, summary: string): Promise<void> {
+  const ref = doc(db, AUDITS, auditId)
+  await setDoc(ref, { summary, updated: new Date().toISOString() }, { merge: true })
+}
+
 export async function deleteAudit(auditId: string): Promise<void> {
   await deleteDoc(doc(db, AUDITS, auditId))
 }

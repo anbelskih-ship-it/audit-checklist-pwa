@@ -42,6 +42,7 @@ export interface Audit {
   structureVersion: string
   answers: Record<string, Answer>
   status: 'draft' | 'completed'
+  summary?: string
 }
 
 export interface Answer {

@@ -1,4 +1,5 @@
 import { Document, Page, Text, View, StyleSheet } from '@react-pdf/renderer'
+import { calcMetrics } from '../utils/metrics'
 import type { ChecklistStructure, Audit } from '../types'
 
 const styles = StyleSheet.create({
@@ -9,6 +10,9 @@ const styles = StyleSheet.create({
   summaryCard: { flex: 1, padding: 12, backgroundColor: '#f5f5f5', borderRadius: 4, textAlign: 'center' },
   summaryValue: { fontSize: 22, fontWeight: 'bold', marginBottom: 4 },
   summaryLabel: { fontSize: 8, color: '#888' },
+  aiSummaryBox: { marginBottom: 20, padding: 12, backgroundColor: '#f0f7ff', borderRadius: 4, borderLeft: '3 solid #2979FF' },
+  aiSummaryTitle: { fontSize: 12, fontWeight: 'bold', marginBottom: 6, color: '#2979FF' },
+  aiSummaryText: { fontSize: 9, lineHeight: 1.5, color: '#333' },
   blockTitle: { fontSize: 14, fontWeight: 'bold', marginTop: 16, marginBottom: 4 },
   progressText: { fontSize: 9, color: '#888', marginBottom: 8 },
   issueRow: { flexDirection: 'row', marginBottom: 4, paddingLeft: 8, borderLeft: '2 solid #f44336' },
@@ -23,19 +27,8 @@ interface Props {
 }
 
 export function AuditPdfReport({ structure, audit }: Props) {
-  let totalItems = 0, totalFilled = 0, totalPassed = 0
-  for (const sheet of structure.sheets) {
-    for (const sec of sheet.sections) {
-      for (const item of sec.items) {
-        totalItems++
-        const a = audit.answers[item.id]
-        if (a?.value !== null && a?.value !== undefined) {
-          totalFilled++
-          if (a.value === 1) totalPassed++
-        }
-      }
-    }
-  }
+  const allEvalItems = structure.sheets.flatMap(sh => sh.sections.flatMap(s => s.items.slice(1)))
+  const { filled: totalFilled, total: totalItems, yesCount: totalPassed } = calcMetrics(allEvalItems, audit.answers)
 
   return (
     <Document>
@@ -60,14 +53,20 @@ export function AuditPdfReport({ structure, audit }: Props) {
           </View>
         </View>
 
+        {audit.summary && (
+          <View style={styles.aiSummaryBox}>
+            <Text style={styles.aiSummaryTitle}>Резюме аудита</Text>
+            <Text style={styles.aiSummaryText}>{audit.summary}</Text>
+          </View>
+        )}
+
         {structure.sheets.map(sheet => {
           const issues: { text: string; comment: string; section: string }[] = []
-          let sheetTotal = 0, sheetPassed = 0
+          const sheetEval = sheet.sections.flatMap(s => s.items.slice(1))
+          const sm = calcMetrics(sheetEval, audit.answers)
           for (const sec of sheet.sections) {
-            for (const item of sec.items) {
-              sheetTotal++
+            for (const item of sec.items.slice(1)) {
               const a = audit.answers[item.id]
-              if (a?.value === 1) sheetPassed++
               if (a?.value === 0) issues.push({ text: item.text, comment: a.comment, section: sec.name })
             }
           }
@@ -77,7 +76,7 @@ export function AuditPdfReport({ structure, audit }: Props) {
           return (
             <View key={sheet.id} wrap={false}>
               <Text style={styles.blockTitle}>{sheet.name}</Text>
-              <Text style={styles.progressText}>{sheetPassed}/{sheetTotal} выполнено · {issues.length} зон роста</Text>
+              <Text style={styles.progressText}>{sm.yesCount}/{sm.total} выполнено · {issues.length} зон роста</Text>
               {issues.map((issue, i) => (
                 <View key={i}>
                   {(i === 0 || issues[i - 1].section !== issue.section) && (

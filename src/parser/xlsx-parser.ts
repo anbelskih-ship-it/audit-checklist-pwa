@@ -1,11 +1,11 @@
 import * as XLSX from 'xlsx'
 import type { ChecklistStructure, SheetBlock, Section } from '../types'
 
-const SECTION_HEADERS = ['Шаги процесса / Этапы операций', 'Шаг процесса', 'Шаги процесса']
-const ITEM_HEADERS = ['Операции процесса', 'Пояснения для критериев', 'Вопрос', 'Критерий выполнения']
-const CRITERIA_HEADERS = ['Критерии выполнения операции', 'Критерий выполнения', 'Пояснения для критериев']
+export const SECTION_HEADERS = ['Шаги процесса / Этапы операций', 'Шаг процесса', 'Шаги процесса']
+export const ITEM_HEADERS = ['Операции процесса', 'Пояснения для критериев', 'Вопрос', 'Критерий выполнения']
+export const CRITERIA_HEADERS = ['Критерии выполнения операции', 'Критерий выполнения', 'Пояснения для критериев']
 
-const SKIP_SHEETS = ['KPIs', 'Сводный результат', 'Лист3']
+export const SKIP_SHEETS = ['KPIs', 'Сводный результат', 'Лист3']
 
 export function findColumnByHeaders(headers: (string | null)[], candidates: string[]): number {
   for (const candidate of candidates) {
