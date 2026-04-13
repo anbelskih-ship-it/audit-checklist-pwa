@@ -45,6 +45,12 @@ service cloud.firestore {
       allow delete: if isAdmin();
     }
 
+    // config collection — admin writes, auditors+ read
+    match /config/{docId} {
+      allow read: if isAuditor();
+      allow write: if isAdmin();
+    }
+
     // Deny everything else
     match /{document=**} {
       allow read, write: if false;
