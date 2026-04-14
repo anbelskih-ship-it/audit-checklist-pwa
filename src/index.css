@@ -896,7 +896,7 @@ select {
 }
 
 .section-item .search-result-text {
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 500;
   line-height: 1.25;
 }
@@ -908,11 +908,11 @@ select {
 }
 
 .section-item .metrics-fill-count {
-  font-size: 13px;
+  font-size: 12px;
 }
 
 .section-item .metrics-fill-pct {
-  font-size: 11px;
+  font-size: 10px;
 }
 
 .section-item .progress {
@@ -926,7 +926,7 @@ select {
 
 .section-item .metrics-score {
   margin-top: var(--space-2);
-  font-size: 12px;
+  font-size: 11px;
 }
 
 .metrics-score--placeholder {
