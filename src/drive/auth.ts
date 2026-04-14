@@ -13,12 +13,19 @@ function getStoredTokens(): Tokens | null {
   return raw ? JSON.parse(raw) : null
 }
 
-function storeTokens(tokens: Tokens) {
+export function storeTokens(tokens: Tokens) {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(tokens))
 }
 
-function clearTokens() {
+export function clearTokens() {
   localStorage.removeItem(STORAGE_KEY)
+}
+
+export function storeAccessToken(accessToken: string, expiresInSeconds = 3600) {
+  storeTokens({
+    access_token: accessToken,
+    expires_at: Date.now() + Math.max(expiresInSeconds - 60, 60) * 1000,
+  })
 }
 
 export async function getAccessToken(): Promise<string | null> {
@@ -27,7 +34,10 @@ export async function getAccessToken(): Promise<string | null> {
 
   if (Date.now() < tokens.expires_at) return tokens.access_token
 
-  if (!tokens.refresh_token) return null
+  if (!tokens.refresh_token) {
+    clearTokens()
+    return null
+  }
 
   try {
     const resp = await fetch(CLOUD_FUNCTION_URL, {
@@ -44,4 +54,9 @@ export async function getAccessToken(): Promise<string | null> {
   } catch {
     return null
   }
+}
+
+export function hasValidAccessToken(): boolean {
+  const tokens = getStoredTokens()
+  return Boolean(tokens && Date.now() < tokens.expires_at)
 }

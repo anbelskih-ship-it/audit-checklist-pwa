@@ -14,6 +14,9 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig)
 export const auth = getAuth(app)
 export const googleProvider = new GoogleAuthProvider()
+googleProvider.addScope('https://www.googleapis.com/auth/drive.file')
+googleProvider.addScope('https://www.googleapis.com/auth/drive.readonly')
+googleProvider.addScope('https://www.googleapis.com/auth/spreadsheets')
 export const db = getFirestore(app)
 
 // Enable offline persistence

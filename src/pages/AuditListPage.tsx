@@ -1,12 +1,15 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { listAudits, createAudit } from '../db/audits'
-import { getStructure } from '../db/structures'
 import { useAuth } from '../hooks/useAuth'
 import { useAppUser } from '../App'
 import type { Audit, ChecklistStructure } from '../types'
 import ProgressBar from '../components/ProgressBar'
 import ThemeToggle from '../components/ThemeToggle'
+import { getAuditCardMetrics } from './audit-list-metrics'
+import { loadStructureWithSync } from '../hooks/useStructure'
+import { compareAuditsByProjectDateDesc, formatAuditCardTitle } from './audit-list-format'
+import { fillBadgeBg, fillBadgeColor } from '../utils/colors'
 
 function countTotalItems(structure: ChecklistStructure): number {
   let total = 0
@@ -35,13 +38,20 @@ export default function AuditListPage() {
 
   useEffect(() => {
     listAudits().then(setAudits)
-    // Load structure totals
-    Promise.all([getStructure('АСП'), getStructure('НА')]).then(([asp, na]) => {
+
+    const loadStructureTotals = async () => {
+      const canSync = typeof navigator !== 'undefined' ? navigator.onLine : false
+      const [asp, na] = await Promise.all([
+        loadStructureWithSync('АСП', canSync),
+        loadStructureWithSync('НА', canSync),
+      ])
       const totals: Record<string, number> = {}
       if (asp) totals['АСП'] = countTotalItems(asp)
       if (na) totals['НА'] = countTotalItems(na)
       setStructureTotals(totals)
-    })
+    }
+
+    loadStructureTotals()
   }, [])
 
   const filtered = filter === 'my' && appUser
@@ -49,22 +59,17 @@ export default function AuditListPage() {
     : audits
 
   const drafts = filtered.filter(a => a.status === 'draft')
-  const completed = filtered.filter(a => a.status === 'completed')
+  const aspDrafts = drafts.filter(a => a.type === 'АСП').sort(compareAuditsByProjectDateDesc)
+  const naDrafts = drafts.filter(a => a.type === 'НА').sort(compareAuditsByProjectDateDesc)
 
   const getMetrics = (audit: Audit) => {
-    const answers = Object.values(audit.answers)
-    const answered = answers.filter(a => a.value !== null && a.value !== undefined).length
-    const yesCount = answers.filter(a => a.value === 1).length
-    const totalItems = structureTotals[audit.type] || Math.max(answered, 1)
-    const fillPct = totalItems > 0 ? Math.round((answered / totalItems) * 100) : 0
-    const scorePct = answered > 0 ? Math.round((yesCount / answered) * 100) : null
-    return { answered, totalItems, fillPct, scorePct }
+    return getAuditCardMetrics(audit.answers, structureTotals[audit.type])
   }
 
   const handleCreate = async () => {
     if (!newDealership.trim() || !appUser) return
     setCreating(true)
-    const structure = await getStructure(newType)
+    const structure = await loadStructureWithSync(newType, typeof navigator !== 'undefined' ? navigator.onLine : false)
     const version = structure?.version || 'unknown'
     const audit = await createAudit({
       type: newType,
@@ -86,15 +91,21 @@ export default function AuditListPage() {
     return (
       <div key={a.id} className="card" onClick={() => navigate(`/audit/${a.id}`)}>
         <div className="flex-between mb-sm">
-          <div className="card-title">{a.name}</div>
-          <span className={`badge ${a.status === 'completed' ? 'badge--success' : 'badge--default'}`}>
-            {a.status === 'completed' ? 'Завершён' : `${fillPct}%`}
-          </span>
+          <div className="card-title">{formatAuditCardTitle(a)}</div>
+          {a.status === 'completed' ? (
+            <span className="badge badge--success">Завершён</span>
+          ) : fillPct === null ? (
+            <span className="badge badge--default">...</span>
+          ) : (
+            <div className="metrics-fill" style={{ background: fillBadgeBg(fillPct), color: fillBadgeColor(fillPct) }}>
+              <div className="metrics-fill-pct" style={{ color: 'inherit' }}>{fillPct}%</div>
+            </div>
+          )}
         </div>
         <div className="card-subtitle">
-          {a.city && `${a.city} · `}{a.authorName || a.authorEmail} · {new Date(a.updated).toLocaleDateString('ru')}
+          {a.authorName || a.authorEmail} · {new Date(a.updated).toLocaleDateString('ru')}
         </div>
-        <ProgressBar filled={answered} total={totalItems} />
+        {totalItems ? <ProgressBar filled={answered} total={totalItems} hideLabel /> : <div className="text-disabled mb-sm">Загружаю структуру чек-листа...</div>}
         {scorePct !== null && (
           <div className="card-score">
             Результат: <strong>{scorePct}%</strong>
@@ -143,27 +154,39 @@ export default function AuditListPage() {
         </button>
       </div>
 
-      {/* Drafts */}
-      {drafts.length > 0 && (
-        <>
-          <div className="section-heading">В работе</div>
-          {drafts.map(renderCard)}
-        </>
+      {/* ASP drafts */}
+      {aspDrafts.length > 0 && (
+        <section className="audit-group">
+          <div className="audit-group__header">
+            <div>
+              <div className="section-heading">АСП с пробегом</div>
+              <div className="audit-group__hint">Актуальные проекты по автомобилям с пробегом</div>
+            </div>
+            <div className="audit-group__count">{aspDrafts.length}</div>
+          </div>
+          {aspDrafts.map(renderCard)}
+        </section>
       )}
 
-      {/* Completed */}
-      {completed.length > 0 && (
-        <>
-          <div className="section-heading section-heading--spaced">Завершённые</div>
-          {completed.map(renderCard)}
-        </>
+      {/* NA drafts */}
+      {naDrafts.length > 0 && (
+        <section className={`audit-group ${aspDrafts.length > 0 ? 'audit-group--spaced' : ''}`}>
+          <div className="audit-group__header">
+            <div>
+              <div className="section-heading">Новые АМ</div>
+              <div className="audit-group__hint">Актуальные проекты по новым автомобилям</div>
+            </div>
+            <div className="audit-group__count">{naDrafts.length}</div>
+          </div>
+          {naDrafts.map(renderCard)}
+        </section>
       )}
 
       {/* Empty state */}
-      {filtered.length === 0 && !showNew && (
+      {drafts.length === 0 && !showNew && (
         <div className="empty-state">
           <div className="empty-state-icon">📋</div>
-          <div className="empty-state-text">Пока нет аудитов</div>
+          <div className="empty-state-text">Пока нет активных аудитов</div>
           <div className="empty-state-hint">Создайте первый аудит, чтобы начать</div>
         </div>
       )}

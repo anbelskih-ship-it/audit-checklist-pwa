@@ -43,6 +43,10 @@ export interface Audit {
   answers: Record<string, Answer>
   status: 'draft' | 'completed'
   summary?: string
+  exportFileId?: string
+  exportFileName?: string
+  exportUpdatedAt?: string
+  exportUrl?: string
 }
 
 export interface Answer {

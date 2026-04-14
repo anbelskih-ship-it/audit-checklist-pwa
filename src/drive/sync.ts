@@ -2,8 +2,13 @@ import * as XLSX from 'xlsx'
 import { getFileMetadata, downloadFile } from './drive-api'
 import { parseChecklistXlsx } from '../parser/xlsx-parser'
 import { saveStructure, getStructure } from '../db/structures'
+import { ASP_FALLBACK, NA_FALLBACK } from '../data/checklist-fallbacks'
 
 const MASTER_FILES: Record<string, { type: 'АСП' | 'НА'; fileId: string }> = {}
+const FALLBACKS = {
+  АСП: ASP_FALLBACK,
+  НА: NA_FALLBACK,
+} as const
 
 export function configureMasterFiles(config: { asp_file_id: string; na_file_id: string }) {
   MASTER_FILES['asp'] = { type: 'АСП', fileId: config.asp_file_id }
@@ -28,6 +33,11 @@ export async function syncStructures(): Promise<{ updated: string[] }> {
       updated.push(type)
     } catch (e) {
       console.error(`Failed to sync ${type}:`, e)
+      const existing = await getStructure(type)
+      if (!existing) {
+        await saveStructure(FALLBACKS[type])
+        updated.push(type)
+      }
     }
   }
 

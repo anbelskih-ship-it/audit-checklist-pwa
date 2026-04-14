@@ -66,6 +66,18 @@ export async function saveAuditSummary(auditId: string, summary: string): Promis
   await setDoc(ref, { summary, updated: new Date().toISOString() }, { merge: true })
 }
 
+export async function saveAuditExportMeta(
+  auditId: string,
+  meta: { exportFileId: string; exportFileName: string; exportUrl: string }
+): Promise<void> {
+  const ref = doc(db, AUDITS, auditId)
+  await setDoc(ref, {
+    ...meta,
+    exportUpdatedAt: new Date().toISOString(),
+    updated: new Date().toISOString(),
+  }, { merge: true })
+}
+
 export async function deleteAudit(auditId: string): Promise<void> {
   await deleteDoc(doc(db, AUDITS, auditId))
 }

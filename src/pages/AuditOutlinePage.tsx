@@ -7,12 +7,10 @@ import { fillBadgeColor, fillBadgeBg } from '../utils/colors'
 import { calcMetrics } from '../utils/metrics'
 import { pdf } from '@react-pdf/renderer'
 import { AuditPdfReport } from '../export/pdf-report'
-import { generateFilledXlsx } from '../export/xlsx-export'
-import { downloadFile } from '../drive/drive-api'
-import * as XLSX from 'xlsx'
 import { buildAuditPrompt } from '../ai/prompt-builder'
-import { saveAuditSummary } from '../db/audits'
+import { saveAuditExportMeta, saveAuditSummary } from '../db/audits'
 import type { Section } from '../types'
+import { exportAuditToGoogleSheet, getExportFolderId } from '../export/google-sheet-export'
 
 type ViewMode = 'edit' | 'review'
 
@@ -26,23 +24,38 @@ export default function AuditOutlinePage() {
   const [showPasteField, setShowPasteField] = useState(false)
   const [showSummaryDrawer, setShowSummaryDrawer] = useState(false)
   const [pasteText, setPasteText] = useState('')
+  const [exportingXlsx, setExportingXlsx] = useState(false)
   const navigate = useNavigate()
 
   const handleExportXlsx = async () => {
     if (!structure || !audit) return
+    if (!getExportFolderId()) {
+      alert('Не задана папка выгрузки. Нужен VITE_EXPORT_FOLDER_ID.')
+      return
+    }
+
+    setExportingXlsx(true)
     try {
-      const buffer = await downloadFile(structure.driveFileId)
-      const templateWb = XLSX.read(buffer, { type: 'array' })
-      const result = generateFilledXlsx(templateWb, structure, audit)
-      const blob = new Blob([result], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' })
-      const url = URL.createObjectURL(blob)
-      const a = document.createElement('a')
-      a.href = url
-      a.download = `${audit.name}.xlsx`
-      a.click()
-      URL.revokeObjectURL(url)
+      const result = await exportAuditToGoogleSheet(audit, structure)
+      await saveAuditExportMeta(audit.id, {
+        exportFileId: result.fileId,
+        exportFileName: result.fileName,
+        exportUrl: result.fileUrl,
+      })
+      alert(result.action === 'created'
+        ? `Создан файл: ${result.fileName}\n${result.fileUrl}`
+        : `Обновлен файл: ${result.fileName}\n${result.fileUrl}`)
     } catch (e) {
-      alert('Для экспорта xlsx нужна авторизация Google Drive')
+      const message = e instanceof Error ? e.message : ''
+      if (message === 'Not authenticated' || message === 'Drive auth expired') {
+        alert('Авторизация Google Drive истекла. Выйдите и зайдите заново, затем повторите выгрузку.')
+      } else if (message === 'EXPORT_FOLDER_NOT_CONFIGURED') {
+        alert('Не задана папка выгрузки. Нужен VITE_EXPORT_FOLDER_ID.')
+      } else {
+        alert(`Не удалось выгрузить файл в Google Drive: ${message || 'неизвестная ошибка'}`)
+      }
+    } finally {
+      setExportingXlsx(false)
     }
   }
 
@@ -262,7 +275,9 @@ export default function AuditOutlinePage() {
       </div>
       <div className="btn-group mt-sm">
         <button className="flex-1" onClick={handleExportPdf}>Скачать PDF</button>
-        <button className="flex-1" onClick={handleExportXlsx}>Выгрузить xlsx</button>
+        <button className="flex-1" onClick={handleExportXlsx} disabled={exportingXlsx}>
+          {exportingXlsx ? 'Выгружаю xlsx...' : 'Выгрузить xlsx'}
+        </button>
       </div>
 
       {showSummaryDrawer && audit.summary && (
