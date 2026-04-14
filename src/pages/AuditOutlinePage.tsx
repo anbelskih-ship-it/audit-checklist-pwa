@@ -11,6 +11,7 @@ import { buildAuditPrompt } from '../ai/prompt-builder'
 import { saveAuditExportMeta, saveAuditSummary } from '../db/audits'
 import type { Section } from '../types'
 import { exportAuditToGoogleSheet, getExportFolderId } from '../export/google-sheet-export'
+import { formatAuditCardTitle } from './audit-list-format'
 
 type ViewMode = 'edit' | 'review'
 
@@ -115,7 +116,7 @@ export default function AuditOutlinePage() {
         <button className="btn-ghost" onClick={() => navigate('/')}>← Назад</button>
       </div>
 
-      <h1 className="page-title">{audit.name}</h1>
+      <h1 className="page-title">{formatAuditCardTitle(audit)}</h1>
       <div className="card-subtitle mb-sm">
         {audit.type} · {audit.status === 'completed' ? 'Завершён' : 'Черновик'}
       </div>
@@ -163,7 +164,7 @@ export default function AuditOutlinePage() {
             </div>
 
             {isExpanded && (
-              <div className="mb-sm">
+              <div className="section-stack mb-sm">
                 {sheet.sections.map(section => {
                   const evalItems = section.items.slice(1)
                   if (!evalItems.length) return null
@@ -188,9 +189,9 @@ export default function AuditOutlinePage() {
                         </div>
                         <div className="metrics-bar">
                           <ProgressBar filled={sYes} total={sFilled || 1} hideLabel />
-                          {sScore !== null && (
-                            <div className="metrics-score">Результат: <strong>{sScore}%</strong></div>
-                          )}
+                          <div className={`metrics-score ${sScore === null ? 'metrics-score--placeholder' : ''}`}>
+                            {sScore !== null ? <>Результат: <strong>{sScore}%</strong></> : 'Результат:'}
+                          </div>
                         </div>
                       </div>
 

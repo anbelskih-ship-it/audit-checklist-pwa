@@ -458,6 +458,7 @@ button:disabled {
   font-size: var(--font-size-caption);
   color: var(--color-text);
   margin-top: var(--space-1);
+  min-height: 18px;
 }
 
 .card-score {
@@ -843,24 +844,93 @@ select {
 }
 
 /* === Expanded sections === */
+.section-stack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin-top: var(--space-2);
+  padding: 0 var(--space-4);
+}
+
 .section-item {
-  padding: var(--space-6) var(--space-8);
+  position: relative;
+  padding: var(--space-4) var(--space-5);
   min-height: 44px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  border-bottom: 1px solid var(--color-border-light);
+  border: 1px solid var(--color-border);
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--color-surface) 90%, var(--color-bg) 10%);
+  box-shadow: 0 1px 1px rgba(0,0,0,0.02);
   cursor: pointer;
+  overflow: hidden;
 }
 
 .section-item--col {
   flex-direction: column;
   align-items: stretch;
-  gap: var(--space-2);
+  gap: var(--space-1);
 }
 
 .section-item:active {
   background: var(--color-surface-active);
+}
+
+.section-item .search-result-text {
+  color: color-mix(in srgb, var(--color-text) 88%, var(--color-text-muted) 12%);
+}
+
+.section-item .metrics-score {
+  color: var(--color-text-secondary);
+}
+
+.section-item .card-header-row {
+  margin-bottom: 0;
+  align-items: flex-start;
+}
+
+.section-item .metrics-bar {
+  padding-top: var(--space-2);
+  border-top: 1px solid var(--color-border);
+}
+
+.section-item .search-result-text {
+  font-size: 15px;
+  font-weight: 500;
+  line-height: 1.25;
+}
+
+.section-item .metrics-fill {
+  min-width: 52px;
+  padding: var(--space-2) var(--space-3);
+  border-radius: 12px;
+}
+
+.section-item .metrics-fill-count {
+  font-size: 13px;
+}
+
+.section-item .metrics-fill-pct {
+  font-size: 11px;
+}
+
+.section-item .progress {
+  gap: var(--space-3);
+  margin-top: var(--space-2);
+}
+
+.section-item .progress-bar {
+  height: 6px;
+}
+
+.section-item .metrics-score {
+  margin-top: var(--space-2);
+  font-size: 12px;
+}
+
+.metrics-score--placeholder {
+  visibility: hidden;
 }
 
 /* === Utility & Layout Classes === */
