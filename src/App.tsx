@@ -10,6 +10,7 @@ import AdminUsersPage from './pages/AdminUsersPage'
 import LoginPage from './pages/LoginPage'
 import SyncStatus from './components/SyncStatus'
 import VersionToast from './components/VersionToast'
+import InstallPrompt from './components/InstallPrompt'
 import { configureMasterFiles, syncStructures } from './drive/sync'
 
 configureMasterFiles({
@@ -134,6 +135,7 @@ export default function App() {
           <Route path="*" element={<Navigate to="/" />} />
         </Routes>
         <SyncStatus />
+        <InstallPrompt />
         <VersionToast />
       </HashRouter>
     </AppUserContext.Provider>

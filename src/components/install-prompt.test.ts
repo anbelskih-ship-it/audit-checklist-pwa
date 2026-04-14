@@ -14,14 +14,25 @@ describe('getInstallPromptMode', () => {
     expect(getInstallPromptMode({
       hasDeferredPrompt: false,
       isIos: true,
+      isAndroid: false,
       isStandalone: false,
     })).toBe('ios')
+  })
+
+  it('returns android when on Android without native prompt', () => {
+    expect(getInstallPromptMode({
+      hasDeferredPrompt: false,
+      isIos: false,
+      isAndroid: true,
+      isStandalone: false,
+    })).toBe('android')
   })
 
   it('returns none when app is already installed', () => {
     expect(getInstallPromptMode({
       hasDeferredPrompt: true,
       isIos: true,
+      isAndroid: true,
       isStandalone: true,
     })).toBe('none')
   })
@@ -30,6 +41,7 @@ describe('getInstallPromptMode', () => {
     expect(getInstallPromptMode({
       hasDeferredPrompt: false,
       isIos: false,
+      isAndroid: false,
       isStandalone: false,
     })).toBe('none')
   })

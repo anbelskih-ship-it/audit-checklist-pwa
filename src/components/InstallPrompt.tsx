@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { detectIos, getInstallPromptMode } from './install-prompt'
+import { detectAndroid, detectIos, getInstallPromptMode } from './install-prompt'
 
 type DeferredPromptEvent = Event & {
   prompt: () => Promise<void>
@@ -21,6 +21,7 @@ export default function InstallPrompt() {
   }, [])
 
   const isIos = useMemo(() => detectIos(window.navigator.userAgent), [])
+  const isAndroid = useMemo(() => detectAndroid(window.navigator.userAgent), [])
   const isStandalone = useMemo(() => {
     return window.matchMedia('(display-mode: standalone)').matches
       || (window.navigator as Navigator & { standalone?: boolean }).standalone === true
@@ -29,6 +30,7 @@ export default function InstallPrompt() {
   const mode = getInstallPromptMode({
     hasDeferredPrompt: !!deferredPrompt,
     isIos,
+    isAndroid,
     isStandalone,
   })
 
@@ -54,11 +56,20 @@ export default function InstallPrompt() {
             <button className="flex-1" onClick={() => setDismissed(true)}>Позже</button>
           </div>
         </>
-      ) : (
+      ) : mode === 'ios' ? (
         <>
           <div className="install-card__title">Установить на iPhone</div>
           <div className="install-card__text">
             Откройте меню Поделиться в Safari и выберите «На экран Домой».
+          </div>
+          <button className="btn-full" onClick={() => setDismissed(true)}>Понятно</button>
+        </>
+      ) : (
+        <>
+          <div className="install-card__title">Установить на Android</div>
+          <div className="install-card__text">
+            Откройте страницу во внешнем браузере Chrome или Samsung Internet, затем выберите
+            в меню «Установить приложение» или «Добавить на главный экран».
           </div>
           <button className="btn-full" onClick={() => setDismissed(true)}>Понятно</button>
         </>
