@@ -9,6 +9,7 @@ import ThemeToggle from '../components/ThemeToggle'
 import { getAuditCardMetrics } from './audit-list-metrics'
 import { loadStructureWithSync } from '../hooks/useStructure'
 import { compareAuditsByProjectDateDesc, formatAuditCardTitle } from './audit-list-format'
+import { filterAuditsByOwner } from './audit-list-filter'
 import { fillBadgeBg, fillBadgeColor } from '../utils/colors'
 
 function countTotalItems(structure: ChecklistStructure): number {
@@ -55,7 +56,7 @@ export default function AuditListPage() {
   }, [])
 
   const filtered = filter === 'my' && appUser
-    ? audits.filter(a => a.authorUid === appUser.uid)
+    ? filterAuditsByOwner(audits, appUser.email)
     : audits
 
   const drafts = filtered.filter(a => a.status === 'draft')
