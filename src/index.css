@@ -266,6 +266,107 @@ button:disabled {
   z-index: var(--z-bottom-bar);
 }
 
+.summary-indicator {
+  width: 100%;
+  min-height: 0;
+  justify-content: flex-start;
+  gap: var(--space-6);
+  padding: var(--space-7) var(--space-8);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-2xl);
+  box-shadow: var(--shadow-card);
+  text-align: left;
+}
+
+.summary-indicator:active {
+  background: var(--color-surface-hover);
+  opacity: 1;
+}
+
+.summary-indicator__dot {
+  width: 10px;
+  height: 10px;
+  flex: 0 0 auto;
+  border-radius: 999px;
+  background: var(--color-primary);
+  box-shadow: 0 0 0 6px rgba(41,121,255,0.12);
+}
+
+.summary-indicator__content {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.summary-indicator__title {
+  font-size: var(--font-size-body);
+  font-weight: 700;
+  color: var(--color-text);
+}
+
+.summary-indicator__hint {
+  font-size: var(--font-size-caption);
+  color: var(--color-text-secondary);
+  line-height: 1.4;
+}
+
+.summary-indicator__arrow {
+  flex: 0 0 auto;
+  font-size: var(--font-size-body-lg);
+  color: var(--color-primary);
+}
+
+.drawer-overlay {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding: var(--space-8);
+  background: var(--shadow-overlay);
+  z-index: var(--z-overlay);
+}
+
+.bottom-drawer {
+  width: min(600px, 100%);
+  max-height: min(78dvh, 720px);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-8);
+  padding: var(--space-6);
+  padding-bottom: calc(var(--space-8) + env(safe-area-inset-bottom, 0));
+  background: var(--color-surface);
+  border-radius: var(--radius-2xl) var(--radius-2xl) 0 0;
+  box-shadow: var(--shadow-elevated);
+}
+
+.bottom-drawer__handle {
+  width: 44px;
+  height: 5px;
+  margin: 0 auto;
+  border-radius: 999px;
+  background: var(--color-border);
+}
+
+.bottom-drawer__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-6);
+}
+
+.bottom-drawer__content {
+  overflow-y: auto;
+  padding: var(--space-2) var(--space-1) 0;
+  font-size: var(--font-size-caption);
+  line-height: 1.6;
+  color: var(--color-text-secondary);
+  white-space: pre-line;
+}
+
 .btn-group-bottom > button {
   flex: 1;
 }

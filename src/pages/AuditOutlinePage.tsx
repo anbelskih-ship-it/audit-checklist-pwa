@@ -24,6 +24,7 @@ export default function AuditOutlinePage() {
   const [expandedSection, setExpandedSection] = useState<string | null>(null)
   const [viewMode, setViewMode] = useState<ViewMode>('edit')
   const [showPasteField, setShowPasteField] = useState(false)
+  const [showSummaryDrawer, setShowSummaryDrawer] = useState(false)
   const [pasteText, setPasteText] = useState('')
   const navigate = useNavigate()
 
@@ -68,7 +69,7 @@ export default function AuditOutlinePage() {
     if (!audit || !structure) return
     const prompt = buildAuditPrompt(audit, structure)
     navigator.clipboard.writeText(prompt).then(() => {
-      alert('Промпт скопирован в буфер обмена. Вставьте в claude.ai или другой AI-чат.')
+      alert('Промпт скопирован в буфер обмена. Вставьте его в DeepSeek или другой AI-чат.')
     })
   }
 
@@ -214,12 +215,18 @@ export default function AuditOutlinePage() {
 
       {/* AI Summary section */}
       {audit.summary && (
-        <div className="card mt-md">
-          <div className="card-title" style={{ marginBottom: 'var(--space-4)' }}>AI-резюме</div>
-          <div style={{ fontSize: 'var(--font-size-caption)', color: 'var(--color-text-secondary)', lineHeight: 1.5, whiteSpace: 'pre-line' }}>
-            {audit.summary}
-          </div>
-        </div>
+        <button
+          type="button"
+          className="summary-indicator mt-md"
+          onClick={() => setShowSummaryDrawer(true)}
+        >
+          <span className="summary-indicator__dot" aria-hidden="true" />
+          <span className="summary-indicator__content">
+            <span className="summary-indicator__title">Выжимка DeepSeek сохранена</span>
+            <span className="summary-indicator__hint">Нажмите, чтобы открыть полный ответ</span>
+          </span>
+          <span className="summary-indicator__arrow" aria-hidden="true">↗</span>
+        </button>
       )}
 
       <div className="btn-group mt-md">
@@ -234,7 +241,7 @@ export default function AuditOutlinePage() {
           <textarea
             value={pasteText}
             onChange={e => setPasteText(e.target.value)}
-            placeholder="Скопируйте ответ из claude.ai или другого AI-чата и вставьте сюда..."
+            placeholder="Скопируйте ответ из DeepSeek или другого AI-чата и вставьте сюда..."
             rows={6}
           />
           <div className="btn-group mt-sm">
@@ -257,6 +264,36 @@ export default function AuditOutlinePage() {
         <button className="flex-1" onClick={handleExportPdf}>Скачать PDF</button>
         <button className="flex-1" onClick={handleExportXlsx}>Выгрузить xlsx</button>
       </div>
+
+      {showSummaryDrawer && audit.summary && (
+        <div
+          className="drawer-overlay"
+          onClick={() => setShowSummaryDrawer(false)}
+          role="presentation"
+        >
+          <div
+            className="bottom-drawer"
+            onClick={e => e.stopPropagation()}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="summary-drawer-title"
+          >
+            <div className="bottom-drawer__handle" aria-hidden="true" />
+            <div className="bottom-drawer__header">
+              <div>
+                <div id="summary-drawer-title" className="card-title">Выжимка DeepSeek</div>
+                <div className="card-subtitle">Полный текст сохранённого ответа</div>
+              </div>
+              <button type="button" className="btn-ghost" onClick={() => setShowSummaryDrawer(false)}>
+                Закрыть
+              </button>
+            </div>
+            <div className="bottom-drawer__content">
+              {audit.summary}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
