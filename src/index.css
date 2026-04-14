@@ -1,8 +1,8 @@
 /* === Design Tokens === */
 :root {
   /* Palette (raw values) */
-  --palette-blue-500: #2979FF;
-  --palette-blue-600: #2962FF;
+  --palette-blue-500: #2f343b;
+  --palette-blue-600: #1f2328;
   --palette-green-500: #4caf50;
   --palette-green-600: #43a047;
   --palette-green-700: #2e7d32;
@@ -23,32 +23,32 @@
   --color-danger-darker: var(--palette-red-700);
 
   /* Surfaces */
-  --color-bg: #f4f4f4;
-  --color-surface: #fff;
-  --color-surface-hover: #f7f7f7;
-  --color-surface-active: #f0f0f0;
-  --color-border: #e5e5e5;
-  --color-border-light: #efefef;
-  --color-bg-criteria: #fafafa;
+  --color-bg: #f3f1ec;
+  --color-surface: #fffdfa;
+  --color-surface-hover: #f7f4ef;
+  --color-surface-active: #efe9e1;
+  --color-border: #ddd7cf;
+  --color-border-light: #ebe6df;
+  --color-bg-criteria: #f7f3ed;
   --color-bg-success: #e8f5e9;
   --color-bg-danger: #ffebee;
   --color-bg-warning: #fff3e0;
-  --color-input-border: #d9d9d9;
+  --color-input-border: #d5cec5;
   --color-btn-default: transparent;
-  --color-btn-default-border: #d9d9d9;
+  --color-btn-default-border: #d2cbc2;
 
   /* Text */
-  --color-text: #222;
-  --color-text-secondary: #555;
-  --color-text-hint: #666;
-  --color-text-muted: #888;
-  --color-text-disabled: #999;
+  --color-text: #1f1f1d;
+  --color-text-secondary: #4d4a46;
+  --color-text-hint: #64605a;
+  --color-text-muted: #8a847b;
+  --color-text-disabled: #aaa39a;
   --color-text-on-primary: #fff;
 
   /* Shadows */
-  --shadow-card: 0 1px 4px rgba(0,0,0,0.08);
-  --shadow-elevated: 0 4px 12px rgba(0,0,0,0.12);
-  --shadow-focus: 0 0 0 3px rgba(41,121,255,0.15);
+  --shadow-card: 0 1px 4px rgba(32, 28, 22, 0.06);
+  --shadow-elevated: 0 10px 30px rgba(32, 28, 22, 0.14);
+  --shadow-focus: 0 0 0 3px rgba(47, 52, 59, 0.16);
   --shadow-overlay: rgba(0,0,0,0.4);
 
   /* Typography */
@@ -290,7 +290,7 @@ button:disabled {
   flex: 0 0 auto;
   border-radius: 999px;
   background: var(--color-primary);
-  box-shadow: 0 0 0 6px rgba(41,121,255,0.12);
+  box-shadow: 0 0 0 6px rgba(47, 52, 59, 0.08);
 }
 
 .summary-indicator__content {
@@ -380,7 +380,7 @@ button:disabled {
   cursor: pointer;
   transition: background 0.15s, transform 0.15s ease, box-shadow 0.15s ease;
   box-shadow: var(--shadow-card);
-  border: 1px solid rgba(0, 0, 0, 0.02);
+  border: 1px solid rgba(82, 74, 63, 0.08);
 }
 
 .card:active {
@@ -473,8 +473,8 @@ button:disabled {
   padding: var(--space-7);
   border-radius: 24px;
   background:
-    linear-gradient(180deg, rgba(255,255,255,0.7) 0%, rgba(255,255,255,0.3) 100%);
-  border: 1px solid rgba(0, 0, 0, 0.04);
+    linear-gradient(180deg, rgba(255, 253, 250, 0.82) 0%, rgba(248, 243, 236, 0.62) 100%);
+  border: 1px solid rgba(82, 74, 63, 0.08);
 }
 
 .audit-group--spaced {
