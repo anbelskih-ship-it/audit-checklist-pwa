@@ -1,5 +1,5 @@
 import { HashRouter, Routes, Route, Navigate } from 'react-router-dom'
-import { useEffect, useState, createContext, useContext } from 'react'
+import { useEffect, useState, createContext, useContext, type ReactNode } from 'react'
 import { useAuth } from './hooks/useAuth'
 import { getAllowedUser, type AllowedUser } from './db/users'
 import AuditListPage from './pages/AuditListPage'
@@ -26,6 +26,20 @@ interface AppUser extends AllowedUser {
 
 const AppUserContext = createContext<AppUser | null>(null)
 export function useAppUser() { return useContext(AppUserContext)! }
+
+function RequireRole({
+  role,
+  children,
+}: {
+  role: AllowedUser['role']
+  children: ReactNode
+}) {
+  const appUser = useAppUser()
+  if (appUser.role !== role) {
+    return <Navigate to="/" replace />
+  }
+  return <>{children}</>
+}
 
 export default function App() {
   const { user, loading, logout } = useAuth()
@@ -106,7 +120,14 @@ export default function App() {
       <HashRouter>
         <Routes>
           <Route path="/" element={<AuditListPage />} />
-          <Route path="/admin/users" element={<AdminUsersPage />} />
+          <Route
+            path="/admin/users"
+            element={(
+              <RequireRole role="admin">
+                <AdminUsersPage />
+              </RequireRole>
+            )}
+          />
           <Route path="/audit/:auditId" element={<AuditOutlinePage />} />
           <Route path="/audit/:auditId/fill/:itemId" element={<ItemFillPage />} />
           <Route path="/audit/:auditId/view" element={<AuditViewPage />} />

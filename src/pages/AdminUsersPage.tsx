@@ -1,8 +1,10 @@
 import { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { Navigate, useNavigate } from 'react-router-dom'
 import { listAllowedUsers, addAllowedUser, removeAllowedUser, updateUserRole, type AllowedUser, type UserRole } from '../db/users'
+import { useAppUser } from '../App'
 
 export default function AdminUsersPage() {
+  const appUser = useAppUser()
   const [users, setUsers] = useState<AllowedUser[]>([])
   const [newEmail, setNewEmail] = useState('')
   const [newName, setNewName] = useState('')
@@ -35,6 +37,10 @@ export default function AdminUsersPage() {
   const handleRoleChange = async (email: string, role: UserRole) => {
     await updateUserRole(email, role)
     load()
+  }
+
+  if (appUser.role !== 'admin') {
+    return <Navigate to="/" replace />
   }
 
   if (loading) return <div className="page center-content text-disabled">Загрузка...</div>
