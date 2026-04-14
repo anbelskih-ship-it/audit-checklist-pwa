@@ -7,6 +7,7 @@ import {
 import { auth, googleProvider } from '../firebase'
 import { clearTokens, storeAccessToken } from '../drive/auth'
 import { getLoginStrategy } from './auth-login-strategy'
+import { getAuthInitTimeoutMs } from './auth-init-timeout'
 
 function saveDriveTokenFromCredential(result: UserCredential) {
   const credential = GoogleAuthProvider.credentialFromResult(result)
@@ -30,6 +31,14 @@ export function useAuth() {
   const [authError, setAuthError] = useState<string | null>(null)
 
   useEffect(() => {
+    let resolved = false
+    const timeoutId = window.setTimeout(() => {
+      if (!resolved) {
+        setLoading(false)
+        setAuthError('Вход через Google на этом устройстве отвечает слишком долго. Повторите попытку или откройте ссылку во внешнем Safari.')
+      }
+    }, getAuthInitTimeoutMs(window.navigator.userAgent))
+
     // Check redirect result first (mobile flow)
     getRedirectResult(auth)
       .then(result => {
@@ -39,10 +48,18 @@ export function useAuth() {
         setAuthError(formatAuthError(error))
       })
 
-    return onAuthStateChanged(auth, (u) => {
+    const unsubscribe = onAuthStateChanged(auth, (u) => {
+      resolved = true
+      window.clearTimeout(timeoutId)
       setUser(u)
       setLoading(false)
     })
+
+    return () => {
+      resolved = true
+      window.clearTimeout(timeoutId)
+      unsubscribe()
+    }
   }, [])
 
   const login = async () => {
