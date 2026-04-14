@@ -367,6 +367,30 @@ button:disabled {
   white-space: pre-line;
 }
 
+.install-card {
+  width: min(420px, 100%);
+  margin-top: var(--space-6);
+  padding: var(--space-7);
+  background: color-mix(in srgb, var(--color-surface) 88%, var(--color-bg) 12%);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-2xl);
+  box-shadow: var(--shadow-card);
+}
+
+.install-card__title {
+  font-size: var(--font-size-body);
+  font-weight: 700;
+  color: var(--color-text);
+}
+
+.install-card__text {
+  margin-top: var(--space-2);
+  margin-bottom: var(--space-6);
+  font-size: var(--font-size-caption);
+  line-height: 1.45;
+  color: var(--color-text-secondary);
+}
+
 .btn-group-bottom > button {
   flex: 1;
 }

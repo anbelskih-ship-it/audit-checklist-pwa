@@ -1,4 +1,5 @@
 import { useAuth } from '../hooks/useAuth'
+import InstallPrompt from '../components/InstallPrompt'
 
 export default function LoginPage() {
   const { login, loading } = useAuth()
@@ -21,6 +22,7 @@ export default function LoginPage() {
           Войти через Google
         </button>
       </div>
+      <InstallPrompt />
     </div>
   )
 }
