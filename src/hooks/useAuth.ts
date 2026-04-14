@@ -5,6 +5,7 @@ import {
 } from 'firebase/auth'
 import { auth, googleProvider } from '../firebase'
 import { clearTokens, storeAccessToken } from '../drive/auth'
+import { getLoginStrategy } from './auth-login-strategy'
 
 function saveDriveTokenFromCredential(result: UserCredential) {
   const credential = GoogleAuthProvider.credentialFromResult(result)
@@ -32,14 +33,15 @@ export function useAuth() {
   }, [])
 
   const login = async () => {
-    try {
-      // Try popup first (works on desktop)
+    const strategy = getLoginStrategy(window.navigator.userAgent)
+
+    if (strategy === 'popup') {
       const result = await signInWithPopup(auth, googleProvider)
       saveDriveTokenFromCredential(result)
-    } catch {
-      // Fallback to redirect (works on mobile)
-      await signInWithRedirect(auth, googleProvider)
+      return
     }
+
+    await signInWithRedirect(auth, googleProvider)
   }
 
   const logout = () => {
