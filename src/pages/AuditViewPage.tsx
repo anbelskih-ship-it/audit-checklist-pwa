@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useAudit } from '../hooks/useAudit'
 import { useStructure } from '../hooks/useStructure'
@@ -12,6 +12,10 @@ export default function AuditViewPage() {
   const [showOnlyIssues, setShowOnlyIssues] = useState(false)
   const [expandedSheet, setExpandedSheet] = useState<string | null>(null)
   const navigate = useNavigate()
+
+  useEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: 'auto' })
+  }, [])
 
   if (!audit || !structure) return <div className="page center-content text-disabled">Загрузка...</div>
 
