@@ -1,30 +1,56 @@
+export interface SpeechRecognitionResultLike {
+  transcript: string
+  isFinal?: boolean
+}
+
+export interface SpeechRecognitionEventLike {
+  results: readonly SpeechRecognitionResultLike[]
+  resultIndex: number
+}
+
+export interface SpeechRecognitionErrorEventLike {
+  error: string
+  message?: string
+}
+
 export interface SpeechRecognitionLike {
   lang: string
+  continuous: boolean
+  interimResults: boolean
+  maxAlternatives: number
+  onresult: ((event: SpeechRecognitionEventLike) => void) | null
+  onerror: ((event: SpeechRecognitionErrorEventLike) => void) | null
+  start(): void
+  stop(): void
 }
 
 export interface SpeechRecognitionCtor {
   new (): SpeechRecognitionLike
 }
 
-type SpeechRecognitionWindow = Window & {
+export type SpeechRecognitionSource = {
   SpeechRecognition?: SpeechRecognitionCtor
   webkitSpeechRecognition?: SpeechRecognitionCtor
 }
 
-export function getSpeechRecognitionCtor(win: Window): SpeechRecognitionCtor | null {
-  const speechWindow = win as SpeechRecognitionWindow
-  return speechWindow.SpeechRecognition ?? speechWindow.webkitSpeechRecognition ?? null
+export function getSpeechRecognitionCtor(source: SpeechRecognitionSource): SpeechRecognitionCtor | null {
+  return source.SpeechRecognition ?? source.webkitSpeechRecognition ?? null
 }
 
 export function normalizeTranscript(text: string): string {
   return text.trim().replace(/\s+/g, ' ')
 }
 
-export function createConfiguredRecognition(win: Window): SpeechRecognitionLike | null {
-  const ctor = getSpeechRecognitionCtor(win)
+export function createConfiguredRecognition(source: SpeechRecognitionSource): SpeechRecognitionLike | null {
+  const ctor = getSpeechRecognitionCtor(source)
   if (!ctor) return null
 
   const recognition = new ctor()
   recognition.lang = 'ru-RU'
+  recognition.continuous = false
+  recognition.interimResults = true
+  recognition.maxAlternatives = 1
+  recognition.onresult = null
+  recognition.onerror = null
   return recognition
 }

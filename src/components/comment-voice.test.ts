@@ -30,16 +30,63 @@ describe('comment-voice', () => {
     expect(normalizeTranscript('  Привет\n\nмир   ')).toBe('Привет мир')
   })
 
-  it('creates a configured recognition instance with ru-RU language', () => {
+  it('returns null when configured recognition is unavailable', () => {
+    expect(createConfiguredRecognition({} as Window)).toBeNull()
+  })
+
+  it('creates a configured recognition instance from SpeechRecognition', () => {
     class FakeRecognition {
       lang = ''
+      continuous = false
+      interimResults = false
+      maxAlternatives = 0
+      onresult: unknown = 'unset'
+      onerror: unknown = 'unset'
+
+      start() {}
+
+      stop() {}
     }
 
     const recognition = createConfiguredRecognition({
       SpeechRecognition: FakeRecognition,
-    } as unknown as Window)
+    })
 
     expect(recognition).toBeInstanceOf(FakeRecognition)
     expect(recognition?.lang).toBe('ru-RU')
+    expect(recognition?.continuous).toBe(false)
+    expect(recognition?.interimResults).toBe(true)
+    expect(recognition?.maxAlternatives).toBe(1)
+    expect(recognition?.onresult).toBeNull()
+    expect(recognition?.onerror).toBeNull()
+    expect(recognition?.start).toBeTypeOf('function')
+    expect(recognition?.stop).toBeTypeOf('function')
+  })
+
+  it('creates a configured recognition instance from webkitSpeechRecognition', () => {
+    class FakeWebkitRecognition {
+      lang = ''
+      continuous = false
+      interimResults = false
+      maxAlternatives = 0
+      onresult: unknown = 'unset'
+      onerror: unknown = 'unset'
+
+      start() {}
+
+      stop() {}
+    }
+
+    const recognition = createConfiguredRecognition({
+      webkitSpeechRecognition: FakeWebkitRecognition,
+    })
+
+    expect(recognition).toBeInstanceOf(FakeWebkitRecognition)
+    expect(recognition?.lang).toBe('ru-RU')
+    expect(recognition?.continuous).toBe(false)
+    expect(recognition?.interimResults).toBe(true)
+    expect(recognition?.maxAlternatives).toBe(1)
+    expect(recognition?.onresult).toBeNull()
+    expect(recognition?.onerror).toBeNull()
   })
 })
