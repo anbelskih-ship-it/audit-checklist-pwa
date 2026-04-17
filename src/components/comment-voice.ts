@@ -1,10 +1,21 @@
-export interface SpeechRecognitionResultLike {
+export interface SpeechRecognitionAlternativeLike {
   transcript: string
-  isFinal?: boolean
+  confidence: number
+}
+
+export interface SpeechRecognitionResultLike {
+  readonly length: number
+  readonly isFinal: boolean
+  [index: number]: SpeechRecognitionAlternativeLike
+}
+
+export interface SpeechRecognitionResultListLike {
+  readonly length: number
+  [index: number]: SpeechRecognitionResultLike
 }
 
 export interface SpeechRecognitionEventLike {
-  results: readonly SpeechRecognitionResultLike[]
+  results: SpeechRecognitionResultListLike
   resultIndex: number
 }
 
