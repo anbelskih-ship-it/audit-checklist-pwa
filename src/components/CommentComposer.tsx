@@ -16,6 +16,7 @@ import {
   type SpeechRecognitionErrorEventLike,
   type SpeechRecognitionEventLike,
   type SpeechRecognitionLike,
+  type SpeechRecognitionSource,
 } from './comment-voice'
 
 type InputMethod = 'text' | 'phrases' | 'voice'
@@ -76,6 +77,10 @@ function getVoiceStatusLabel(status: VoiceStatus): string {
     default:
       return 'Ожидание'
   }
+}
+
+function getRecognitionSource(): SpeechRecognitionSource {
+  return window as typeof window & SpeechRecognitionSource
 }
 
 function ToggleGroup<T extends string>({
@@ -152,7 +157,7 @@ export default function CommentComposer({ value, onChange, onBlur }: CommentComp
       return
     }
 
-    if (!createConfiguredRecognition(window)) {
+    if (!createConfiguredRecognition(getRecognitionSource())) {
       setVoiceStatus('unsupported')
       setVoiceError('')
       return
@@ -225,7 +230,7 @@ export default function CommentComposer({ value, onChange, onBlur }: CommentComp
 
     if (voiceStatus === 'unsupported') return
 
-    const recognition = createConfiguredRecognition(window)
+    const recognition = createConfiguredRecognition(getRecognitionSource())
     recognitionRef.current = recognition
 
     if (!recognition) {

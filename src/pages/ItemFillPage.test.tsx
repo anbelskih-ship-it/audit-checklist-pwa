@@ -1,0 +1,148 @@
+import '@testing-library/jest-dom/vitest'
+import { fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { MemoryRouter, Route, Routes } from 'react-router-dom'
+import ItemFillPage from './ItemFillPage'
+import type { Audit, ChecklistStructure } from '../types'
+
+const saveAnswerMock = vi.fn()
+const useAuditMock = vi.fn()
+const useStructureMock = vi.fn()
+
+vi.mock('../hooks/useAudit', () => ({
+  useAudit: (...args: unknown[]) => useAuditMock(...args),
+}))
+
+vi.mock('../hooks/useStructure', () => ({
+  useStructure: (...args: unknown[]) => useStructureMock(...args),
+}))
+
+vi.mock('../hooks/useSwipe', () => ({
+  useSwipe: () => ({}),
+}))
+
+vi.mock('../components/SearchDialog', () => ({
+  default: () => null,
+}))
+
+vi.mock('../components/ProgressBar', () => ({
+  default: () => <div data-testid="progress-bar" />,
+}))
+
+const structure: ChecklistStructure = {
+  type: 'АСП',
+  version: 'v1',
+  driveFileId: 'drive-1',
+  sheets: [
+    {
+      id: 'sheet-1',
+      name: 'Лист 1',
+      estimatedTime: '1 час',
+      sections: [
+        {
+          id: 'section-1',
+          name: 'Секция 1',
+          items: [
+            { id: 'header-1', text: 'Заголовок секции', criteria: '' },
+            { id: 'item-1', text: 'Проверяемый пункт', criteria: 'Критерий' },
+          ],
+        },
+      ],
+    },
+  ],
+}
+
+function createAudit(answer: Audit['answers'][string]): Audit {
+  return {
+    id: 'audit-1',
+    name: 'Тестовый аудит',
+    type: 'АСП',
+    dealership: 'ДЦ',
+    city: 'Москва',
+    authorUid: 'uid-1',
+    authorName: 'User',
+    authorEmail: 'user@example.com',
+    created: '2026-04-17T00:00:00.000Z',
+    updated: '2026-04-17T00:00:00.000Z',
+    plannedEnd: '2026-04-30',
+    comment: '',
+    structureVersion: 'v1',
+    answers: {
+      'item-1': answer,
+    },
+    status: 'draft',
+  }
+}
+
+function renderPage() {
+  return render(
+    <MemoryRouter initialEntries={['/audit/audit-1/fill/item-1']}>
+      <Routes>
+        <Route path="/audit/:auditId/fill/:itemId" element={<ItemFillPage />} />
+      </Routes>
+    </MemoryRouter>,
+  )
+}
+
+describe('ItemFillPage', () => {
+  beforeEach(() => {
+    saveAnswerMock.mockReset()
+    useStructureMock.mockReturnValue({ structure, loading: false })
+  })
+
+  it('renders CommentComposer controls and keeps current answer comment in the field', () => {
+    useAuditMock.mockReturnValue({
+      audit: createAudit({ value: 1, comment: 'Текущий комментарий' }),
+      loading: false,
+      saveAnswer: saveAnswerMock,
+    })
+
+    renderPage()
+
+    expect(screen.getByRole('button', { name: 'Дополнить' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Переписать' })).toBeInTheDocument()
+    expect(screen.getByRole('textbox', { name: 'Комментарий' })).toHaveValue('Текущий комментарий')
+  })
+
+  it('persists the latest local comment on blur', async () => {
+    useAuditMock.mockReturnValue({
+      audit: createAudit({ value: 0, comment: 'Старый комментарий' }),
+      loading: false,
+      saveAnswer: saveAnswerMock,
+    })
+
+    renderPage()
+
+    const textbox = screen.getByRole('textbox', { name: 'Комментарий' })
+    fireEvent.change(textbox, { target: { value: 'Обновлённый комментарий' } })
+    fireEvent.blur(textbox)
+
+    await waitFor(() => {
+      expect(saveAnswerMock).toHaveBeenCalledWith('item-1', {
+        value: 0,
+        comment: 'Обновлённый комментарий',
+      })
+    })
+  })
+
+  it('passes the latest comment to handleScore after a composer phrase selection', async () => {
+    useAuditMock.mockReturnValue({
+      audit: createAudit({ value: null, comment: '' }),
+      loading: false,
+      saveAnswer: saveAnswerMock,
+    })
+
+    renderPage()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Фразы' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Нет регулярного контроля' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Да' }))
+
+    await waitFor(() => {
+      expect(saveAnswerMock).toHaveBeenCalledWith('item-1', {
+        value: 1,
+        comment: 'Нет регулярного контроля',
+      })
+    })
+  })
+})

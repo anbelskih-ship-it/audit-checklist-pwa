@@ -6,6 +6,7 @@ import { useSwipe } from '../hooks/useSwipe'
 import ScoreToggle from '../components/ScoreToggle'
 import SearchDialog from '../components/SearchDialog'
 import ProgressBar from '../components/ProgressBar'
+import CommentComposer from '../components/CommentComposer'
 import { calcMetrics } from '../utils/metrics'
 import type { CheckItem, Section } from '../types'
 
@@ -202,9 +203,7 @@ export default function ItemFillPage() {
         )}
 
         <ScoreToggle value={currentAnswer?.value ?? null} onChange={handleScore} />
-
-        <textarea value={comment} onChange={e => setComment(e.target.value)} onBlur={handleCommentBlur}
-          placeholder="Комментарий..." />
+        <CommentComposer value={comment} onChange={setComment} onBlur={handleCommentBlur} />
       </div>
 
       <div className="btn-group-bottom">
