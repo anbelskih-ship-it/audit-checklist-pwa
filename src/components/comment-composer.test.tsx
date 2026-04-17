@@ -31,6 +31,29 @@ describe('CommentComposer', () => {
     delete (window as typeof window & { webkitSpeechRecognition?: unknown }).webkitSpeechRecognition
   })
 
+  it('shows a distinct ready state when voice input is supported', () => {
+    class FakeRecognition {
+      lang = ''
+      continuous = false
+      interimResults = false
+      maxAlternatives = 0
+      onresult = null
+      onerror = null
+
+      start() {}
+
+      stop() {}
+    }
+
+    ;(window as typeof window & { SpeechRecognition?: typeof FakeRecognition }).SpeechRecognition = FakeRecognition
+
+    render(<Harness initialValue="База" />)
+
+    fireEvent.click(screen.getByRole('button', { name: 'Голос' }))
+
+    expect(screen.getByText('Голосовой ввод доступен. Нажмите «Начать запись», чтобы добавить фразу.')).toBeInTheDocument()
+  })
+
   it('keeps the old comment visible after switching to rewrite before first input', () => {
     render(<Harness initialValue="Текущий комментарий" />)
 

@@ -19,7 +19,7 @@ import {
 } from './comment-voice'
 
 type InputMethod = 'text' | 'phrases' | 'voice'
-type VoiceStatus = 'idle' | 'listening' | 'unsupported' | 'error'
+type VoiceStatus = 'idle' | 'ready' | 'listening' | 'unsupported' | 'error'
 
 const PHRASES = [
   'Нет стандарта выполнения',
@@ -50,6 +50,8 @@ function buildChunk(state: CommentComposerState, text: string): string {
 
 function getVoiceMessage(status: VoiceStatus, errorMessage: string): string {
   switch (status) {
+    case 'ready':
+      return 'Голосовой ввод доступен. Нажмите «Начать запись», чтобы добавить фразу.'
     case 'unsupported':
       return 'Голосовой ввод недоступен на этом устройстве.'
     case 'listening':
@@ -58,6 +60,21 @@ function getVoiceMessage(status: VoiceStatus, errorMessage: string): string {
       return errorMessage || 'Не удалось получить голосовой ввод.'
     default:
       return 'Нажмите кнопку записи, чтобы добавить комментарий голосом.'
+  }
+}
+
+function getVoiceStatusLabel(status: VoiceStatus): string {
+  switch (status) {
+    case 'ready':
+      return 'Поддерживается'
+    case 'listening':
+      return 'Запись'
+    case 'unsupported':
+      return 'Недоступно'
+    case 'error':
+      return 'Ошибка'
+    default:
+      return 'Ожидание'
   }
 }
 
@@ -110,7 +127,11 @@ export default function CommentComposer({ value, onChange, onBlur }: CommentComp
   }, [])
 
   useEffect(() => {
-    if (inputMethod !== 'voice') return
+    if (inputMethod !== 'voice') {
+      setVoiceStatus('idle')
+      setVoiceError('')
+      return
+    }
 
     if (!createConfiguredRecognition(window)) {
       setVoiceStatus('unsupported')
@@ -118,7 +139,7 @@ export default function CommentComposer({ value, onChange, onBlur }: CommentComp
       return
     }
 
-    setVoiceStatus((current) => (current === 'unsupported' ? 'idle' : current))
+    setVoiceStatus((current) => (current === 'listening' || current === 'error' ? current : 'ready'))
   }, [inputMethod])
 
   const commitState = (next: CommentComposerState) => {
@@ -153,7 +174,7 @@ export default function CommentComposer({ value, onChange, onBlur }: CommentComp
     if (!transcript) return
 
     commitState(applyVoiceTranscript(currentState, buildChunk(currentState, transcript)))
-    setVoiceStatus('idle')
+    setVoiceStatus('ready')
     setVoiceError('')
   }
 
@@ -165,7 +186,7 @@ export default function CommentComposer({ value, onChange, onBlur }: CommentComp
   const handleVoiceToggle = () => {
     if (voiceStatus === 'listening') {
       recognitionRef.current?.stop()
-      setVoiceStatus('idle')
+      setVoiceStatus('ready')
       setVoiceError('')
       return
     }
@@ -232,6 +253,11 @@ export default function CommentComposer({ value, onChange, onBlur }: CommentComp
 
       {inputMethod === 'voice' && (
         <div className={`comment-composer__voice comment-composer__voice--${voiceStatus}`}>
+          <div className="comment-composer__voice-header">
+            <span className={`comment-composer__voice-status comment-composer__voice-status--${voiceStatus}`}>
+              {getVoiceStatusLabel(voiceStatus)}
+            </span>
+          </div>
           <button
             type="button"
             className={voiceStatus === 'listening' ? 'btn-primary' : ''}

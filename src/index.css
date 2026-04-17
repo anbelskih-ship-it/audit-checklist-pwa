@@ -1347,6 +1347,10 @@ select {
   background: color-mix(in srgb, var(--color-surface) 85%, var(--color-bg) 15%);
 }
 
+.comment-composer__voice--ready {
+  border-color: color-mix(in srgb, var(--color-success) 28%, var(--color-border) 72%);
+}
+
 .comment-composer__voice--error {
   border-color: color-mix(in srgb, var(--color-danger) 35%, var(--color-border) 65%);
   background: color-mix(in srgb, var(--color-bg-danger) 60%, var(--color-surface) 40%);
@@ -1354,6 +1358,41 @@ select {
 
 .comment-composer__voice--unsupported {
   border-style: dashed;
+}
+
+.comment-composer__voice-header {
+  display: flex;
+  justify-content: flex-start;
+}
+
+.comment-composer__voice-status {
+  display: inline-flex;
+  align-items: center;
+  min-height: 28px;
+  padding: 0 var(--space-4);
+  border-radius: 999px;
+  font-size: var(--font-size-xs);
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  background: var(--color-border-light);
+  color: var(--color-text-secondary);
+}
+
+.comment-composer__voice-status--ready {
+  background: var(--color-bg-success);
+  color: var(--color-success-dark);
+}
+
+.comment-composer__voice-status--listening {
+  background: color-mix(in srgb, var(--color-primary) 14%, var(--color-surface) 86%);
+  color: var(--color-primary);
+}
+
+.comment-composer__voice-status--unsupported,
+.comment-composer__voice-status--error {
+  background: var(--color-bg-danger);
+  color: var(--color-danger-dark);
 }
 
 .comment-composer__voice-text {
