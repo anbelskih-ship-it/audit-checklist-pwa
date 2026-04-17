@@ -11,12 +11,12 @@ export default defineConfig({
     VitePWA({
       registerType: 'prompt',
       manifest: {
-        name: 'Аудит Чек-лист',
-        short_name: 'Аудит',
+        name: 'АРБ Консалт',
+        short_name: 'АРБ Консалт',
         start_url: base,
         display: 'standalone',
         background_color: '#ffffff',
-        theme_color: '#2979FF',
+        theme_color: '#2f2b2f',
         lang: 'ru',
         icons: [
           { src: `${base}icons/icon-192.png`, sizes: '192x192', type: 'image/png' },

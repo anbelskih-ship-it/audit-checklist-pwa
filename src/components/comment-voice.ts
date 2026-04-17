@@ -59,7 +59,7 @@ export function createConfiguredRecognition(source: SpeechRecognitionSource): Sp
 
   const recognition = new ctor()
   recognition.lang = 'ru-RU'
-  recognition.continuous = false
+  recognition.continuous = true
   recognition.interimResults = true
   recognition.maxAlternatives = 1
   recognition.onresult = null

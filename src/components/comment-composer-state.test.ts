@@ -18,17 +18,17 @@ describe('comment-composer-state', () => {
   })
 
   it('appends a selected phrase in append mode', () => {
-    const state = applyPhraseSelection(createComposerState('База'), ' фраза')
+    const state = applyPhraseSelection(createComposerState('База'), ', фраза')
 
-    expect(getVisibleComment(state)).toBe('База фраза')
-    expect(getCommittedComment(state)).toBe('База фраза')
+    expect(getVisibleComment(state)).toBe('База, фраза')
+    expect(getCommittedComment(state)).toBe('База, фраза')
   })
 
   it('appends a voice transcript in append mode', () => {
-    const state = applyVoiceTranscript(createComposerState('База'), ' голосом')
+    const state = applyVoiceTranscript(createComposerState('База'), ', голосом')
 
-    expect(getVisibleComment(state)).toBe('База голосом')
-    expect(getCommittedComment(state)).toBe('База голосом')
+    expect(getVisibleComment(state)).toBe('База, голосом')
+    expect(getCommittedComment(state)).toBe('База, голосом')
   })
 
   it('keeps the original comment visible after switching to rewrite mode', () => {

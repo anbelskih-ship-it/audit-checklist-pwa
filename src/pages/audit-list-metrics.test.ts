@@ -24,4 +24,17 @@ describe('getAuditCardMetrics', () => {
     expect(metrics.fillPct).toBe(10)
     expect(metrics.scorePct).toBe(50)
   })
+
+  it('counts only answers that exist in the current structure', () => {
+    const metrics = getAuditCardMetrics({
+      a: { value: 1, comment: '', updated: '2026-04-14T11:00:00.000Z' },
+      b: { value: 1, comment: '', updated: '2026-04-14T11:01:00.000Z' },
+      c: { value: 0, comment: '', updated: '2026-04-14T11:02:00.000Z' },
+    }, 2, new Set(['a', 'c']))
+
+    expect(metrics.answered).toBe(2)
+    expect(metrics.totalItems).toBe(2)
+    expect(metrics.fillPct).toBe(100)
+    expect(metrics.scorePct).toBe(50)
+  })
 })

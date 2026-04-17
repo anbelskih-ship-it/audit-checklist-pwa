@@ -7,7 +7,7 @@ interface Props {
 }
 
 export default function ProgressBar({ filled, total, hideLabel }: Props) {
-  const pct = total > 0 ? Math.round((filled / total) * 100) : 0
+  const pct = total > 0 ? Math.max(0, Math.min(100, Math.round((filled / total) * 100))) : 0
 
   return (
     <div className="progress">

@@ -9,12 +9,17 @@ export interface AuditCardMetrics {
 
 export function getAuditCardMetrics(
   answers: Record<string, Answer>,
-  structureTotal?: number
+  structureTotal?: number,
+  validItemIds?: Set<string>
 ): AuditCardMetrics {
-  const values = Object.values(answers)
-  const answered = values.filter(a => a.value !== null && a.value !== undefined).length
-  const yesCount = values.filter(a => a.value === 1).length
+  const entries = validItemIds
+    ? Object.entries(answers).filter(([itemId]) => validItemIds.has(itemId))
+    : Object.entries(answers)
+  const rawAnswered = entries.filter(([, answer]) => answer.value !== null && answer.value !== undefined).length
+  const rawYesCount = entries.filter(([, answer]) => answer.value === 1).length
   const totalItems = typeof structureTotal === 'number' ? structureTotal : null
+  const answered = rawAnswered
+  const yesCount = rawYesCount
   const fillPct = totalItems && totalItems > 0
     ? Math.round((answered / totalItems) * 100)
     : null

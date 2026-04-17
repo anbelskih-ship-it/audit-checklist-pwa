@@ -22,11 +22,20 @@ function countTotalItems(structure: ChecklistStructure): number {
   return total
 }
 
+function collectEvalItemIds(structure: ChecklistStructure): Set<string> {
+  return new Set(
+    structure.sheets.flatMap((sheet) =>
+      sheet.sections.flatMap((section) => section.items.slice(1).map((item) => item.id)),
+    ),
+  )
+}
+
 export default function AuditListPage() {
   const { logout } = useAuth()
   const appUser = useAppUser()
   const [audits, setAudits] = useState<Audit[]>([])
   const [structureTotals, setStructureTotals] = useState<Record<string, number>>({})
+  const [structureItemIds, setStructureItemIds] = useState<Record<string, Set<string>>>({})
   const [filter, setFilter] = useState<'all' | 'my'>('all')
   const [showNew, setShowNew] = useState(false)
   const [newType, setNewType] = useState<'АСП' | 'НА'>('АСП')
@@ -47,9 +56,13 @@ export default function AuditListPage() {
         loadStructureWithSync('НА', canSync),
       ])
       const totals: Record<string, number> = {}
+      const itemIds: Record<string, Set<string>> = {}
       if (asp) totals['АСП'] = countTotalItems(asp)
+      if (asp) itemIds['АСП'] = collectEvalItemIds(asp)
       if (na) totals['НА'] = countTotalItems(na)
+      if (na) itemIds['НА'] = collectEvalItemIds(na)
       setStructureTotals(totals)
+      setStructureItemIds(itemIds)
     }
 
     loadStructureTotals()
@@ -64,7 +77,7 @@ export default function AuditListPage() {
   const naDrafts = drafts.filter(a => a.type === 'НА').sort(compareAuditsByProjectDateDesc)
 
   const getMetrics = (audit: Audit) => {
-    return getAuditCardMetrics(audit.answers, structureTotals[audit.type])
+    return getAuditCardMetrics(audit.answers, structureTotals[audit.type], structureItemIds[audit.type])
   }
 
   const handleCreate = async () => {

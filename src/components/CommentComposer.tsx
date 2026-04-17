@@ -42,25 +42,71 @@ interface CommentComposerProps {
 }
 
 function buildChunk(state: CommentComposerState, text: string): string {
-  if (!text) return ''
-  if (state.mode === 'rewrite' && !state.rewriteStarted) return text
-  if (!state.workingComment) return text
-  if (/\s$/.test(state.workingComment)) return text
-  return ` ${text}`
+  const chunk = text.trim()
+
+  if (!chunk) return ''
+  if (state.mode === 'rewrite' && !state.rewriteStarted) return chunk
+
+  const comment = state.workingComment.trim()
+  if (!comment) return chunk
+  if (comment.endsWith(',')) return ` ${chunk}`
+  return `, ${chunk}`
+}
+
+function getPhraseSource(state: CommentComposerState): string {
+  if (state.mode === 'rewrite' && !state.rewriteStarted) return ''
+  return getCommittedComment(state)
+}
+
+function escapeRegExp(value: string): string {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+}
+
+function hasPhrase(source: string, phrase: string): boolean {
+  return new RegExp(`(^|,\\s*)${escapeRegExp(phrase)}(?=,\\s*|$)`).test(source)
+}
+
+function getSelectedPhrases(state: CommentComposerState): Set<string> {
+  const source = getPhraseSource(state)
+  return new Set(PHRASES.filter((phrase) => hasPhrase(source, phrase)))
+}
+
+function removePhrase(comment: string, phrase: string): string {
+  return comment
+    .replace(new RegExp(`(^|,\\s*)${escapeRegExp(phrase)}(?=,\\s*|$)`, 'g'), '$1')
+    .replace(/,\s*,+/g, ', ')
+    .replace(/^,\s*|\s*,\s*$/g, '')
+    .trim()
 }
 
 function getVoiceMessage(status: VoiceStatus, errorMessage: string): string {
   switch (status) {
     case 'ready':
-      return 'Голосовой ввод доступен. Нажмите «Начать запись», чтобы добавить фразу.'
+      return 'Голосовой ввод доступен. Лучше всего работает в Chrome или Edge. Нажмите «Начать запись».'
     case 'unsupported':
-      return 'Голосовой ввод недоступен на этом устройстве.'
+      return 'Голосовой ввод недоступен в этом браузере. Откройте страницу в Chrome или Edge.'
     case 'listening':
       return 'Идёт запись. Говорите короткими фразами.'
     case 'error':
       return errorMessage || 'Не удалось получить голосовой ввод.'
     default:
       return 'Нажмите кнопку записи, чтобы добавить комментарий голосом.'
+  }
+}
+
+function getVoiceErrorMessage(event: SpeechRecognitionErrorEventLike): string {
+  switch (event.error) {
+    case 'not-allowed':
+    case 'service-not-allowed':
+      return 'Нет доступа к микрофону. Разрешите микрофон для этой страницы и попробуйте снова.'
+    case 'audio-capture':
+      return 'Микрофон не найден или недоступен.'
+    case 'network':
+      return 'Не удалось обратиться к сервису распознавания. Проверьте интернет и попробуйте снова.'
+    case 'no-speech':
+      return 'Речь не распознана. Попробуйте говорить ближе к микрофону.'
+    default:
+      return event.message || `Ошибка голосового ввода: ${event.error}`
   }
 }
 
@@ -89,7 +135,7 @@ function ToggleGroup<T extends string>({
   onChange: (value: T) => void
 }) {
   return (
-    <div className="comment-composer__toggle-group" role="group">
+    <div className={`comment-composer__toggle-group comment-composer__toggle-group--${options.length}`} role="group">
       {options.map((option) => (
         <button
           key={option.value}
@@ -110,10 +156,12 @@ export default function CommentComposer({ value, onChange, onBlur }: CommentComp
   const [inputMethod, setInputMethod] = useState<InputMethod>('text')
   const [voiceStatus, setVoiceStatus] = useState<VoiceStatus>('idle')
   const [voiceError, setVoiceError] = useState('')
+  const [voiceDraft, setVoiceDraft] = useState('')
   const textareaId = useId()
   const composerStateRef = useRef(composerState)
   const inputMethodRef = useRef(inputMethod)
   const recognitionRef = useRef<SpeechRecognitionLike | null>(null)
+  const keepListeningRef = useRef(false)
 
   useEffect(() => {
     setComposerState((current) =>
@@ -129,9 +177,17 @@ export default function CommentComposer({ value, onChange, onBlur }: CommentComp
     inputMethodRef.current = inputMethod
   }, [inputMethod])
 
+  const selectedPhrases = getSelectedPhrases(composerState)
+  const showRewritePreview =
+    composerState.mode === 'rewrite' && !composerState.rewriteStarted && Boolean(composerState.originalComment)
+
   const stopRecognition = (nextStatus: VoiceStatus = 'ready') => {
+    keepListeningRef.current = false
     const recognition = recognitionRef.current
-    if (!recognition) return
+    if (!recognition) {
+      setVoiceStatus(nextStatus)
+      return
+    }
 
     recognition.onresult = null
     recognition.onerror = null
@@ -139,6 +195,40 @@ export default function CommentComposer({ value, onChange, onBlur }: CommentComp
     recognition.stop()
     recognitionRef.current = null
     setVoiceStatus(nextStatus)
+  }
+
+  const startRecognition = () => {
+    const recognition = createConfiguredRecognition(window as typeof window & SpeechRecognitionSource)
+    recognitionRef.current = recognition
+
+    if (!recognition) {
+      setVoiceStatus('unsupported')
+      setVoiceError('')
+      keepListeningRef.current = false
+      return
+    }
+
+    recognition.onresult = (event) => handleVoiceResult(recognition, event)
+    recognition.onerror = (event) => handleVoiceError(recognition, event)
+    recognition.onend = () => handleVoiceEnd(recognition)
+
+    try {
+      recognition.start()
+      setVoiceStatus('listening')
+      setVoiceError('')
+      setVoiceDraft('')
+    } catch (error) {
+      recognition.onresult = null
+      recognition.onerror = null
+      recognition.onend = null
+      recognitionRef.current = null
+      keepListeningRef.current = false
+      setVoiceStatus('error')
+      setVoiceDraft('')
+      setVoiceError(
+        error instanceof Error ? `Ошибка голосового ввода: ${error.message}` : 'Не удалось запустить голосовой ввод.',
+      )
+    }
   }
 
   useEffect(() => () => {
@@ -150,6 +240,13 @@ export default function CommentComposer({ value, onChange, onBlur }: CommentComp
       stopRecognition('idle')
       setVoiceStatus('idle')
       setVoiceError('')
+      setVoiceDraft('')
+      return
+    }
+
+    if (!window.isSecureContext) {
+      setVoiceStatus('error')
+      setVoiceError('Голосовой ввод работает только на localhost или через https.')
       return
     }
 
@@ -184,7 +281,14 @@ export default function CommentComposer({ value, onChange, onBlur }: CommentComp
   }
 
   const handlePhraseClick = (phrase: string) => {
-    const nextValue = commitState(applyPhraseSelection(composerState, buildChunk(composerState, phrase)))
+    const currentState = composerStateRef.current
+    if (getSelectedPhrases(currentState).has(phrase)) {
+      const nextValue = commitState(applyTextInput(currentState, removePhrase(getCommittedComment(currentState), phrase)))
+      onBlur?.(nextValue)
+      return
+    }
+
+    const nextValue = commitState(applyPhraseSelection(currentState, buildChunk(currentState, phrase)))
     onBlur?.(nextValue)
   }
 
@@ -195,22 +299,25 @@ export default function CommentComposer({ value, onChange, onBlur }: CommentComp
     const result = event.results[event.resultIndex]
     const currentState = composerStateRef.current
 
-    if (!result?.isFinal) return
-
     const transcript = normalizeTranscript(result[0]?.transcript ?? '')
     if (!transcript) return
+    setVoiceDraft(transcript)
+
+    if (!result?.isFinal) return
 
     const nextValue = commitState(applyVoiceTranscript(currentState, buildChunk(currentState, transcript)))
     onBlur?.(nextValue)
-    setVoiceStatus('ready')
     setVoiceError('')
+    setVoiceDraft('')
   }
 
   const handleVoiceError = (recognition: SpeechRecognitionLike, event: SpeechRecognitionErrorEventLike) => {
     if (recognitionRef.current !== recognition) return
     recognitionRef.current = null
+    keepListeningRef.current = false
     setVoiceStatus('error')
-    setVoiceError(event.message || `Ошибка голосового ввода: ${event.error}`)
+    setVoiceError(getVoiceErrorMessage(event))
+    setVoiceDraft('')
   }
 
   const handleVoiceEnd = (recognition: SpeechRecognitionLike) => {
@@ -218,46 +325,35 @@ export default function CommentComposer({ value, onChange, onBlur }: CommentComp
     recognitionRef.current = null
 
     if (inputMethodRef.current !== 'voice') return
+    if (keepListeningRef.current) {
+      window.setTimeout(() => {
+        if (inputMethodRef.current !== 'voice' || !keepListeningRef.current || recognitionRef.current) return
+        startRecognition()
+      }, 150)
+      return
+    }
 
     setVoiceStatus((current) => (current === 'listening' ? 'ready' : current))
+    setVoiceDraft('')
   }
 
   const handleVoiceToggle = () => {
     if (voiceStatus === 'listening') {
       stopRecognition('ready')
       setVoiceError('')
+      setVoiceDraft('')
       return
     }
 
     if (voiceStatus === 'unsupported') return
-
-    const recognition = createConfiguredRecognition(window as typeof window & SpeechRecognitionSource)
-    recognitionRef.current = recognition
-
-    if (!recognition) {
-      setVoiceStatus('unsupported')
-      setVoiceError('')
+    if (!window.isSecureContext) {
+      setVoiceStatus('error')
+      setVoiceError('Голосовой ввод работает только на localhost или через https.')
       return
     }
 
-    recognition.onresult = (event) => handleVoiceResult(recognition, event)
-    recognition.onerror = (event) => handleVoiceError(recognition, event)
-    recognition.onend = () => handleVoiceEnd(recognition)
-
-    try {
-      recognition.start()
-      setVoiceStatus('listening')
-      setVoiceError('')
-    } catch (error) {
-      recognition.onresult = null
-      recognition.onerror = null
-      recognition.onend = null
-      recognitionRef.current = null
-      setVoiceStatus('error')
-      setVoiceError(
-        error instanceof Error ? `Ошибка голосового ввода: ${error.message}` : 'Не удалось запустить голосовой ввод.',
-      )
-    }
+    keepListeningRef.current = true
+    startRecognition()
   }
 
   return (
@@ -293,7 +389,8 @@ export default function CommentComposer({ value, onChange, onBlur }: CommentComp
             <button
               key={phrase}
               type="button"
-              className="comment-composer__phrase"
+              className={`comment-composer__phrase ${selectedPhrases.has(phrase) ? 'comment-composer__phrase--active' : ''}`}
+              aria-pressed={selectedPhrases.has(phrase)}
               onClick={() => handlePhraseClick(phrase)}
             >
               {phrase}
@@ -308,6 +405,12 @@ export default function CommentComposer({ value, onChange, onBlur }: CommentComp
             <span className={`comment-composer__voice-status comment-composer__voice-status--${voiceStatus}`}>
               {getVoiceStatusLabel(voiceStatus)}
             </span>
+            {voiceStatus === 'listening' && (
+              <span className="comment-composer__voice-live">
+                <span className="comment-composer__voice-dot" />
+                Слушаю
+              </span>
+            )}
           </div>
           <button
             type="button"
@@ -317,6 +420,7 @@ export default function CommentComposer({ value, onChange, onBlur }: CommentComp
             {voiceStatus === 'listening' ? 'Остановить запись' : 'Начать запись'}
           </button>
           <p className="comment-composer__voice-text">{getVoiceMessage(voiceStatus, voiceError)}</p>
+          {voiceDraft && <div className="comment-composer__voice-preview">Слышу: {voiceDraft}</div>}
         </div>
       )}
 
@@ -324,13 +428,19 @@ export default function CommentComposer({ value, onChange, onBlur }: CommentComp
         <label className="form-label" htmlFor={textareaId}>
           Комментарий
         </label>
+        {showRewritePreview && (
+          <div className="comment-composer__rewrite-preview">
+            <div className="comment-composer__rewrite-preview-label">Текущий комментарий</div>
+            <div>{composerState.originalComment}</div>
+          </div>
+        )}
         <textarea
           id={textareaId}
           className="comment-composer__textarea"
-          value={getVisibleComment(composerState)}
+          value={showRewritePreview ? '' : getVisibleComment(composerState)}
           onChange={(event) => handleTextChange(event.target.value)}
           onBlur={() => onBlur?.(getCommittedComment(composerStateRef.current))}
-          placeholder="Комментарий..."
+          placeholder={showRewritePreview ? 'Введите новый комментарий...' : 'Комментарий...'}
         />
       </div>
     </section>

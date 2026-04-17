@@ -260,7 +260,7 @@ describe('CommentComposer', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Фразы' }))
     fireEvent.click(screen.getByRole('button', { name: 'Нет регулярного контроля' }))
 
-    expect(onBlur).toHaveBeenCalledWith('База Нет регулярного контроля')
+    expect(onBlur).toHaveBeenCalledWith('База, Нет регулярного контроля')
   })
 
   it('calls onBlur with the committed value after a final voice transcript', () => {
@@ -305,7 +305,20 @@ describe('CommentComposer', () => {
       })
     })
 
-    expect(onBlur).toHaveBeenCalledWith('База Голос')
+    expect(onBlur).toHaveBeenCalledWith('База, Голос')
+  })
+
+  it('highlights selected phrases and does not duplicate them on repeated click', () => {
+    render(<Harness />)
+
+    fireEvent.click(screen.getByRole('button', { name: 'Фразы' }))
+    const phrase = screen.getByRole('button', { name: 'Нет регулярного контроля' })
+
+    fireEvent.click(phrase)
+    fireEvent.click(phrase)
+
+    expect(phrase).toHaveAttribute('aria-pressed', 'true')
+    expect(screen.getByRole('textbox', { name: 'Комментарий' })).toHaveValue('Нет регулярного контроля')
   })
 
   it('shows a fallback message when voice input is unsupported', () => {
