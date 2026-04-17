@@ -31,6 +31,7 @@ export interface SpeechRecognitionLike {
   maxAlternatives: number
   onresult: ((event: SpeechRecognitionEventLike) => void) | null
   onerror: ((event: SpeechRecognitionErrorEventLike) => void) | null
+  onend: (() => void) | null
   start(): void
   stop(): void
 }
@@ -63,5 +64,6 @@ export function createConfiguredRecognition(source: SpeechRecognitionSource): Sp
   recognition.maxAlternatives = 1
   recognition.onresult = null
   recognition.onerror = null
+  recognition.onend = null
   return recognition
 }

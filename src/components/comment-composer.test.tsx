@@ -1,6 +1,6 @@
 import '@testing-library/jest-dom/vitest'
 import { useState } from 'react'
-import { fireEvent, render, screen } from '@testing-library/react'
+import { act, fireEvent, render, screen } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import CommentComposer from './CommentComposer'
 
@@ -31,6 +31,115 @@ describe('CommentComposer', () => {
     delete (window as typeof window & { webkitSpeechRecognition?: unknown }).webkitSpeechRecognition
   })
 
+  it('stops active recognition when switching away from voice while listening', () => {
+    const stop = vi.fn()
+
+    class FakeRecognition {
+      static instances: FakeRecognition[] = []
+      lang = ''
+      continuous = false
+      interimResults = false
+      maxAlternatives = 0
+      onresult = null
+      onerror = null
+      onend = null
+      start = vi.fn()
+      stop = stop
+
+      constructor() {
+        FakeRecognition.instances.push(this)
+      }
+    }
+
+    ;(window as typeof window & { SpeechRecognition?: typeof FakeRecognition }).SpeechRecognition = FakeRecognition
+
+    render(<Harness initialValue="База" />)
+
+    fireEvent.click(screen.getByRole('button', { name: 'Голос' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Начать запись' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Текст' }))
+
+    expect(stop).toHaveBeenCalledTimes(1)
+  })
+
+  it('leaves listening state when recognition ends naturally', () => {
+    class FakeRecognition {
+      static instances: FakeRecognition[] = []
+      lang = ''
+      continuous = false
+      interimResults = false
+      maxAlternatives = 0
+      onresult: ((event: never) => void) | null = null
+      onerror = null
+      onend: (() => void) | null = null
+
+      constructor() {
+        FakeRecognition.instances.push(this)
+      }
+
+      start() {}
+
+      stop() {}
+    }
+
+    ;(window as typeof window & { SpeechRecognition?: typeof FakeRecognition }).SpeechRecognition = FakeRecognition
+
+    render(<Harness initialValue="База" />)
+
+    fireEvent.click(screen.getByRole('button', { name: 'Голос' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Начать запись' }))
+    act(() => {
+      FakeRecognition.instances.at(-1)?.onend?.()
+    })
+
+    expect(screen.getByText('Поддерживается')).toBeInTheDocument()
+    expect(screen.getByText('Голосовой ввод доступен. Нажмите «Начать запись», чтобы добавить фразу.')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Начать запись' })).toBeInTheDocument()
+  })
+
+  it('shows a controlled error state when recognition start throws', () => {
+    class FakeRecognition {
+      lang = ''
+      continuous = false
+      interimResults = false
+      maxAlternatives = 0
+      onresult = null
+      onerror = null
+      onend = null
+
+      start() {
+        throw new Error('start failed')
+      }
+
+      stop() {}
+    }
+
+    ;(window as typeof window & { SpeechRecognition?: typeof FakeRecognition }).SpeechRecognition = FakeRecognition
+
+    render(<Harness initialValue="База" />)
+
+    fireEvent.click(screen.getByRole('button', { name: 'Голос' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Начать запись' }))
+
+    expect(screen.getByText('Ошибка')).toBeInTheDocument()
+    expect(screen.getByText('Ошибка голосового ввода: start failed')).toBeInTheDocument()
+  })
+
+  it('uses unique textarea ids for multiple component instances', () => {
+    render(
+      <>
+        <Harness initialValue="Первый" />
+        <Harness initialValue="Второй" />
+      </>,
+    )
+
+    const [first, second] = screen.getAllByRole('textbox', { name: 'Комментарий' })
+
+    expect(first).toHaveAttribute('id')
+    expect(second).toHaveAttribute('id')
+    expect(first.getAttribute('id')).not.toBe(second.getAttribute('id'))
+  })
+
   it('shows a distinct ready state when voice input is supported', () => {
     class FakeRecognition {
       lang = ''
@@ -39,6 +148,7 @@ describe('CommentComposer', () => {
       maxAlternatives = 0
       onresult = null
       onerror = null
+      onend = null
 
       start() {}
 

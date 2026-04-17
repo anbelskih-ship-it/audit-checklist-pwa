@@ -39,6 +39,7 @@ describe('comment-voice', () => {
       maxAlternatives = 0
       onresult: unknown = 'unset'
       onerror: unknown = 'unset'
+      onend: unknown = 'unset'
 
       start() {}
 
@@ -56,6 +57,7 @@ describe('comment-voice', () => {
     expect(recognition?.maxAlternatives).toBe(1)
     expect(recognition?.onresult).toBeNull()
     expect(recognition?.onerror).toBeNull()
+    expect(recognition?.onend).toBeNull()
     expect(recognition?.start).toBeTypeOf('function')
     expect(recognition?.stop).toBeTypeOf('function')
   })
@@ -68,6 +70,7 @@ describe('comment-voice', () => {
       maxAlternatives = 0
       onresult: unknown = 'unset'
       onerror: unknown = 'unset'
+      onend: unknown = 'unset'
 
       start() {}
 
@@ -85,6 +88,7 @@ describe('comment-voice', () => {
     expect(recognition?.maxAlternatives).toBe(1)
     expect(recognition?.onresult).toBeNull()
     expect(recognition?.onerror).toBeNull()
+    expect(recognition?.onend).toBeNull()
   })
 
   it('models the result event with transcript and finality at the expected levels', () => {

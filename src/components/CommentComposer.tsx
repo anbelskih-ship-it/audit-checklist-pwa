@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useId, useRef, useState } from 'react'
 import {
   applyPhraseSelection,
   applyTextInput,
@@ -109,7 +109,9 @@ export default function CommentComposer({ value, onChange, onBlur }: CommentComp
   const [inputMethod, setInputMethod] = useState<InputMethod>('text')
   const [voiceStatus, setVoiceStatus] = useState<VoiceStatus>('idle')
   const [voiceError, setVoiceError] = useState('')
+  const textareaId = useId()
   const composerStateRef = useRef(composerState)
+  const inputMethodRef = useRef(inputMethod)
   const recognitionRef = useRef<SpeechRecognitionLike | null>(null)
 
   useEffect(() => {
@@ -122,12 +124,29 @@ export default function CommentComposer({ value, onChange, onBlur }: CommentComp
     composerStateRef.current = composerState
   }, [composerState])
 
+  useEffect(() => {
+    inputMethodRef.current = inputMethod
+  }, [inputMethod])
+
+  const stopRecognition = (nextStatus: VoiceStatus = 'ready') => {
+    const recognition = recognitionRef.current
+    if (!recognition) return
+
+    recognition.onresult = null
+    recognition.onerror = null
+    recognition.onend = null
+    recognition.stop()
+    recognitionRef.current = null
+    setVoiceStatus(nextStatus)
+  }
+
   useEffect(() => () => {
-    recognitionRef.current?.stop()
+    stopRecognition('idle')
   }, [])
 
   useEffect(() => {
     if (inputMethod !== 'voice') {
+      stopRecognition('idle')
       setVoiceStatus('idle')
       setVoiceError('')
       return
@@ -165,6 +184,8 @@ export default function CommentComposer({ value, onChange, onBlur }: CommentComp
   }
 
   const handleVoiceResult = (event: SpeechRecognitionEventLike) => {
+    if (inputMethodRef.current !== 'voice') return
+
     const result = event.results[event.resultIndex]
     const currentState = composerStateRef.current
 
@@ -179,14 +200,22 @@ export default function CommentComposer({ value, onChange, onBlur }: CommentComp
   }
 
   const handleVoiceError = (event: SpeechRecognitionErrorEventLike) => {
+    recognitionRef.current = null
     setVoiceStatus('error')
     setVoiceError(event.message || `Ошибка голосового ввода: ${event.error}`)
   }
 
+  const handleVoiceEnd = () => {
+    recognitionRef.current = null
+
+    if (inputMethodRef.current !== 'voice') return
+
+    setVoiceStatus((current) => (current === 'listening' ? 'ready' : current))
+  }
+
   const handleVoiceToggle = () => {
     if (voiceStatus === 'listening') {
-      recognitionRef.current?.stop()
-      setVoiceStatus('ready')
+      stopRecognition('ready')
       setVoiceError('')
       return
     }
@@ -204,9 +233,22 @@ export default function CommentComposer({ value, onChange, onBlur }: CommentComp
 
     recognition.onresult = handleVoiceResult
     recognition.onerror = handleVoiceError
-    recognition.start()
-    setVoiceStatus('listening')
-    setVoiceError('')
+    recognition.onend = handleVoiceEnd
+
+    try {
+      recognition.start()
+      setVoiceStatus('listening')
+      setVoiceError('')
+    } catch (error) {
+      recognition.onresult = null
+      recognition.onerror = null
+      recognition.onend = null
+      recognitionRef.current = null
+      setVoiceStatus('error')
+      setVoiceError(
+        error instanceof Error ? `Ошибка голосового ввода: ${error.message}` : 'Не удалось запустить голосовой ввод.',
+      )
+    }
   }
 
   return (
@@ -270,11 +312,11 @@ export default function CommentComposer({ value, onChange, onBlur }: CommentComp
       )}
 
       <div className="form-group comment-composer__textarea-group">
-        <label className="form-label" htmlFor="comment-composer-textarea">
+        <label className="form-label" htmlFor={textareaId}>
           Комментарий
         </label>
         <textarea
-          id="comment-composer-textarea"
+          id={textareaId}
           className="comment-composer__textarea"
           value={getVisibleComment(composerState)}
           onChange={(event) => handleTextChange(event.target.value)}
