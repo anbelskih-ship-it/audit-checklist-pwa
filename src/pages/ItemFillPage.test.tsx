@@ -1,5 +1,5 @@
 import '@testing-library/jest-dom/vitest'
-import { fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import ItemFillPage from './ItemFillPage'
@@ -144,5 +144,81 @@ describe('ItemFillPage', () => {
         comment: 'Нет регулярного контроля',
       })
     })
+  })
+
+  it('saves phrase-driven comment changes without waiting for a later textarea blur', async () => {
+    useAuditMock.mockReturnValue({
+      audit: createAudit({ value: null, comment: '' }),
+      loading: false,
+      saveAnswer: saveAnswerMock,
+    })
+
+    renderPage()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Фразы' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Нет регулярного контроля' }))
+
+    await waitFor(() => {
+      expect(saveAnswerMock).toHaveBeenCalledWith('item-1', {
+        value: null,
+        comment: 'Нет регулярного контроля',
+      })
+    })
+  })
+
+  it('saves voice-driven comment changes after a final transcript', async () => {
+    class FakeRecognition {
+      static instances: FakeRecognition[] = []
+      lang = ''
+      continuous = false
+      interimResults = false
+      maxAlternatives = 0
+      onresult: ((event: { results: { 0: { 0: { transcript: string }; isFinal: boolean }; length: number }; resultIndex: number }) => void) | null = null
+      onerror = null
+      onend: (() => void) | null = null
+
+      constructor() {
+        FakeRecognition.instances.push(this)
+      }
+
+      start() {}
+
+      stop() {}
+    }
+
+    ;(window as typeof window & { SpeechRecognition?: typeof FakeRecognition }).SpeechRecognition = FakeRecognition
+
+    useAuditMock.mockReturnValue({
+      audit: createAudit({ value: null, comment: '' }),
+      loading: false,
+      saveAnswer: saveAnswerMock,
+    })
+
+    renderPage()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Голос' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Начать запись' }))
+
+    act(() => {
+      FakeRecognition.instances.at(-1)?.onresult?.({
+        resultIndex: 0,
+        results: {
+          0: {
+            0: { transcript: 'Голосовой комментарий' },
+            isFinal: true,
+          },
+          length: 1,
+        },
+      })
+    })
+
+    await waitFor(() => {
+      expect(saveAnswerMock).toHaveBeenCalledWith('item-1', {
+        value: null,
+        comment: 'Голосовой комментарий',
+      })
+    })
+
+    delete (window as typeof window & { SpeechRecognition?: unknown }).SpeechRecognition
   })
 })

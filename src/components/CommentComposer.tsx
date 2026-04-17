@@ -38,7 +38,7 @@ const PHRASES = [
 interface CommentComposerProps {
   value: string
   onChange: (nextValue: string) => void
-  onBlur?: () => void
+  onBlur?: (nextValue: string) => void
 }
 
 function buildChunk(state: CommentComposerState, text: string): string {
@@ -77,10 +77,6 @@ function getVoiceStatusLabel(status: VoiceStatus): string {
     default:
       return 'Ожидание'
   }
-}
-
-function getRecognitionSource(): SpeechRecognitionSource {
-  return window as typeof window & SpeechRecognitionSource
 }
 
 function ToggleGroup<T extends string>({
@@ -157,7 +153,7 @@ export default function CommentComposer({ value, onChange, onBlur }: CommentComp
       return
     }
 
-    if (!createConfiguredRecognition(getRecognitionSource())) {
+    if (!createConfiguredRecognition(window as typeof window & SpeechRecognitionSource)) {
       setVoiceStatus('unsupported')
       setVoiceError('')
       return
@@ -170,10 +166,13 @@ export default function CommentComposer({ value, onChange, onBlur }: CommentComp
     const previous = composerStateRef.current
     setComposerState(next)
     composerStateRef.current = next
+    const committedComment = getCommittedComment(next)
 
-    if (getCommittedComment(next) !== getCommittedComment(previous)) {
-      onChange(getCommittedComment(next))
+    if (committedComment !== getCommittedComment(previous)) {
+      onChange(committedComment)
     }
+
+    return committedComment
   }
 
   const handleModeChange = (mode: CommentEditMode) => {
@@ -185,7 +184,8 @@ export default function CommentComposer({ value, onChange, onBlur }: CommentComp
   }
 
   const handlePhraseClick = (phrase: string) => {
-    commitState(applyPhraseSelection(composerState, buildChunk(composerState, phrase)))
+    const nextValue = commitState(applyPhraseSelection(composerState, buildChunk(composerState, phrase)))
+    onBlur?.(nextValue)
   }
 
   const handleVoiceResult = (recognition: SpeechRecognitionLike, event: SpeechRecognitionEventLike) => {
@@ -200,7 +200,8 @@ export default function CommentComposer({ value, onChange, onBlur }: CommentComp
     const transcript = normalizeTranscript(result[0]?.transcript ?? '')
     if (!transcript) return
 
-    commitState(applyVoiceTranscript(currentState, buildChunk(currentState, transcript)))
+    const nextValue = commitState(applyVoiceTranscript(currentState, buildChunk(currentState, transcript)))
+    onBlur?.(nextValue)
     setVoiceStatus('ready')
     setVoiceError('')
   }
@@ -230,7 +231,7 @@ export default function CommentComposer({ value, onChange, onBlur }: CommentComp
 
     if (voiceStatus === 'unsupported') return
 
-    const recognition = createConfiguredRecognition(getRecognitionSource())
+    const recognition = createConfiguredRecognition(window as typeof window & SpeechRecognitionSource)
     recognitionRef.current = recognition
 
     if (!recognition) {
@@ -328,7 +329,7 @@ export default function CommentComposer({ value, onChange, onBlur }: CommentComp
           className="comment-composer__textarea"
           value={getVisibleComment(composerState)}
           onChange={(event) => handleTextChange(event.target.value)}
-          onBlur={onBlur}
+          onBlur={() => onBlur?.(getCommittedComment(composerStateRef.current))}
           placeholder="Комментарий..."
         />
       </div>

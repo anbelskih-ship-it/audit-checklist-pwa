@@ -7,7 +7,7 @@ import CommentComposer from './CommentComposer'
 interface HarnessProps {
   initialValue?: string
   onChange?: (nextValue: string) => void
-  onBlur?: () => void
+  onBlur?: (nextValue: string) => void
 }
 
 function Harness({ initialValue = '', onChange, onBlur }: HarnessProps) {
@@ -250,6 +250,62 @@ describe('CommentComposer', () => {
 
     expect(onChange).toHaveBeenCalledWith('Нет регулярного контроля')
     expect(screen.getByRole('textbox', { name: 'Комментарий' })).toHaveValue('Нет регулярного контроля')
+  })
+
+  it('calls onBlur with the committed phrase value after a phrase selection', () => {
+    const onBlur = vi.fn()
+
+    render(<Harness initialValue="База" onBlur={onBlur} />)
+
+    fireEvent.click(screen.getByRole('button', { name: 'Фразы' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Нет регулярного контроля' }))
+
+    expect(onBlur).toHaveBeenCalledWith('База Нет регулярного контроля')
+  })
+
+  it('calls onBlur with the committed value after a final voice transcript', () => {
+    const onBlur = vi.fn()
+
+    class FakeRecognition {
+      static instances: FakeRecognition[] = []
+      lang = ''
+      continuous = false
+      interimResults = false
+      maxAlternatives = 0
+      onresult: ((event: { results: { 0: { 0: { transcript: string }; isFinal: boolean }; length: number }; resultIndex: number }) => void) | null = null
+      onerror = null
+      onend = null
+
+      constructor() {
+        FakeRecognition.instances.push(this)
+      }
+
+      start() {}
+
+      stop() {}
+    }
+
+    ;(window as typeof window & { SpeechRecognition?: typeof FakeRecognition }).SpeechRecognition = FakeRecognition
+
+    render(<Harness initialValue="База" onBlur={onBlur} />)
+
+    fireEvent.click(screen.getByRole('button', { name: 'Голос' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Начать запись' }))
+
+    act(() => {
+      FakeRecognition.instances.at(-1)?.onresult?.({
+        resultIndex: 0,
+        results: {
+          0: {
+            0: { transcript: 'Голос' },
+            isFinal: true,
+          },
+          length: 1,
+        },
+      })
+    })
+
+    expect(onBlur).toHaveBeenCalledWith('База Голос')
   })
 
   it('shows a fallback message when voice input is unsupported', () => {

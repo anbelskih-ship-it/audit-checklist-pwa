@@ -97,10 +97,10 @@ export default function ItemFillPage() {
     await saveAnswer(current.item.id, { value, comment })
   }
 
-  const handleCommentBlur = async () => {
-    if (comment === (currentAnswer?.comment || '')) return
+  const handleCommentBlur = async (nextComment = comment) => {
+    if (nextComment === (currentAnswer?.comment || '')) return
     const val = currentAnswer?.value ?? null
-    await saveAnswer(current.item.id, { value: val, comment })
+    await saveAnswer(current.item.id, { value: val, comment: nextComment })
   }
 
   const sectionHeader = current.section.items[0]
