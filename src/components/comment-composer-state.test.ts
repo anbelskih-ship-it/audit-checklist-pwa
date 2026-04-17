@@ -10,8 +10,8 @@ import {
 } from './comment-composer-state'
 
 describe('comment-composer-state', () => {
-  it('appends typed text in append mode', () => {
-    const state = applyTextInput(createComposerState('База'), ' еще')
+  it('updates typed text in append mode from the full textarea value', () => {
+    const state = applyTextInput(createComposerState('База'), 'База еще')
 
     expect(getVisibleComment(state)).toBe('База еще')
     expect(getCommittedComment(state)).toBe('База еще')
@@ -38,6 +38,14 @@ describe('comment-composer-state', () => {
     expect(getCommittedComment(state)).toBe('База')
   })
 
+  it('does not start rewrite on an empty first text input', () => {
+    const state = applyTextInput(setMode(createComposerState('База'), 'rewrite'), '')
+
+    expect(state.rewriteStarted).toBe(false)
+    expect(getVisibleComment(state)).toBe('База')
+    expect(getCommittedComment(state)).toBe('База')
+  })
+
   it('starts a new version on the first rewrite text input', () => {
     const state = applyTextInput(setMode(createComposerState('База'), 'rewrite'), 'Новый текст')
 
@@ -59,11 +67,12 @@ describe('comment-composer-state', () => {
     expect(getCommittedComment(state)).toBe('Новое голосом')
   })
 
-  it('continues the rewritten version after switching back to append mode', () => {
+  it('continues the rewritten version after switching back to append mode and rewriting again', () => {
     const rewritten = applyTextInput(setMode(createComposerState('База'), 'rewrite'), 'Новый')
-    const appended = applyTextInput(setMode(rewritten, 'append'), ' текст')
+    const appended = applyTextInput(setMode(rewritten, 'append'), 'Новый текст')
+    const rewrittenAgain = applyTextInput(setMode(appended, 'rewrite'), 'Новый текст и ещё')
 
-    expect(getVisibleComment(appended)).toBe('Новый текст')
-    expect(getCommittedComment(appended)).toBe('Новый текст')
+    expect(getVisibleComment(rewrittenAgain)).toBe('Новый текст и ещё')
+    expect(getCommittedComment(rewrittenAgain)).toBe('Новый текст и ещё')
   })
 })

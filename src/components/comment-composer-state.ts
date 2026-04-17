@@ -25,6 +25,8 @@ export function setMode(state: CommentComposerState, mode: CommentEditMode): Com
 }
 
 function applyChunk(state: CommentComposerState, chunk: string): CommentComposerState {
+  if (!chunk) return state
+
   if (state.mode === 'rewrite' && !state.rewriteStarted) {
     return {
       ...state,
@@ -40,8 +42,24 @@ function applyChunk(state: CommentComposerState, chunk: string): CommentComposer
   }
 }
 
-export function applyTextInput(state: CommentComposerState, value: string): CommentComposerState {
-  return applyChunk(state, value)
+export function applyTextInput(state: CommentComposerState, nextValue: string): CommentComposerState {
+  if (state.workingComment === nextValue) return state
+
+  if (state.mode === 'rewrite' && !state.rewriteStarted) {
+    if (!nextValue || nextValue === state.originalComment) return state
+
+    return {
+      ...state,
+      rewriteStarted: true,
+      workingComment: nextValue,
+    }
+  }
+
+  return {
+    ...state,
+    rewriteStarted: state.rewriteStarted || state.mode === 'rewrite',
+    workingComment: nextValue,
+  }
 }
 
 export function applyPhraseSelection(state: CommentComposerState, phrase: string): CommentComposerState {
