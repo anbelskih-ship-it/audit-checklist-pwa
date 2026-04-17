@@ -1,0 +1,261 @@
+import { useEffect, useRef, useState } from 'react'
+import {
+  applyPhraseSelection,
+  applyTextInput,
+  applyVoiceTranscript,
+  createComposerState,
+  getCommittedComment,
+  getVisibleComment,
+  setMode,
+  type CommentComposerState,
+  type CommentEditMode,
+} from './comment-composer-state'
+import {
+  createConfiguredRecognition,
+  normalizeTranscript,
+  type SpeechRecognitionErrorEventLike,
+  type SpeechRecognitionEventLike,
+  type SpeechRecognitionLike,
+} from './comment-voice'
+
+type InputMethod = 'text' | 'phrases' | 'voice'
+type VoiceStatus = 'idle' | 'listening' | 'unsupported' | 'error'
+
+const PHRASES = [
+  'Нет стандарта выполнения',
+  'Стандарт есть, но не соблюдается',
+  'Нет регулярного контроля',
+  'Контроль нерегулярный',
+  'Нет закреплённой ответственности',
+  'Процесс выполняется частично',
+  'Сотрудник не знает порядок действий',
+  'Данные не фиксируются в системе',
+  'Нет доказательств выполнения',
+  'Требуется отдельная контр-мера',
+] as const
+
+interface CommentComposerProps {
+  value: string
+  onChange: (nextValue: string) => void
+  onBlur?: () => void
+}
+
+function buildChunk(state: CommentComposerState, text: string): string {
+  if (!text) return ''
+  if (state.mode === 'rewrite' && !state.rewriteStarted) return text
+  if (!state.workingComment) return text
+  if (/\s$/.test(state.workingComment)) return text
+  return ` ${text}`
+}
+
+function getVoiceMessage(status: VoiceStatus, errorMessage: string): string {
+  switch (status) {
+    case 'unsupported':
+      return 'Голосовой ввод недоступен на этом устройстве.'
+    case 'listening':
+      return 'Идёт запись. Говорите короткими фразами.'
+    case 'error':
+      return errorMessage || 'Не удалось получить голосовой ввод.'
+    default:
+      return 'Нажмите кнопку записи, чтобы добавить комментарий голосом.'
+  }
+}
+
+function ToggleGroup<T extends string>({
+  value,
+  options,
+  onChange,
+}: {
+  value: T
+  options: ReadonlyArray<{ value: T; label: string }>
+  onChange: (value: T) => void
+}) {
+  return (
+    <div className="comment-composer__toggle-group" role="group">
+      {options.map((option) => (
+        <button
+          key={option.value}
+          type="button"
+          className={`comment-composer__toggle ${value === option.value ? 'comment-composer__toggle--active' : ''}`}
+          aria-pressed={value === option.value}
+          onClick={() => onChange(option.value)}
+        >
+          {option.label}
+        </button>
+      ))}
+    </div>
+  )
+}
+
+export default function CommentComposer({ value, onChange, onBlur }: CommentComposerProps) {
+  const [composerState, setComposerState] = useState(() => createComposerState(value))
+  const [inputMethod, setInputMethod] = useState<InputMethod>('text')
+  const [voiceStatus, setVoiceStatus] = useState<VoiceStatus>('idle')
+  const [voiceError, setVoiceError] = useState('')
+  const composerStateRef = useRef(composerState)
+  const recognitionRef = useRef<SpeechRecognitionLike | null>(null)
+
+  useEffect(() => {
+    setComposerState((current) =>
+      value === current.workingComment ? current : createComposerState(value),
+    )
+  }, [value])
+
+  useEffect(() => {
+    composerStateRef.current = composerState
+  }, [composerState])
+
+  useEffect(() => () => {
+    recognitionRef.current?.stop()
+  }, [])
+
+  useEffect(() => {
+    if (inputMethod !== 'voice') return
+
+    if (!createConfiguredRecognition(window)) {
+      setVoiceStatus('unsupported')
+      setVoiceError('')
+      return
+    }
+
+    setVoiceStatus((current) => (current === 'unsupported' ? 'idle' : current))
+  }, [inputMethod])
+
+  const commitState = (next: CommentComposerState) => {
+    const previous = composerStateRef.current
+    setComposerState(next)
+    composerStateRef.current = next
+
+    if (getCommittedComment(next) !== getCommittedComment(previous)) {
+      onChange(getCommittedComment(next))
+    }
+  }
+
+  const handleModeChange = (mode: CommentEditMode) => {
+    setComposerState((current) => setMode(current, mode))
+  }
+
+  const handleTextChange = (nextValue: string) => {
+    commitState(applyTextInput(composerState, nextValue))
+  }
+
+  const handlePhraseClick = (phrase: string) => {
+    commitState(applyPhraseSelection(composerState, buildChunk(composerState, phrase)))
+  }
+
+  const handleVoiceResult = (event: SpeechRecognitionEventLike) => {
+    const result = event.results[event.resultIndex]
+    const currentState = composerStateRef.current
+
+    if (!result?.isFinal) return
+
+    const transcript = normalizeTranscript(result[0]?.transcript ?? '')
+    if (!transcript) return
+
+    commitState(applyVoiceTranscript(currentState, buildChunk(currentState, transcript)))
+    setVoiceStatus('idle')
+    setVoiceError('')
+  }
+
+  const handleVoiceError = (event: SpeechRecognitionErrorEventLike) => {
+    setVoiceStatus('error')
+    setVoiceError(event.message || `Ошибка голосового ввода: ${event.error}`)
+  }
+
+  const handleVoiceToggle = () => {
+    if (voiceStatus === 'listening') {
+      recognitionRef.current?.stop()
+      setVoiceStatus('idle')
+      setVoiceError('')
+      return
+    }
+
+    if (voiceStatus === 'unsupported') return
+
+    const recognition = createConfiguredRecognition(window)
+    recognitionRef.current = recognition
+
+    if (!recognition) {
+      setVoiceStatus('unsupported')
+      setVoiceError('')
+      return
+    }
+
+    recognition.onresult = handleVoiceResult
+    recognition.onerror = handleVoiceError
+    recognition.start()
+    setVoiceStatus('listening')
+    setVoiceError('')
+  }
+
+  return (
+    <section className="comment-composer">
+      <div className="comment-composer__section">
+        <span className="comment-composer__label">Режим</span>
+        <ToggleGroup
+          value={composerState.mode}
+          onChange={handleModeChange}
+          options={[
+            { value: 'append', label: 'Дополнить' },
+            { value: 'rewrite', label: 'Переписать' },
+          ]}
+        />
+      </div>
+
+      <div className="comment-composer__section">
+        <span className="comment-composer__label">Способ ввода</span>
+        <ToggleGroup
+          value={inputMethod}
+          onChange={setInputMethod}
+          options={[
+            { value: 'text', label: 'Текст' },
+            { value: 'phrases', label: 'Фразы' },
+            { value: 'voice', label: 'Голос' },
+          ]}
+        />
+      </div>
+
+      {inputMethod === 'phrases' && (
+        <div className="comment-composer__phrases" aria-label="Быстрые фразы">
+          {PHRASES.map((phrase) => (
+            <button
+              key={phrase}
+              type="button"
+              className="comment-composer__phrase"
+              onClick={() => handlePhraseClick(phrase)}
+            >
+              {phrase}
+            </button>
+          ))}
+        </div>
+      )}
+
+      {inputMethod === 'voice' && (
+        <div className={`comment-composer__voice comment-composer__voice--${voiceStatus}`}>
+          <button
+            type="button"
+            className={voiceStatus === 'listening' ? 'btn-primary' : ''}
+            onClick={handleVoiceToggle}
+          >
+            {voiceStatus === 'listening' ? 'Остановить запись' : 'Начать запись'}
+          </button>
+          <p className="comment-composer__voice-text">{getVoiceMessage(voiceStatus, voiceError)}</p>
+        </div>
+      )}
+
+      <div className="form-group comment-composer__textarea-group">
+        <label className="form-label" htmlFor="comment-composer-textarea">
+          Комментарий
+        </label>
+        <textarea
+          id="comment-composer-textarea"
+          className="comment-composer__textarea"
+          value={getVisibleComment(composerState)}
+          onChange={(event) => handleTextChange(event.target.value)}
+          onBlur={onBlur}
+          placeholder="Комментарий..."
+        />
+      </div>
+    </section>
+  )
+}
