@@ -125,6 +125,50 @@ describe('CommentComposer', () => {
     expect(screen.getByText('Ошибка голосового ввода: start failed')).toBeInTheDocument()
   })
 
+  it('ignores stale callbacks from an old recognition session after a new one starts', () => {
+    class FakeRecognition {
+      static instances: FakeRecognition[] = []
+      lang = ''
+      continuous = false
+      interimResults = false
+      maxAlternatives = 0
+      onresult = null
+      onerror: ((event: { error: string; message?: string }) => void) | null = null
+      onend: (() => void) | null = null
+
+      constructor() {
+        FakeRecognition.instances.push(this)
+      }
+
+      start() {}
+
+      stop() {}
+    }
+
+    ;(window as typeof window & { SpeechRecognition?: typeof FakeRecognition }).SpeechRecognition = FakeRecognition
+
+    render(<Harness initialValue="База" />)
+
+    fireEvent.click(screen.getByRole('button', { name: 'Голос' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Начать запись' }))
+    const sessionA = FakeRecognition.instances.at(-1)
+    const staleOnError = sessionA?.onerror
+    const staleOnEnd = sessionA?.onend
+
+    fireEvent.click(screen.getByRole('button', { name: 'Текст' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Голос' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Начать запись' }))
+
+    act(() => {
+      staleOnError?.({ error: 'network', message: 'Старая ошибка' })
+      staleOnEnd?.()
+    })
+
+    expect(screen.getByText('Запись')).toBeInTheDocument()
+    expect(screen.getByText('Идёт запись. Говорите короткими фразами.')).toBeInTheDocument()
+    expect(screen.queryByText('Старая ошибка')).not.toBeInTheDocument()
+  })
+
   it('uses unique textarea ids for multiple component instances', () => {
     render(
       <>

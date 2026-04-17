@@ -183,7 +183,8 @@ export default function CommentComposer({ value, onChange, onBlur }: CommentComp
     commitState(applyPhraseSelection(composerState, buildChunk(composerState, phrase)))
   }
 
-  const handleVoiceResult = (event: SpeechRecognitionEventLike) => {
+  const handleVoiceResult = (recognition: SpeechRecognitionLike, event: SpeechRecognitionEventLike) => {
+    if (recognitionRef.current !== recognition) return
     if (inputMethodRef.current !== 'voice') return
 
     const result = event.results[event.resultIndex]
@@ -199,13 +200,15 @@ export default function CommentComposer({ value, onChange, onBlur }: CommentComp
     setVoiceError('')
   }
 
-  const handleVoiceError = (event: SpeechRecognitionErrorEventLike) => {
+  const handleVoiceError = (recognition: SpeechRecognitionLike, event: SpeechRecognitionErrorEventLike) => {
+    if (recognitionRef.current !== recognition) return
     recognitionRef.current = null
     setVoiceStatus('error')
     setVoiceError(event.message || `Ошибка голосового ввода: ${event.error}`)
   }
 
-  const handleVoiceEnd = () => {
+  const handleVoiceEnd = (recognition: SpeechRecognitionLike) => {
+    if (recognitionRef.current !== recognition) return
     recognitionRef.current = null
 
     if (inputMethodRef.current !== 'voice') return
@@ -231,9 +234,9 @@ export default function CommentComposer({ value, onChange, onBlur }: CommentComp
       return
     }
 
-    recognition.onresult = handleVoiceResult
-    recognition.onerror = handleVoiceError
-    recognition.onend = handleVoiceEnd
+    recognition.onresult = (event) => handleVoiceResult(recognition, event)
+    recognition.onerror = (event) => handleVoiceError(recognition, event)
+    recognition.onend = () => handleVoiceEnd(recognition)
 
     try {
       recognition.start()
