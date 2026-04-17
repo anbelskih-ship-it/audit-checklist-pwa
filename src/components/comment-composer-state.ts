@@ -46,7 +46,7 @@ export function applyTextInput(state: CommentComposerState, nextValue: string): 
   if (state.workingComment === nextValue) return state
 
   if (state.mode === 'rewrite' && !state.rewriteStarted) {
-    if (!nextValue || nextValue === state.originalComment) return state
+    if (nextValue === state.originalComment) return state
 
     return {
       ...state,

@@ -38,12 +38,20 @@ describe('comment-composer-state', () => {
     expect(getCommittedComment(state)).toBe('База')
   })
 
-  it('does not start rewrite on an empty first text input', () => {
+  it('allows rewriting to an empty string as the first meaningful text input', () => {
     const state = applyTextInput(setMode(createComposerState('База'), 'rewrite'), '')
 
+    expect(state.rewriteStarted).toBe(true)
+    expect(getVisibleComment(state)).toBe('')
+    expect(getCommittedComment(state)).toBe('')
+  })
+
+  it('keeps an already empty comment unchanged on the first rewrite input', () => {
+    const state = applyTextInput(setMode(createComposerState(''), 'rewrite'), '')
+
     expect(state.rewriteStarted).toBe(false)
-    expect(getVisibleComment(state)).toBe('База')
-    expect(getCommittedComment(state)).toBe('База')
+    expect(getVisibleComment(state)).toBe('')
+    expect(getCommittedComment(state)).toBe('')
   })
 
   it('starts a new version on the first rewrite text input', () => {
