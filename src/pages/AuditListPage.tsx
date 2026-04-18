@@ -137,9 +137,14 @@ export default function AuditListPage() {
         <div className="flex-center gap-sm">
           <ThemeToggle />
           {appUser?.role === 'admin' && (
-            <button className="btn-ghost" onClick={() => navigate('/admin/users')}>
-              Пользователи
-            </button>
+            <>
+              <button className="btn-ghost" onClick={() => navigate('/admin/followup-bots')}>
+                Follow-up
+              </button>
+              <button className="btn-ghost" onClick={() => navigate('/admin/users')}>
+                Пользователи
+              </button>
+            </>
           )}
           <button className="btn-ghost" onClick={logout}>
             Выйти

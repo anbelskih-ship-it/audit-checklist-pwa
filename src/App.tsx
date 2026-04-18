@@ -7,6 +7,7 @@ import AuditOutlinePage from './pages/AuditOutlinePage'
 import ItemFillPage from './pages/ItemFillPage'
 import AuditViewPage from './pages/AuditViewPage'
 import AdminUsersPage from './pages/AdminUsersPage'
+import AdminFollowupBotsPage from './pages/AdminFollowupBotsPage'
 import LoginPage from './pages/LoginPage'
 import SyncStatus from './components/SyncStatus'
 import VersionToast from './components/VersionToast'
@@ -25,7 +26,7 @@ interface AppUser extends AllowedUser {
   photoURL: string
 }
 
-const AppUserContext = createContext<AppUser | null>(null)
+export const AppUserContext = createContext<AppUser | null>(null)
 export function useAppUser() { return useContext(AppUserContext)! }
 
 function RequireRole({
@@ -126,6 +127,14 @@ export default function App() {
             element={(
               <RequireRole role="admin">
                 <AdminUsersPage />
+              </RequireRole>
+            )}
+          />
+          <Route
+            path="/admin/followup-bots"
+            element={(
+              <RequireRole role="admin">
+                <AdminFollowupBotsPage />
               </RequireRole>
             )}
           />

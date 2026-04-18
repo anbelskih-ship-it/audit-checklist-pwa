@@ -1283,6 +1283,86 @@ select {
   min-height: 60px;
 }
 
+.followup-meta {
+  margin-top: var(--space-5);
+  display: grid;
+  gap: var(--space-2);
+  font-size: var(--font-size-caption);
+  color: var(--color-text-secondary);
+}
+
+.followup-section {
+  margin-top: var(--space-7);
+}
+
+.followup-chain {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  margin-top: var(--space-4);
+}
+
+.followup-health-table {
+  margin-top: var(--space-4);
+  display: grid;
+  gap: var(--space-3);
+}
+
+.followup-health-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-6);
+  padding: var(--space-4) var(--space-5);
+  border-radius: var(--radius-lg);
+  background: color-mix(in srgb, var(--color-surface) 82%, var(--color-bg) 18%);
+  border: 1px solid var(--color-border-light);
+  font-size: var(--font-size-caption);
+  color: var(--color-text-secondary);
+}
+
+.followup-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 32px;
+  padding: var(--space-2) var(--space-5);
+  border-radius: 999px;
+  border: 1px solid transparent;
+  font-size: var(--font-size-xs);
+  font-weight: 700;
+}
+
+.followup-pill--active {
+  background: var(--color-primary);
+  color: var(--color-text-on-primary);
+  border-color: var(--color-primary);
+}
+
+.followup-pill--green {
+  background: var(--color-bg-success);
+  color: var(--color-success-dark);
+  border-color: color-mix(in srgb, var(--color-success) 35%, transparent);
+}
+
+.followup-pill--red {
+  background: var(--color-bg-danger);
+  color: var(--color-danger-darker);
+  border-color: color-mix(in srgb, var(--color-danger) 35%, transparent);
+}
+
+.followup-pill--amber {
+  background: var(--color-bg-warning);
+  color: #9a6400;
+  border-color: color-mix(in srgb, var(--color-warning) 35%, transparent);
+}
+
+.followup-pill--gray {
+  background: var(--color-border-light);
+  color: var(--color-text-secondary);
+  border-color: var(--color-border);
+}
+
 .comment-composer {
   display: flex;
   flex-direction: column;
