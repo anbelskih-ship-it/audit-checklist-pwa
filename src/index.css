@@ -296,13 +296,13 @@ button:disabled {
 }
 
 .btn-muted {
-  background: color-mix(in srgb, var(--color-surface) 52%, var(--color-border-light) 48%);
+  background: color-mix(in srgb, var(--color-primary) 14%, var(--color-surface) 86%);
   color: var(--color-text-secondary);
-  border-color: color-mix(in srgb, var(--color-border) 78%, var(--color-text-muted) 22%);
+  border-color: color-mix(in srgb, var(--color-primary) 18%, var(--color-border) 82%);
 }
 
 .btn-muted:active {
-  background: color-mix(in srgb, var(--color-surface-active) 60%, var(--color-border-light) 40%);
+  background: color-mix(in srgb, var(--color-primary) 18%, var(--color-surface-active) 82%);
 }
 
 .btn-ghost {
@@ -1394,9 +1394,9 @@ select {
 }
 
 [data-theme="dark"] .btn-muted {
-  background: #252525;
+  background: #2a2a2a;
   color: var(--color-text-secondary);
-  border-color: #3a3a3a;
+  border-color: #404040;
 }
 
 [data-theme="dark"] .audit-group__count {
@@ -1406,15 +1406,16 @@ select {
 }
 
 [data-theme="dark"] .metrics-fill {
-  background: #2a2623;
+  background: #252220;
+  filter: saturate(0.42) brightness(0.74);
 }
 
 [data-theme="dark"] .progress-bar {
-  background: #2f2f2f;
+  background: #303030;
 }
 
 [data-theme="dark"] .progress-fill {
-  filter: saturate(0.72) brightness(0.86);
+  filter: saturate(0.35) brightness(0.68);
 }
 
 @media (prefers-color-scheme: dark) {
@@ -1436,9 +1437,9 @@ select {
   }
 
   :root:not([data-theme]) .btn-muted {
-    background: #252525;
+    background: #2a2a2a;
     color: var(--color-text-secondary);
-    border-color: #3a3a3a;
+    border-color: #404040;
   }
 
   :root:not([data-theme]) .audit-group__count {
@@ -1448,15 +1449,16 @@ select {
   }
 
   :root:not([data-theme]) .metrics-fill {
-    background: #2a2623;
+    background: #252220;
+    filter: saturate(0.42) brightness(0.74);
   }
 
   :root:not([data-theme]) .progress-bar {
-    background: #2f2f2f;
+    background: #303030;
   }
 
   :root:not([data-theme]) .progress-fill {
-    filter: saturate(0.72) brightness(0.86);
+    filter: saturate(0.35) brightness(0.68);
   }
 }
 .mt-md { margin-top: var(--space-8); }

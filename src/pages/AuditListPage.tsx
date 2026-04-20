@@ -218,63 +218,67 @@ export default function AuditListPage() {
         </div>
       </div>
 
-      {/* Filter */}
-      <div className="filter-row">
-        <button
-          className={filter === 'all' ? 'btn-primary' : ''}
-          onClick={() => setFilter('all')}
-        >
-          Все
-        </button>
-        <button
-          className={filter === 'my' ? 'btn-primary' : ''}
-          onClick={() => setFilter('my')}
-        >
-          Мои
-        </button>
-      </div>
-
-      {appUser?.role === 'guest' ? null : !showNew ? (
-        <button className="btn-muted btn-full mb-md" onClick={() => setShowNew(true)}>
-          + Новый аудит
-        </button>
-      ) : null}
-
-      {/* ASP drafts */}
-      {aspDrafts.length > 0 && (
-        <section className="audit-group">
-          <div className="audit-group__header">
-            <div>
-              <div className="section-heading">АСП с пробегом</div>
-              <div className="audit-group__hint">Актуальные проекты по автомобилям с пробегом</div>
-            </div>
-            <div className="audit-group__count">{aspDrafts.length}</div>
+      {!showNew && (
+        <>
+          {/* Filter */}
+          <div className="filter-row">
+            <button
+              className={filter === 'all' ? 'btn-primary' : ''}
+              onClick={() => setFilter('all')}
+            >
+              Все
+            </button>
+            <button
+              className={filter === 'my' ? 'btn-primary' : ''}
+              onClick={() => setFilter('my')}
+            >
+              Мои
+            </button>
           </div>
-          {aspDrafts.map((audit, index) => renderCard(audit, index, aspDrafts.length))}
-        </section>
-      )}
 
-      {/* NA drafts */}
-      {naDrafts.length > 0 && (
-        <section className={`audit-group ${aspDrafts.length > 0 ? 'audit-group--spaced' : ''}`}>
-          <div className="audit-group__header">
-            <div>
-              <div className="section-heading">Новые АМ</div>
-              <div className="audit-group__hint">Актуальные проекты по новым автомобилям</div>
+          {appUser?.role === 'guest' ? null : (
+            <button className="btn-muted btn-full mb-md" onClick={() => setShowNew(true)}>
+              + Новый аудит
+            </button>
+          )}
+
+          {/* ASP drafts */}
+          {aspDrafts.length > 0 && (
+            <section className="audit-group">
+              <div className="audit-group__header">
+                <div>
+                  <div className="section-heading">АСП с пробегом</div>
+                  <div className="audit-group__hint">Актуальные проекты по автомобилям с пробегом</div>
+                </div>
+                <div className="audit-group__count">{aspDrafts.length}</div>
+              </div>
+              {aspDrafts.map((audit, index) => renderCard(audit, index, aspDrafts.length))}
+            </section>
+          )}
+
+          {/* NA drafts */}
+          {naDrafts.length > 0 && (
+            <section className={`audit-group ${aspDrafts.length > 0 ? 'audit-group--spaced' : ''}`}>
+              <div className="audit-group__header">
+                <div>
+                  <div className="section-heading">Новые АМ</div>
+                  <div className="audit-group__hint">Актуальные проекты по новым автомобилям</div>
+                </div>
+                <div className="audit-group__count">{naDrafts.length}</div>
+              </div>
+              {naDrafts.map((audit, index) => renderCard(audit, index, naDrafts.length))}
+            </section>
+          )}
+
+          {/* Empty state */}
+          {drafts.length === 0 && (
+            <div className="empty-state">
+              <div className="empty-state-icon">📋</div>
+              <div className="empty-state-text">Пока нет активных аудитов</div>
+              <div className="empty-state-hint">Создайте первый аудит, чтобы начать</div>
             </div>
-            <div className="audit-group__count">{naDrafts.length}</div>
-          </div>
-          {naDrafts.map((audit, index) => renderCard(audit, index, naDrafts.length))}
-        </section>
-      )}
-
-      {/* Empty state */}
-      {drafts.length === 0 && !showNew && (
-        <div className="empty-state">
-          <div className="empty-state-icon">📋</div>
-          <div className="empty-state-text">Пока нет активных аудитов</div>
-          <div className="empty-state-hint">Создайте первый аудит, чтобы начать</div>
-        </div>
+          )}
+        </>
       )}
 
       {/* Create form (hidden for guests) */}
