@@ -17,8 +17,13 @@ describe('getLoginStrategy', () => {
       .toBe('popup')
   })
 
-  it('uses redirect on Android', () => {
+  it('uses popup on Android Chrome', () => {
     expect(getLoginStrategy('Mozilla/5.0 (Linux; Android 14; SM-A556B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/135.0.0.0 Mobile Safari/537.36'))
+      .toBe('popup')
+  })
+
+  it('uses redirect in Android in-app browser', () => {
+    expect(getLoginStrategy('Mozilla/5.0 (Linux; Android 14; SM-A556B; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/135.0.0.0 Mobile Safari/537.36 Telegram'))
       .toBe('redirect')
   })
 })
