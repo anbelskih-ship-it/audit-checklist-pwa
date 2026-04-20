@@ -1187,32 +1187,6 @@ select {
   color: var(--color-text-muted);
 }
 
-.fill-sheet-progress {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: var(--space-1);
-  margin-bottom: var(--space-4);
-}
-
-.fill-sheet-progress__badge {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: var(--space-1);
-}
-
-.fill-sheet-progress__count {
-  font-size: var(--font-size-body-sm);
-  font-weight: 700;
-  color: var(--color-text);
-}
-
-.fill-sheet-progress__score {
-  font-size: var(--font-size-xs);
-  color: var(--color-text-muted);
-}
-
 .fill-sheet-title {
   flex: 1;
   font-size: var(--font-size-body-lg);
@@ -1312,13 +1286,13 @@ select {
 }
 
 .btn-primary--nav {
-  background: #243852;
-  border-color: #243852;
+  background: #1f73ff;
+  border-color: #1f73ff;
 }
 
 .btn-primary--nav:active {
-  background: #1c2d43;
-  border-color: #1c2d43;
+  background: #155dd1;
+  border-color: #155dd1;
 }
 
 .version-toast {
@@ -1455,10 +1429,6 @@ select {
 
 [data-theme="dark"] .progress-fill {
   filter: saturate(0.35) brightness(0.68);
-}
-
-[data-theme="dark"] .fill-sheet-progress__count {
-  color: var(--color-text);
 }
 
 @media (prefers-color-scheme: dark) {

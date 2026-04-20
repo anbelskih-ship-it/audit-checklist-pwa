@@ -136,12 +136,6 @@ export default function ItemFillPage() {
 
       <div className="fill-audit-progress">{auditPositionLabel}</div>
 
-      <div className="fill-sheet-progress">
-        {sheetScorePct !== null && (
-          <div className="fill-sheet-progress__score">Результат: {sheetScorePct}%</div>
-        )}
-      </div>
-
       {/* Sheet name + nav */}
       <div className="fill-sheet-nav">
         <button
