@@ -295,6 +295,16 @@ button:disabled {
   border-color: var(--color-primary-active);
 }
 
+.btn-muted {
+  background: color-mix(in srgb, var(--color-surface) 52%, var(--color-border-light) 48%);
+  color: var(--color-text-secondary);
+  border-color: color-mix(in srgb, var(--color-border) 78%, var(--color-text-muted) 22%);
+}
+
+.btn-muted:active {
+  background: color-mix(in srgb, var(--color-surface-active) 60%, var(--color-border-light) 40%);
+}
+
 .btn-ghost {
   background: transparent;
   color: var(--color-primary);
@@ -474,11 +484,11 @@ button:disabled {
 }
 
 .card--tone-a {
-  background: color-mix(in srgb, var(--color-surface) 94%, #ffffff 6%);
+  background: color-mix(in srgb, var(--color-surface) 96%, #ffffff 4%);
 }
 
 .card--tone-b {
-  background: color-mix(in srgb, var(--color-surface) 88%, #efe6db 12%);
+  background: color-mix(in srgb, var(--color-surface) 78%, #ece3d7 22%);
 }
 
 .card-title {
@@ -875,6 +885,10 @@ select {
   padding: var(--space-2) var(--space-5);
   box-shadow: none;
   font-size: var(--font-size-xs);
+}
+
+.audit-settings-form {
+  margin-top: 0;
 }
 
 .sync-badge--online {
@@ -1376,7 +1390,13 @@ select {
 }
 
 [data-theme="dark"] .card--tone-b {
-  background: #242424;
+  background: #2a2a2a;
+}
+
+[data-theme="dark"] .btn-muted {
+  background: #252525;
+  color: var(--color-text-secondary);
+  border-color: #3a3a3a;
 }
 
 [data-theme="dark"] .audit-group__count {
@@ -1412,7 +1432,13 @@ select {
   }
 
   :root:not([data-theme]) .card--tone-b {
-    background: #242424;
+    background: #2a2a2a;
+  }
+
+  :root:not([data-theme]) .btn-muted {
+    background: #252525;
+    color: var(--color-text-secondary);
+    border-color: #3a3a3a;
   }
 
   :root:not([data-theme]) .audit-group__count {

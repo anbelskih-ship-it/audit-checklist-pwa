@@ -4,6 +4,7 @@ import { useAuth } from './hooks/useAuth'
 import { getAllowedUser, type AllowedUser } from './db/users'
 import AuditListPage from './pages/AuditListPage'
 import AuditOutlinePage from './pages/AuditOutlinePage'
+import AuditSettingsPage from './pages/AuditSettingsPage'
 import ItemFillPage from './pages/ItemFillPage'
 import AuditViewPage from './pages/AuditViewPage'
 import AdminUsersPage from './pages/AdminUsersPage'
@@ -138,6 +139,7 @@ export default function App() {
             )}
           />
           <Route path="/audit/:auditId" element={<AuditOutlinePage />} />
+          <Route path="/audit/:auditId/settings" element={<AuditSettingsPage />} />
           <Route path="/audit/:auditId/fill/:itemId" element={<ItemFillPage />} />
           <Route path="/audit/:auditId/view" element={<AuditViewPage />} />
           <Route path="*" element={<Navigate to="/" />} />

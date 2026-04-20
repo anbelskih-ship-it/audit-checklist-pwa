@@ -15,6 +15,16 @@ import { formatAuditCardTitle } from './audit-list-format'
 
 type ViewMode = 'edit' | 'review'
 
+function EditAuditIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path d="M5 16.5V19H7.5L16.6 9.9L14.1 7.4L5 16.5Z" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round" />
+      <path d="M13.4 8.1L15.9 10.6" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+      <path d="M15 6.5L17.5 9" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+    </svg>
+  )
+}
+
 export default function AuditOutlinePage() {
   const { auditId } = useParams<{ auditId: string }>()
   const { audit, loading: auditLoading } = useAudit(auditId!)
@@ -114,6 +124,14 @@ export default function AuditOutlinePage() {
     <div className="page">
       <div className="page-header">
         <button className="btn-ghost" onClick={() => navigate('/')}>← Назад</button>
+        <button
+          type="button"
+          className="header-icon-btn header-icon-btn--admin"
+          aria-label="Редактировать параметры аудита"
+          onClick={() => navigate(`/audit/${audit.id}/settings`)}
+        >
+          <EditAuditIcon />
+        </button>
       </div>
 
       <h1 className="page-title">{formatAuditCardTitle(audit)}</h1>

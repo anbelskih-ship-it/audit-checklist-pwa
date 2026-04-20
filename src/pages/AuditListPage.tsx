@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { listAudits, createAudit } from '../db/audits'
 import { useAuth } from '../hooks/useAuth'
 import { useAppUser } from '../App'
+import { listAllowedUsers, type AllowedUser } from '../db/users'
 import type { Audit, ChecklistStructure } from '../types'
 import ProgressBar from '../components/ProgressBar'
 import ThemeToggle from '../components/ThemeToggle'
@@ -74,6 +75,7 @@ export default function AuditListPage() {
   const appUser = useAppUser()
   const online = useOnline()
   const [audits, setAudits] = useState<Audit[]>([])
+  const [allowedUsers, setAllowedUsers] = useState<AllowedUser[]>([])
   const [structureTotals, setStructureTotals] = useState<Record<string, number>>({})
   const [structureItemIds, setStructureItemIds] = useState<Record<string, Set<string>>>({})
   const [filter, setFilter] = useState<'all' | 'my'>('all')
@@ -88,6 +90,7 @@ export default function AuditListPage() {
 
   useEffect(() => {
     listAudits().then(setAudits)
+    listAllowedUsers().then(setAllowedUsers)
 
     const loadStructureTotals = async () => {
       const canSync = typeof navigator !== 'undefined' ? navigator.onLine : false
@@ -115,6 +118,9 @@ export default function AuditListPage() {
   const drafts = filtered.filter(a => a.status === 'draft')
   const aspDrafts = drafts.filter(a => a.type === 'АСП').sort(compareAuditsByProjectDateDesc)
   const naDrafts = drafts.filter(a => a.type === 'НА').sort(compareAuditsByProjectDateDesc)
+  const authorNames = Object.fromEntries(
+    allowedUsers.map(user => [user.email.toLowerCase(), user.name || user.email]),
+  )
 
   const getMetrics = (audit: Audit) => {
     return getAuditCardMetrics(audit.answers, structureTotals[audit.type], structureItemIds[audit.type])
@@ -132,7 +138,7 @@ export default function AuditListPage() {
       plannedEnd: newPlannedEnd,
       comment: newComment.trim(),
       authorUid: appUser.uid,
-      authorName: appUser.displayName,
+      authorName: appUser.name || appUser.displayName,
       authorEmail: appUser.email,
       structureVersion: version,
     })
@@ -143,6 +149,7 @@ export default function AuditListPage() {
   const renderCard = (a: Audit, index: number, totalInGroup: number) => {
     const { answered, totalItems, fillPct, scorePct } = getMetrics(a)
     const zebraClass = totalInGroup >= 3 ? (index % 2 === 0 ? 'card--tone-a' : 'card--tone-b') : ''
+    const authorLabel = authorNames[(a.authorEmail || '').toLowerCase()] || a.authorName || a.authorEmail
     return (
       <div key={a.id} className={`card ${zebraClass}`.trim()} onClick={() => navigate(`/audit/${a.id}`)}>
         <div className="flex-between mb-sm">
@@ -158,7 +165,7 @@ export default function AuditListPage() {
           )}
         </div>
         <div className="card-subtitle">
-          {a.authorName || a.authorEmail} · {new Date(a.updated).toLocaleDateString('ru')}
+          {authorLabel} · {new Date(a.updated).toLocaleDateString('ru')}
         </div>
         {totalItems ? <ProgressBar filled={answered} total={totalItems} hideLabel /> : <div className="text-disabled mb-sm">Загружаю структуру чек-листа...</div>}
         {scorePct !== null && (
@@ -227,6 +234,12 @@ export default function AuditListPage() {
         </button>
       </div>
 
+      {appUser?.role === 'guest' ? null : !showNew ? (
+        <button className="btn-muted btn-full mb-md" onClick={() => setShowNew(true)}>
+          + Новый аудит
+        </button>
+      ) : null}
+
       {/* ASP drafts */}
       {aspDrafts.length > 0 && (
         <section className="audit-group">
@@ -265,11 +278,7 @@ export default function AuditListPage() {
       )}
 
       {/* Create form (hidden for guests) */}
-      {appUser?.role === 'guest' ? null : !showNew ? (
-        <button className="btn-primary btn-full mt-md" onClick={() => setShowNew(true)}>
-          + Новый аудит
-        </button>
-      ) : (
+      {appUser?.role === 'guest' ? null : showNew ? (
         <div className="new-audit-form">
           <div className="form-group">
             <label className="form-label">Тип</label>
@@ -298,7 +307,7 @@ export default function AuditListPage() {
               placeholder="Дополнительная информация..." rows={2} className="textarea-sm" />
           </div>
           <div className="user-info">
-            Ответственный: <strong>{appUser?.displayName}</strong>
+            Ответственный: <strong>{appUser?.name || appUser?.displayName}</strong>
           </div>
           <div className="btn-group">
             <button className="btn-primary flex-1" onClick={handleCreate} disabled={creating || !newDealership.trim()}>
@@ -307,7 +316,7 @@ export default function AuditListPage() {
             <button className="flex-1" onClick={() => setShowNew(false)}>Отмена</button>
           </div>
         </div>
-      )}
+      ) : null}
     </div>
   )
 }

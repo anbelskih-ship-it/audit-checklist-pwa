@@ -81,3 +81,20 @@ export async function saveAuditExportMeta(
 export async function deleteAudit(auditId: string): Promise<void> {
   await deleteDoc(doc(db, AUDITS, auditId))
 }
+
+export interface UpdateAuditMetaParams {
+  dealership: string
+  city: string
+  plannedEnd: string
+  comment: string
+}
+
+export async function updateAuditMeta(auditId: string, params: UpdateAuditMetaParams): Promise<void> {
+  await setDoc(doc(db, AUDITS, auditId), {
+    dealership: params.dealership,
+    city: params.city,
+    plannedEnd: params.plannedEnd,
+    comment: params.comment,
+    updated: new Date().toISOString(),
+  }, { merge: true })
+}
