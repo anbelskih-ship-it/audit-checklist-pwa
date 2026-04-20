@@ -226,12 +226,26 @@ body {
 }
 
 .header-icon-btn svg {
-  width: 18px;
-  height: 18px;
+  width: 20px;
+  height: 20px;
+}
+
+.header-icon-btn--bot {
+  color: #1f8f74;
+  background: color-mix(in srgb, #1f8f74 14%, var(--color-surface) 86%);
+  border-color: color-mix(in srgb, #1f8f74 24%, var(--color-border) 76%);
+}
+
+.header-icon-btn--admin {
+  color: #3f6fd8;
+  background: color-mix(in srgb, #3f6fd8 14%, var(--color-surface) 86%);
+  border-color: color-mix(in srgb, #3f6fd8 24%, var(--color-border) 76%);
 }
 
 .header-icon-btn--danger {
-  color: var(--color-text-secondary);
+  color: #b35757;
+  background: color-mix(in srgb, #b35757 13%, var(--color-surface) 87%);
+  border-color: color-mix(in srgb, #b35757 24%, var(--color-border) 76%);
 }
 
 /* === Buttons === */
@@ -1314,8 +1328,61 @@ select {
   }
 
   .header-icon-btn svg {
-    width: 16px;
-    height: 16px;
+    width: 18px;
+    height: 18px;
+  }
+}
+
+[data-theme="dark"] .header-icon-btn,
+:root:not([data-theme]) .header-icon-btn {
+  box-shadow: none;
+}
+
+[data-theme="dark"] .audit-group {
+  background: linear-gradient(180deg, #252525 0%, #222222 100%);
+  border-color: #303030;
+}
+
+[data-theme="dark"] .audit-group__count {
+  background: #1f1f1f;
+  color: var(--color-text-secondary);
+  box-shadow: none;
+}
+
+[data-theme="dark"] .metrics-fill {
+  background: #2a2623;
+}
+
+[data-theme="dark"] .progress-bar {
+  background: #2f2f2f;
+}
+
+[data-theme="dark"] .progress-fill {
+  filter: saturate(0.72) brightness(0.86);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme]) .audit-group {
+    background: linear-gradient(180deg, #252525 0%, #222222 100%);
+    border-color: #303030;
+  }
+
+  :root:not([data-theme]) .audit-group__count {
+    background: #1f1f1f;
+    color: var(--color-text-secondary);
+    box-shadow: none;
+  }
+
+  :root:not([data-theme]) .metrics-fill {
+    background: #2a2623;
+  }
+
+  :root:not([data-theme]) .progress-bar {
+    background: #2f2f2f;
+  }
+
+  :root:not([data-theme]) .progress-fill {
+    filter: saturate(0.72) brightness(0.86);
   }
 }
 .mt-md { margin-top: var(--space-8); }

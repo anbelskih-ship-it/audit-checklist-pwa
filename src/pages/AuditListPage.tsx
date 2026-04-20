@@ -182,14 +182,14 @@ export default function AuditListPage() {
           {appUser?.role === 'admin' && (
             <>
               <button
-                className="header-icon-btn"
+                className="header-icon-btn header-icon-btn--bot"
                 aria-label="Follow-up бот"
                 onClick={() => navigate('/admin/followup-bots')}
               >
                 <FollowupBotIcon />
               </button>
               <button
-                className="header-icon-btn"
+                className="header-icon-btn header-icon-btn--admin"
                 aria-label="Админка пользователей"
                 onClick={() => navigate('/admin/users')}
               >
