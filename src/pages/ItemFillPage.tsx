@@ -14,9 +14,6 @@ interface FillItem {
   item: CheckItem
   sheetName: string
   section: Section
-  sectionItemIndex: number
-  sectionEvalCount: number
-  globalIndex: number
 }
 
 export default function ItemFillPage() {
@@ -31,17 +28,12 @@ export default function ItemFillPage() {
   const allItems = useMemo(() => {
     if (!structure) return []
     const items: FillItem[] = []
-    let idx = 0
     for (const sheet of structure.sheets) {
       for (const section of sheet.sections) {
         const evalItems = section.items.slice(1)
-        let sectionIdx = 0
         for (const item of evalItems) {
           items.push({
             item, sheetName: sheet.name, section,
-            sectionItemIndex: sectionIdx++,
-            sectionEvalCount: evalItems.length,
-            globalIndex: idx++,
           })
         }
       }
@@ -103,7 +95,6 @@ export default function ItemFillPage() {
     await saveAnswer(current.item.id, { value: val, comment: nextComment })
   }
 
-  const sectionHeader = current.section.items[0]
   const evalItems = current.section.items.slice(1)
   const { filled: answeredCount, yesCount: onesCount, scorePct: sectionScorePct } = calcMetrics(evalItems, audit.answers)
 
@@ -119,6 +110,8 @@ export default function ItemFillPage() {
     yesCount: sheetYesCount,
     scorePct: sheetScorePct,
   } = calcMetrics(currentSheetItems, audit.answers)
+  const auditPositionLabel = `${currentIndex + 1} / ${allItems.length}`
+  const sheetPositionLabel = `${sheetAnsweredCount}/${sheetTotalCount}`
 
   const getSheetFirstItem = (sheetIdx: number): string | null => {
     const sheet = structure.sheets[sheetIdx]
@@ -141,16 +134,12 @@ export default function ItemFillPage() {
         <button className="btn-ghost" onClick={() => setSearchOpen(true)} style={{ fontSize: 20 }}>🔍</button>
       </div>
 
+      <div className="fill-audit-progress">{auditPositionLabel}</div>
+
       <div className="fill-sheet-progress">
-        <div className="fill-sheet-progress__badge">
-          <div className="fill-sheet-progress__count">{sheetAnsweredCount}/{sheetTotalCount}</div>
-          {sheetScorePct !== null && (
-            <div className="fill-sheet-progress__score">Результат: {sheetScorePct}%</div>
-          )}
-        </div>
-        <div className="fill-sheet-progress__bar">
-          <ProgressBar filled={sheetYesCount} total={sheetAnsweredCount || 1} hideLabel />
-        </div>
+        {sheetScorePct !== null && (
+          <div className="fill-sheet-progress__score">Результат: {sheetScorePct}%</div>
+        )}
       </div>
 
       {/* Sheet name + nav */}
@@ -160,7 +149,7 @@ export default function ItemFillPage() {
           disabled={!prevSheetItemId}
           onClick={() => prevSheetItemId && navigate(`/audit/${auditId}/fill/${prevSheetItemId}`, { replace: true })}
         >‹</button>
-        <div className="fill-sheet-title">{current.sheetName}</div>
+        <div className="fill-sheet-title">{current.sheetName} <span className="fill-sheet-title__meta">({sheetPositionLabel})</span></div>
         <button
           className="fill-sheet-arrow"
           disabled={!nextSheetItemId}
@@ -174,16 +163,20 @@ export default function ItemFillPage() {
           <div className="fill-section-name">{current.section.name}</div>
           <span className="search-result-path">▾</span>
         </div>
-        <div className="search-result-text" style={{ color: 'var(--color-text-secondary)', marginBottom: 'var(--space-3)' }}>{sectionHeader.text}</div>
-        <div className="fill-progress-row">
-          <div className="fill-progress-left">
-            <ProgressBar filled={onesCount} total={answeredCount || 1} hideLabel />
-            {sectionScorePct !== null && (
-              <div className="fill-score-label">Результат: <strong>{sectionScorePct}%</strong></div>
-            )}
+        <div className="fill-progress-stack">
+          <div className="fill-progress-line">
+            <div className="fill-progress-label">Процесс:</div>
+            <div className="fill-progress-left">
+              <ProgressBar filled={sheetYesCount} total={sheetAnsweredCount || 1} hideLabel />
+            </div>
+            <div className="fill-progress-value">{sheetScorePct ?? 0}%</div>
           </div>
-          <div className="fill-progress-badge">
-            <div className="fill-progress-badge-count">{current.sectionItemIndex + 1} из {current.sectionEvalCount}</div>
+          <div className="fill-progress-line">
+            <div className="fill-progress-label">Этап:</div>
+            <div className="fill-progress-left">
+              <ProgressBar filled={onesCount} total={answeredCount || 1} hideLabel />
+            </div>
+            <div className="fill-progress-value">{sectionScorePct ?? 0}%</div>
           </div>
         </div>
       </div>
@@ -213,10 +206,6 @@ export default function ItemFillPage() {
 
       {/* Item content */}
       <div className="flex-1">
-        <div className="search-result-path" style={{ marginBottom: 'var(--space-3)', textAlign: 'right' }}>
-          {currentIndex + 1} / {allItems.length}
-        </div>
-
         <h2 className="fill-question">{current.item.text}</h2>
         {current.item.criteria && (
           <div className="criteria">{current.item.criteria}</div>
