@@ -213,32 +213,25 @@ body {
   letter-spacing: -0.3px;
 }
 
-.header-link-btn {
-  min-height: 34px;
-  padding: var(--space-3) var(--space-4);
-  gap: var(--space-3);
+.header-icon-btn {
+  width: 36px;
+  min-width: 36px;
+  min-height: 36px;
+  padding: 0;
   border-radius: 999px;
-  border: 1px solid var(--color-border);
-  background: color-mix(in srgb, var(--color-surface) 92%, var(--color-bg) 8%);
-  color: var(--color-text-secondary);
-  font-size: var(--font-size-sm);
-  font-weight: 600;
-  white-space: nowrap;
+  border: 1px solid color-mix(in srgb, var(--color-border) 92%, white 8%);
+  background: color-mix(in srgb, var(--color-surface) 90%, var(--color-bg) 10%);
+  color: var(--color-primary);
+  box-shadow: 0 6px 14px rgba(32, 28, 22, 0.08);
 }
 
-.header-link-btn__icon {
+.header-icon-btn svg {
   width: 18px;
   height: 18px;
-  flex: 0 0 18px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 999px;
-  background: var(--color-primary);
-  color: var(--color-text-on-primary);
-  font-size: 10px;
-  line-height: 1;
-  font-weight: 700;
+}
+
+.header-icon-btn--danger {
+  color: var(--color-text-secondary);
 }
 
 /* === Buttons === */
@@ -1314,18 +1307,15 @@ select {
     gap: var(--space-2);
   }
 
-  .header-link-btn {
+  .header-icon-btn {
+    width: 32px;
+    min-width: 32px;
     min-height: 32px;
-    padding: var(--space-2) var(--space-3);
-    font-size: 11px;
-    gap: var(--space-2);
   }
 
-  .header-link-btn__icon {
+  .header-icon-btn svg {
     width: 16px;
     height: 16px;
-    flex-basis: 16px;
-    font-size: 9px;
   }
 }
 .mt-md { margin-top: var(--space-8); }

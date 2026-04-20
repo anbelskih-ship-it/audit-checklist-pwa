@@ -6,7 +6,6 @@ import { useAppUser } from '../App'
 import type { Audit, ChecklistStructure } from '../types'
 import ProgressBar from '../components/ProgressBar'
 import ThemeToggle from '../components/ThemeToggle'
-import RefreshAppButton from '../components/RefreshAppButton'
 import { getAuditCardMetrics } from './audit-list-metrics'
 import { loadStructureWithSync } from '../hooks/useStructure'
 import { compareAuditsByProjectDateDesc, formatAuditCardTitle } from './audit-list-format'
@@ -28,6 +27,44 @@ function collectEvalItemIds(structure: ChecklistStructure): Set<string> {
     structure.sheets.flatMap((sheet) =>
       sheet.sections.flatMap((section) => section.items.slice(1).map((item) => item.id)),
     ),
+  )
+}
+
+function FollowupBotIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <rect x="6.5" y="7.5" width="11" height="9" rx="3.5" stroke="currentColor" strokeWidth="1.8" />
+      <path d="M12 4.5V7.5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+      <circle cx="9.75" cy="12" r="1" fill="currentColor" />
+      <circle cx="14.25" cy="12" r="1" fill="currentColor" />
+      <path d="M10 14.25C10.55 14.7 11.2 15 12 15C12.8 15 13.45 14.7 14 14.25" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+      <path d="M6.5 11H4.75" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+      <path d="M19.25 11H17.5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+    </svg>
+  )
+}
+
+function AdminPanelIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <rect x="4.5" y="5.5" width="15" height="13" rx="3" stroke="currentColor" strokeWidth="1.8" />
+      <path d="M9 9.25H15" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+      <path d="M9 12H15" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+      <path d="M9 14.75H12.75" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+      <circle cx="7.25" cy="9.25" r="0.85" fill="currentColor" />
+      <circle cx="7.25" cy="12" r="0.85" fill="currentColor" />
+      <circle cx="7.25" cy="14.75" r="0.85" fill="currentColor" />
+    </svg>
+  )
+}
+
+function LogoutIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path d="M10 6.75H7.75C6.65 6.75 5.75 7.65 5.75 8.75V15.25C5.75 16.35 6.65 17.25 7.75 17.25H10" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+      <path d="M13 8.5L17 12L13 15.5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M17 12H9.5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+    </svg>
   )
 }
 
@@ -141,31 +178,27 @@ export default function AuditListPage() {
           </div>
         </div>
         <div className="page-header__actions">
-          <RefreshAppButton />
           <ThemeToggle />
           {appUser?.role === 'admin' && (
             <>
               <button
-                className="header-link-btn"
+                className="header-icon-btn"
                 aria-label="Follow-up бот"
                 onClick={() => navigate('/admin/followup-bots')}
               >
-                <span className="header-link-btn__icon">F</span>
-                <span>Бот</span>
+                <FollowupBotIcon />
               </button>
               <button
-                className="header-link-btn"
+                className="header-icon-btn"
                 aria-label="Админка пользователей"
                 onClick={() => navigate('/admin/users')}
               >
-                <span className="header-link-btn__icon">A</span>
-                <span>Адм</span>
+                <AdminPanelIcon />
               </button>
             </>
           )}
-          <button className="header-link-btn" aria-label="Выйти" onClick={logout}>
-            <span className="header-link-btn__icon">×</span>
-            <span>Выйти</span>
+          <button className="header-icon-btn header-icon-btn--danger" aria-label="Выйти" onClick={logout}>
+            <LogoutIcon />
           </button>
         </div>
       </div>
