@@ -213,6 +213,13 @@ body {
   letter-spacing: -0.3px;
 }
 
+.page-title-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  flex-wrap: wrap;
+}
+
 .header-icon-btn {
   width: 36px;
   min-width: 36px;
@@ -458,12 +465,20 @@ button:disabled {
   cursor: pointer;
   transition: background 0.15s, transform 0.15s ease, box-shadow 0.15s ease;
   box-shadow: var(--shadow-card);
-  border: 1px solid rgba(82, 74, 63, 0.08);
+  border: 1px solid rgba(82, 74, 63, 0.14);
 }
 
 .card:active {
   background: var(--color-surface-hover);
   transform: translateY(1px);
+}
+
+.card--tone-a {
+  background: color-mix(in srgb, var(--color-surface) 94%, #ffffff 6%);
+}
+
+.card--tone-b {
+  background: color-mix(in srgb, var(--color-surface) 88%, #efe6db 12%);
 }
 
 .card-title {
@@ -851,6 +866,15 @@ select {
   font-weight: 500;
   z-index: var(--z-sync);
   box-shadow: var(--shadow-elevated);
+}
+
+.sync-badge--inline {
+  position: static;
+  bottom: auto;
+  right: auto;
+  padding: var(--space-2) var(--space-5);
+  box-shadow: none;
+  font-size: var(--font-size-xs);
 }
 
 .sync-badge--online {
@@ -1343,6 +1367,18 @@ select {
   border-color: #303030;
 }
 
+[data-theme="dark"] .card {
+  border-color: #343434;
+}
+
+[data-theme="dark"] .card--tone-a {
+  background: #1f1f1f;
+}
+
+[data-theme="dark"] .card--tone-b {
+  background: #242424;
+}
+
 [data-theme="dark"] .audit-group__count {
   background: #1f1f1f;
   color: var(--color-text-secondary);
@@ -1365,6 +1401,18 @@ select {
   :root:not([data-theme]) .audit-group {
     background: linear-gradient(180deg, #252525 0%, #222222 100%);
     border-color: #303030;
+  }
+
+  :root:not([data-theme]) .card {
+    border-color: #343434;
+  }
+
+  :root:not([data-theme]) .card--tone-a {
+    background: #1f1f1f;
+  }
+
+  :root:not([data-theme]) .card--tone-b {
+    background: #242424;
   }
 
   :root:not([data-theme]) .audit-group__count {

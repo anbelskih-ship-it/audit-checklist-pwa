@@ -9,7 +9,6 @@ import AuditViewPage from './pages/AuditViewPage'
 import AdminUsersPage from './pages/AdminUsersPage'
 import AdminFollowupBotsPage from './pages/AdminFollowupBotsPage'
 import LoginPage from './pages/LoginPage'
-import SyncStatus from './components/SyncStatus'
 import VersionToast from './components/VersionToast'
 import InstallPrompt from './components/InstallPrompt'
 import { configureMasterFiles, syncStructures } from './drive/sync'
@@ -143,7 +142,6 @@ export default function App() {
           <Route path="/audit/:auditId/view" element={<AuditViewPage />} />
           <Route path="*" element={<Navigate to="/" />} />
         </Routes>
-        <SyncStatus />
         <InstallPrompt />
         <VersionToast />
       </HashRouter>

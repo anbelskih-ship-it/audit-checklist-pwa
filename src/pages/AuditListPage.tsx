@@ -6,6 +6,7 @@ import { useAppUser } from '../App'
 import type { Audit, ChecklistStructure } from '../types'
 import ProgressBar from '../components/ProgressBar'
 import ThemeToggle from '../components/ThemeToggle'
+import { useOnline } from '../hooks/useOnline'
 import { getAuditCardMetrics } from './audit-list-metrics'
 import { loadStructureWithSync } from '../hooks/useStructure'
 import { compareAuditsByProjectDateDesc, formatAuditCardTitle } from './audit-list-format'
@@ -71,6 +72,7 @@ function LogoutIcon() {
 export default function AuditListPage() {
   const { logout } = useAuth()
   const appUser = useAppUser()
+  const online = useOnline()
   const [audits, setAudits] = useState<Audit[]>([])
   const [structureTotals, setStructureTotals] = useState<Record<string, number>>({})
   const [structureItemIds, setStructureItemIds] = useState<Record<string, Set<string>>>({})
@@ -138,10 +140,11 @@ export default function AuditListPage() {
     navigate(`/audit/${audit.id}`)
   }
 
-  const renderCard = (a: Audit) => {
+  const renderCard = (a: Audit, index: number, totalInGroup: number) => {
     const { answered, totalItems, fillPct, scorePct } = getMetrics(a)
+    const zebraClass = totalInGroup >= 3 ? (index % 2 === 0 ? 'card--tone-a' : 'card--tone-b') : ''
     return (
-      <div key={a.id} className="card" onClick={() => navigate(`/audit/${a.id}`)}>
+      <div key={a.id} className={`card ${zebraClass}`.trim()} onClick={() => navigate(`/audit/${a.id}`)}>
         <div className="flex-between mb-sm">
           <div className="card-title">{formatAuditCardTitle(a)}</div>
           {a.status === 'completed' ? (
@@ -172,7 +175,12 @@ export default function AuditListPage() {
       {/* Header */}
       <div className="page-header page-header--compact">
         <div className="page-header__title-block">
-          <h1 className="page-title">Аудиты</h1>
+          <div className="page-title-row">
+            <h1 className="page-title">Аудиты</h1>
+            <span className={`sync-badge sync-badge--inline ${online ? 'sync-badge--online' : 'sync-badge--offline'}`}>
+              {online ? 'Онлайн' : 'Офлайн'}
+            </span>
+          </div>
           <div className="user-info user-info--header">
             {appUser?.displayName} · {appUser?.role === 'admin' ? 'Админ' : appUser?.role === 'auditor' ? 'Аудитор' : 'Гость'}
           </div>
@@ -229,7 +237,7 @@ export default function AuditListPage() {
             </div>
             <div className="audit-group__count">{aspDrafts.length}</div>
           </div>
-          {aspDrafts.map(renderCard)}
+          {aspDrafts.map((audit, index) => renderCard(audit, index, aspDrafts.length))}
         </section>
       )}
 
@@ -243,7 +251,7 @@ export default function AuditListPage() {
             </div>
             <div className="audit-group__count">{naDrafts.length}</div>
           </div>
-          {naDrafts.map(renderCard)}
+          {naDrafts.map((audit, index) => renderCard(audit, index, naDrafts.length))}
         </section>
       )}
 
