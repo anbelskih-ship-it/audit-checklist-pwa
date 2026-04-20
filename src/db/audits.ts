@@ -1,6 +1,6 @@
 import {
   collection, doc, setDoc, getDocs,
-  query, orderBy, deleteDoc,
+  query, orderBy, deleteDoc, limit, startAfter, type QueryConstraint,
 } from 'firebase/firestore'
 import { db } from '../firebase'
 import type { Audit, Answer } from '../types'
@@ -46,10 +46,20 @@ export async function createAudit(params: CreateAuditParams): Promise<Audit> {
   return audit
 }
 
-export async function listAudits(): Promise<Audit[]> {
-  const q = query(collection(db, AUDITS), orderBy('updated', 'desc'))
+export interface ListAuditsResult {
+  audits: Audit[]
+  nextCursor: string | null
+}
+
+export async function listAudits(pageSize = 40, cursor?: string | null): Promise<ListAuditsResult> {
+  const constraints: QueryConstraint[] = [orderBy('updated', 'desc')]
+  if (cursor) constraints.push(startAfter(cursor))
+  constraints.push(limit(pageSize))
+  const q = query(collection(db, AUDITS), ...constraints)
   const snap = await getDocs(q)
-  return snap.docs.map(d => d.data() as Audit)
+  const audits = snap.docs.map(d => d.data() as Audit)
+  const nextCursor = audits.length === pageSize ? audits[audits.length - 1]?.updated || null : null
+  return { audits, nextCursor }
 }
 
 export async function saveAnswer(auditId: string, itemId: string, answer: Answer): Promise<void> {

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { listAudits, createAudit } from '../db/audits'
 import { useAuth } from '../hooks/useAuth'
@@ -13,6 +13,9 @@ import { loadStructureWithSync } from '../hooks/useStructure'
 import { compareAuditsByProjectDateDesc, formatAuditCardTitle } from './audit-list-format'
 import { filterAuditsByOwner } from './audit-list-filter'
 import { fillBadgeBg, fillBadgeColor } from '../utils/colors'
+
+const AUDIT_LIST_CACHE_KEY = 'audit-list-cache-v2'
+const AUDIT_PAGE_SIZE = 40
 
 function countTotalItems(structure: ChecklistStructure): number {
   let total = 0
@@ -86,10 +89,29 @@ export default function AuditListPage() {
   const [newPlannedEnd, setNewPlannedEnd] = useState('')
   const [newComment, setNewComment] = useState('')
   const [creating, setCreating] = useState(false)
+  const [nextCursor, setNextCursor] = useState<string | null>(null)
+  const [loadingMore, setLoadingMore] = useState(false)
   const navigate = useNavigate()
 
   useEffect(() => {
-    listAudits().then(setAudits)
+    try {
+      const cached = window.localStorage.getItem(AUDIT_LIST_CACHE_KEY)
+      if (cached) {
+        setAudits(JSON.parse(cached) as Audit[])
+      }
+    } catch {
+      // ignore broken cache
+    }
+
+    listAudits(AUDIT_PAGE_SIZE).then(({ audits: items, nextCursor: cursor }) => {
+      setAudits(items)
+      setNextCursor(cursor)
+      try {
+        window.localStorage.setItem(AUDIT_LIST_CACHE_KEY, JSON.stringify(items))
+      } catch {
+        // ignore cache write failures
+      }
+    })
     listAllowedUsers().then(setAllowedUsers)
 
     const loadStructureTotals = async () => {
@@ -122,9 +144,14 @@ export default function AuditListPage() {
     allowedUsers.map(user => [user.email.toLowerCase(), user.name || user.email]),
   )
 
-  const getMetrics = (audit: Audit) => {
-    return getAuditCardMetrics(audit.answers, structureTotals[audit.type], structureItemIds[audit.type])
-  }
+  const metricsByAuditId = useMemo(() => (
+    Object.fromEntries(
+      audits.map((audit) => [
+        audit.id,
+        getAuditCardMetrics(audit.answers, structureTotals[audit.type], structureItemIds[audit.type]),
+      ]),
+    )
+  ), [audits, structureTotals, structureItemIds])
 
   const handleCreate = async () => {
     if (!newDealership.trim() || !appUser) return
@@ -146,8 +173,30 @@ export default function AuditListPage() {
     navigate(`/audit/${audit.id}`)
   }
 
+  const handleLoadMore = async () => {
+    if (!nextCursor) return
+    setLoadingMore(true)
+    const { audits: items, nextCursor: cursor } = await listAudits(AUDIT_PAGE_SIZE, nextCursor)
+    setAudits((current) => {
+      const merged = [...current, ...items.filter((item) => !current.some((existing) => existing.id === item.id))]
+      try {
+        window.localStorage.setItem(AUDIT_LIST_CACHE_KEY, JSON.stringify(merged))
+      } catch {
+        // ignore cache write failures
+      }
+      return merged
+    })
+    setNextCursor(cursor)
+    setLoadingMore(false)
+  }
+
   const renderCard = (a: Audit, index: number, totalInGroup: number) => {
-    const { answered, totalItems, fillPct, scorePct } = getMetrics(a)
+    const { answered, totalItems, fillPct, scorePct } = metricsByAuditId[a.id] || {
+      answered: 0,
+      totalItems: null,
+      fillPct: null,
+      scorePct: null,
+    }
     const zebraClass = totalInGroup >= 3 ? (index % 2 === 0 ? 'card--tone-a' : 'card--tone-b') : ''
     const authorLabel = authorNames[(a.authorEmail || '').toLowerCase()] || a.authorName || a.authorEmail
     return (
@@ -277,6 +326,12 @@ export default function AuditListPage() {
               <div className="empty-state-text">Пока нет активных аудитов</div>
               <div className="empty-state-hint">Создайте первый аудит, чтобы начать</div>
             </div>
+          )}
+
+          {nextCursor && (
+            <button className="btn-muted btn-full mt-md" onClick={handleLoadMore} disabled={loadingMore}>
+              {loadingMore ? 'Загружаю...' : 'Показать ещё'}
+            </button>
           )}
         </>
       )}

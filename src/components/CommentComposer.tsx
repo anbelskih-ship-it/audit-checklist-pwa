@@ -358,29 +358,31 @@ export default function CommentComposer({ value, onChange, onBlur }: CommentComp
 
   return (
     <section className="comment-composer">
-      <div className="comment-composer__section">
-        <span className="comment-composer__label">Режим</span>
-        <ToggleGroup
-          value={composerState.mode}
-          onChange={handleModeChange}
-          options={[
-            { value: 'append', label: 'Дополнить' },
-            { value: 'rewrite', label: 'Переписать' },
-          ]}
-        />
-      </div>
+      <div className="comment-composer__control-grid">
+        <div className="comment-composer__panel comment-composer__panel--mode">
+          <span className="comment-composer__label">Режим</span>
+          <ToggleGroup
+            value={composerState.mode}
+            onChange={handleModeChange}
+            options={[
+              { value: 'append', label: 'Дополнить' },
+              { value: 'rewrite', label: 'Переписать' },
+            ]}
+          />
+        </div>
 
-      <div className="comment-composer__section">
-        <span className="comment-composer__label">Способ ввода</span>
-        <ToggleGroup
-          value={inputMethod}
-          onChange={setInputMethod}
-          options={[
-            { value: 'text', label: 'Текст' },
-            { value: 'phrases', label: 'Фразы' },
-            { value: 'voice', label: 'Голос' },
-          ]}
-        />
+        <div className="comment-composer__panel comment-composer__panel--input">
+          <span className="comment-composer__label">Способ ввода</span>
+          <ToggleGroup
+            value={inputMethod}
+            onChange={setInputMethod}
+            options={[
+              { value: 'text', label: 'Текст' },
+              { value: 'phrases', label: 'Фразы' },
+              { value: 'voice', label: 'Голос' },
+            ]}
+          />
+        </div>
       </div>
 
       {inputMethod === 'phrases' && (
