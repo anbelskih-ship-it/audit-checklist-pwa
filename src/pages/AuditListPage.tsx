@@ -6,6 +6,7 @@ import { useAppUser } from '../App'
 import type { Audit, ChecklistStructure } from '../types'
 import ProgressBar from '../components/ProgressBar'
 import ThemeToggle from '../components/ThemeToggle'
+import RefreshAppButton from '../components/RefreshAppButton'
 import { getAuditCardMetrics } from './audit-list-metrics'
 import { loadStructureWithSync } from '../hooks/useStructure'
 import { compareAuditsByProjectDateDesc, formatAuditCardTitle } from './audit-list-format'
@@ -132,29 +133,41 @@ export default function AuditListPage() {
   return (
     <div className="page">
       {/* Header */}
-      <div className="page-header">
-        <h1 className="page-title">Аудиты</h1>
-        <div className="flex-center gap-sm">
+      <div className="page-header page-header--compact">
+        <div className="page-header__title-block">
+          <h1 className="page-title">Аудиты</h1>
+          <div className="user-info user-info--header">
+            {appUser?.displayName} · {appUser?.role === 'admin' ? 'Админ' : appUser?.role === 'auditor' ? 'Аудитор' : 'Гость'}
+          </div>
+        </div>
+        <div className="page-header__actions">
+          <RefreshAppButton />
           <ThemeToggle />
           {appUser?.role === 'admin' && (
             <>
-              <button className="btn-ghost" onClick={() => navigate('/admin/followup-bots')}>
-                Follow-up
+              <button
+                className="header-link-btn"
+                aria-label="Follow-up бот"
+                onClick={() => navigate('/admin/followup-bots')}
+              >
+                <span className="header-link-btn__icon">F</span>
+                <span>Бот</span>
               </button>
-              <button className="btn-ghost" onClick={() => navigate('/admin/users')}>
-                Пользователи
+              <button
+                className="header-link-btn"
+                aria-label="Админка пользователей"
+                onClick={() => navigate('/admin/users')}
+              >
+                <span className="header-link-btn__icon">A</span>
+                <span>Адм</span>
               </button>
             </>
           )}
-          <button className="btn-ghost" onClick={logout}>
-            Выйти
+          <button className="header-link-btn" aria-label="Выйти" onClick={logout}>
+            <span className="header-link-btn__icon">×</span>
+            <span>Выйти</span>
           </button>
         </div>
-      </div>
-
-      {/* User info */}
-      <div className="user-info">
-        {appUser?.displayName} · {appUser?.role === 'admin' ? 'Админ' : appUser?.role === 'auditor' ? 'Аудитор' : 'Гость'}
       </div>
 
       {/* Filter */}

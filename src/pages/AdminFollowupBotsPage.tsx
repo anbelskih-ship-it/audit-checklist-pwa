@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Navigate, useNavigate } from 'react-router-dom'
 import { useAppUser } from '../App'
+import RefreshAppButton from '../components/RefreshAppButton'
 
 type LifecycleStatus =
   | 'draft'
@@ -124,7 +125,7 @@ export default function AdminFollowupBotsPage() {
       <div className="page-header">
         <button className="btn-ghost" onClick={() => navigate('/')}>← Назад</button>
         <h1 className="admin-title">Follow-up бот</h1>
-        <div style={{ width: 60 }} />
+        <RefreshAppButton />
       </div>
 
       <div className="info-block">
