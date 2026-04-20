@@ -1178,6 +1178,40 @@ select {
   margin-bottom: var(--space-4);
 }
 
+.fill-sheet-progress {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-3);
+  margin-bottom: var(--space-5);
+}
+
+.fill-sheet-progress__badge {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.fill-sheet-progress__count {
+  font-size: var(--font-size-body-sm);
+  font-weight: 700;
+  color: var(--color-text);
+}
+
+.fill-sheet-progress__score {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
+}
+
+.fill-sheet-progress__bar {
+  width: min(220px, 72%);
+}
+
+.fill-sheet-progress__bar .progress {
+  margin-top: 0;
+}
+
 .fill-sheet-title {
   flex: 1;
   font-size: var(--font-size-body-lg);
@@ -1232,8 +1266,8 @@ select {
   display: flex;
   align-items: center;
   gap: var(--space-6);
-  margin-top: var(--space-5);
-  padding-top: var(--space-5);
+  margin-top: var(--space-4);
+  padding-top: var(--space-4);
   border-top: 1px solid var(--color-border-light);
 }
 
@@ -1269,17 +1303,20 @@ select {
   color: var(--color-text);
 }
 
-.fill-progress-badge-sub {
-  font-size: var(--font-size-xs);
-  color: var(--color-text-muted);
-  line-height: 1.3;
-}
-
-
 .fill-question {
   font-size: var(--font-size-body-lg);
   font-weight: 600;
   margin-bottom: var(--space-4);
+}
+
+.btn-primary--nav {
+  background: #243852;
+  border-color: #243852;
+}
+
+.btn-primary--nav:active {
+  background: #1c2d43;
+  border-color: #1c2d43;
 }
 
 .version-toast {
@@ -1418,6 +1455,15 @@ select {
   filter: saturate(0.35) brightness(0.68);
 }
 
+[data-theme="dark"] .fill-sheet-progress__count {
+  color: var(--color-text);
+}
+
+[data-theme="dark"] .fill-progress-badge {
+  background: #262626;
+  border: 1px solid #343434;
+}
+
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme]) .audit-group {
     background: linear-gradient(180deg, #252525 0%, #222222 100%);
@@ -1459,6 +1505,11 @@ select {
 
   :root:not([data-theme]) .progress-fill {
     filter: saturate(0.35) brightness(0.68);
+  }
+
+  :root:not([data-theme]) .fill-progress-badge {
+    background: #262626;
+    border: 1px solid #343434;
   }
 }
 .mt-md { margin-top: var(--space-8); }

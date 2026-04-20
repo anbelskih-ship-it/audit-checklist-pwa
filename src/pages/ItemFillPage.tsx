@@ -111,6 +111,15 @@ export default function ItemFillPage() {
   const currentSheetIndex = structure.sheets.findIndex(s =>
     s.sections.some(sec => sec.id === current.section.id)
   )
+  const currentSheet = structure.sheets[currentSheetIndex]
+  const currentSheetItems = currentSheet ? currentSheet.sections.flatMap((section) => section.items.slice(1)) : []
+  const {
+    filled: sheetAnsweredCount,
+    total: sheetTotalCount,
+    yesCount: sheetYesCount,
+    scorePct: sheetScorePct,
+  } = calcMetrics(currentSheetItems, audit.answers)
+
   const getSheetFirstItem = (sheetIdx: number): string | null => {
     const sheet = structure.sheets[sheetIdx]
     if (!sheet) return null
@@ -130,6 +139,18 @@ export default function ItemFillPage() {
       <div className="page-header">
         <button className="btn-ghost" onClick={() => navigate(`/audit/${auditId}`)}>← Оглавление</button>
         <button className="btn-ghost" onClick={() => setSearchOpen(true)} style={{ fontSize: 20 }}>🔍</button>
+      </div>
+
+      <div className="fill-sheet-progress">
+        <div className="fill-sheet-progress__badge">
+          <div className="fill-sheet-progress__count">{sheetAnsweredCount}/{sheetTotalCount}</div>
+          {sheetScorePct !== null && (
+            <div className="fill-sheet-progress__score">Результат: {sheetScorePct}%</div>
+          )}
+        </div>
+        <div className="fill-sheet-progress__bar">
+          <ProgressBar filled={sheetYesCount} total={sheetAnsweredCount || 1} hideLabel />
+        </div>
       </div>
 
       {/* Sheet name + nav */}
@@ -163,7 +184,6 @@ export default function ItemFillPage() {
           </div>
           <div className="fill-progress-badge">
             <div className="fill-progress-badge-count">{current.sectionItemIndex + 1} из {current.sectionEvalCount}</div>
-            <div className="fill-progress-badge-sub">{answeredCount}/{evalItems.length}</div>
           </div>
         </div>
       </div>
@@ -208,7 +228,7 @@ export default function ItemFillPage() {
 
       <div className="btn-group-bottom">
         <button onClick={goPrev} disabled={currentIndex === 0}>← Назад</button>
-        <button className="btn-primary" onClick={goNext} disabled={currentIndex === allItems.length - 1}>Далее →</button>
+        <button className="btn-primary btn-primary--nav" onClick={goNext} disabled={currentIndex === allItems.length - 1}>Далее →</button>
       </div>
 
       <SearchDialog structure={structure} open={searchOpen} onClose={() => setSearchOpen(false)}
