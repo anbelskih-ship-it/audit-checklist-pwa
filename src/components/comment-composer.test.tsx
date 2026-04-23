@@ -256,10 +256,10 @@ describe('CommentComposer', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'Переписать' }))
     fireEvent.click(screen.getByRole('button', { name: 'Фразы' }))
-    fireEvent.click(screen.getByRole('button', { name: 'Нет регулярного контроля' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Нет контроля' }))
 
-    expect(onChange).toHaveBeenCalledWith('Нет регулярного контроля')
-    expect(screen.getByRole('textbox', { name: 'Комментарий' })).toHaveValue('Нет регулярного контроля')
+    expect(onChange).toHaveBeenCalledWith('Нет контроля')
+    expect(screen.getByRole('textbox', { name: 'Комментарий' })).toHaveValue('Нет контроля')
   })
 
   it('calls onBlur with the committed phrase value after a phrase selection', () => {
@@ -268,9 +268,9 @@ describe('CommentComposer', () => {
     render(<Harness initialValue="База" onBlur={onBlur} />)
 
     fireEvent.click(screen.getByRole('button', { name: 'Фразы' }))
-    fireEvent.click(screen.getByRole('button', { name: 'Нет регулярного контроля' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Нет контроля' }))
 
-    expect(onBlur).toHaveBeenCalledWith('База, Нет регулярного контроля')
+    expect(onBlur).toHaveBeenCalledWith('База, Нет контроля')
   })
 
   it('calls onBlur with the committed value after a final voice transcript', () => {
@@ -419,13 +419,13 @@ describe('CommentComposer', () => {
     render(<Harness />)
 
     fireEvent.click(screen.getByRole('button', { name: 'Фразы' }))
-    const phrase = screen.getByRole('button', { name: 'Нет регулярного контроля' })
+    const phrase = screen.getByRole('button', { name: 'Нет контроля' })
 
     fireEvent.click(phrase)
     fireEvent.click(phrase)
 
     expect(phrase).toHaveAttribute('aria-pressed', 'true')
-    expect(screen.getByRole('textbox', { name: 'Комментарий' })).toHaveValue('Нет регулярного контроля')
+    expect(screen.getByRole('textbox', { name: 'Комментарий' })).toHaveValue('Нет контроля')
   })
 
   it('shows a fallback message when voice input is unsupported', () => {

@@ -1,5 +1,6 @@
 import type { Audit, ChecklistStructure } from '../types'
 import { calcMetrics } from '../utils/metrics'
+import { getSectionEvalItems, getSheetEvalItems } from '../utils/checklist-items'
 
 /**
  * Универсальный промпт для любой LLM-модели (Gemini, Claude, GPT, Llama).
@@ -8,20 +9,20 @@ import { calcMetrics } from '../utils/metrics'
  */
 export function buildAuditPrompt(audit: Audit, structure: ChecklistStructure): string {
   // Общие метрики
-  const allEvalItems = structure.sheets.flatMap(sh => sh.sections.flatMap(s => s.items.slice(1)))
+  const allEvalItems = structure.sheets.flatMap(getSheetEvalItems)
   const { filled, total, yesCount } = calcMetrics(allEvalItems, audit.answers)
   const overallScore = filled > 0 ? Math.round((yesCount / filled) * 100) : 0
 
   // Зоны роста по листам
   const sheetBlocks: string[] = []
   for (const sheet of structure.sheets) {
-    const evalItems = sheet.sections.flatMap(s => s.items.slice(1))
+    const evalItems = getSheetEvalItems(sheet)
     const m = calcMetrics(evalItems, audit.answers)
     const sheetScore = m.filled > 0 ? Math.round((m.yesCount / m.filled) * 100) : 0
 
     const issues: string[] = []
     for (const section of sheet.sections) {
-      for (const item of section.items.slice(1)) {
+      for (const item of getSectionEvalItems(section)) {
         const a = audit.answers[item.id]
         if (a?.value === 0) {
           let line = `- ${item.text}`

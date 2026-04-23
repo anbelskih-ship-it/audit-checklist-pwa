@@ -13,6 +13,7 @@ import { loadStructureWithSync } from '../hooks/useStructure'
 import { compareAuditsByProjectDateDesc, formatAuditCardTitle } from './audit-list-format'
 import { filterAuditsByOwner } from './audit-list-filter'
 import { fillBadgeBg, fillBadgeColor } from '../utils/colors'
+import { getSectionEvalItems } from '../utils/checklist-items'
 
 const AUDIT_LIST_CACHE_KEY = 'audit-list-cache-v2'
 const AUDIT_PAGE_SIZE = 40
@@ -21,7 +22,7 @@ function countTotalItems(structure: ChecklistStructure): number {
   let total = 0
   for (const sheet of structure.sheets) {
     for (const section of sheet.sections) {
-      total += section.items.length - 1 // skip section header
+      total += getSectionEvalItems(section).length
     }
   }
   return total
@@ -30,7 +31,7 @@ function countTotalItems(structure: ChecklistStructure): number {
 function collectEvalItemIds(structure: ChecklistStructure): Set<string> {
   return new Set(
     structure.sheets.flatMap((sheet) =>
-      sheet.sections.flatMap((section) => section.items.slice(1).map((item) => item.id)),
+      sheet.sections.flatMap((section) => getSectionEvalItems(section).map((item) => item.id)),
     ),
   )
 }

@@ -8,12 +8,11 @@ export async function loadStructureWithSync(
   canSync: boolean
 ): Promise<ChecklistStructure | null> {
   const cached = await getStructure(type)
-  if (cached) return cached
-  if (!canSync) return null
+  if (!canSync) return cached || null
 
   await syncStructures()
   const refreshed = await getStructure(type)
-  return refreshed || null
+  return refreshed || cached || null
 }
 
 export function useStructure(type: 'АСП' | 'НА') {

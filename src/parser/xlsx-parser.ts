@@ -5,7 +5,70 @@ export const SECTION_HEADERS = ['Шаги процесса / Этапы опер
 export const ITEM_HEADERS = ['Операции процесса', 'Пояснения для критериев', 'Вопрос', 'Критерий выполнения']
 export const CRITERIA_HEADERS = ['Критерии выполнения операции', 'Критерий выполнения', 'Пояснения для критериев']
 
-export const SKIP_SHEETS = ['KPIs', 'Сводный результат', 'Лист3']
+export const SKIP_SHEETS = ['Сводный результат', 'Лист3']
+
+function isKpiSheet(sheetName: string): boolean {
+  return /kpis|показател/i.test(sheetName)
+}
+
+function parseKpiSheet(
+  data: (string | number | null)[][]
+): SheetBlock | null {
+  const sections: Section[] = []
+  let currentSection: Section | null = null
+  let sectionCounter = 0
+  let itemCounter = 0
+
+  for (let r = 1; r < data.length; r++) {
+    const row = data[r]
+    if (!row) continue
+
+    const sectionName = row[1]?.toString()?.trim()
+    const itemText = row[2]?.toString()?.trim()
+    const benchmark = row[3]?.toString()?.trim() || ''
+
+    if (sectionName) {
+      sectionCounter++
+      itemCounter = 0
+      currentSection = {
+        id: `KPIs.${sectionCounter}`,
+        name: sectionName.replace(/^\d+\.\s*/, ''),
+        items: [],
+      }
+      sections.push(currentSection)
+    }
+
+    if (!itemText) continue
+
+    if (!currentSection) {
+      sectionCounter++
+      itemCounter = 0
+      currentSection = {
+        id: `KPIs.${sectionCounter}`,
+        name: 'Показатели',
+        items: [],
+      }
+      sections.push(currentSection)
+    }
+
+    itemCounter++
+    currentSection.items.push({
+      id: `${currentSection.id}.${itemCounter}`,
+      text: itemText,
+      criteria: benchmark,
+    })
+  }
+
+  const nonEmptySections = sections.filter(section => section.items.length > 0)
+  if (!nonEmptySections.length) return null
+
+  return {
+    id: 'KPIs',
+    name: 'Показатели',
+    estimatedTime: '',
+    sections: nonEmptySections,
+  }
+}
 
 export function findColumnByHeaders(headers: (string | null)[], candidates: string[]): number {
   for (const candidate of candidates) {
@@ -37,6 +100,12 @@ export function parseChecklistXlsx(
     const ws = workbook.Sheets[sheetName]
     const data: (string | number | null)[][] = XLSX.utils.sheet_to_json(ws, { header: 1 })
     if (data.length < 3) continue
+
+    if (isKpiSheet(sheetName)) {
+      const parsedKpiSheet = parseKpiSheet(data)
+      if (parsedKpiSheet) sheets.push(parsedKpiSheet)
+      continue
+    }
 
     // Try headers in row 2 first, then row 1 (НА files have some sheets with headers in row 1)
     const row1 = data[0] || []

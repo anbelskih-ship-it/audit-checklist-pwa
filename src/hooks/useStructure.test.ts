@@ -47,4 +47,30 @@ describe('loadStructureWithSync', () => {
     expect(syncStructuresMock).not.toHaveBeenCalled()
     expect(result).toBeNull()
   })
+
+  it('returns refreshed structure when cache exists and online sync updates it', async () => {
+    const cached: ChecklistStructure = {
+      type: 'АСП',
+      version: 'old',
+      driveFileId: 'file1',
+      sheets: [],
+    }
+    const refreshed: ChecklistStructure = {
+      type: 'АСП',
+      version: 'new',
+      driveFileId: 'file1',
+      sheets: [{ id: 'KPIs', name: 'Показатели', estimatedTime: '', sections: [] }],
+    }
+
+    getStructureMock
+      .mockResolvedValueOnce(cached)
+      .mockResolvedValueOnce(refreshed)
+    syncStructuresMock.mockResolvedValue({ updated: ['АСП'] })
+
+    const result = await loadStructureWithSync('АСП', true)
+
+    expect(syncStructuresMock).toHaveBeenCalledTimes(1)
+    expect(getStructureMock).toHaveBeenCalledTimes(2)
+    expect(result).toEqual(refreshed)
+  })
 })

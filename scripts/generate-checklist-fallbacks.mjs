@@ -17,7 +17,68 @@ function findColumnByHeaders(headers, candidates) {
 const SECTION_HEADERS = ['Шаги процесса / Этапы операций', 'Шаг процесса', 'Шаги процесса']
 const ITEM_HEADERS = ['Операции процесса', 'Пояснения для критериев', 'Вопрос', 'Критерий выполнения']
 const CRITERIA_HEADERS = ['Критерии выполнения операции', 'Критерий выполнения', 'Пояснения для критериев']
-const SKIP_SHEETS = ['KPIs', 'Сводный результат', 'Лист3']
+const SKIP_SHEETS = ['Сводный результат', 'Лист3']
+
+function isKpiSheet(sheetName) {
+  return /kpis|показател/i.test(sheetName)
+}
+
+function parseKpiSheet(data) {
+  const sections = []
+  let currentSection = null
+  let sectionCounter = 0
+  let itemCounter = 0
+
+  for (let r = 1; r < data.length; r++) {
+    const row = data[r]
+    if (!row) continue
+
+    const sectionName = row[1]?.toString()?.trim()
+    const itemText = row[2]?.toString()?.trim()
+    const criteriaText = row[3]?.toString()?.trim() || ''
+
+    if (sectionName) {
+      sectionCounter++
+      itemCounter = 0
+      currentSection = {
+        id: `KPIs.${sectionCounter}`,
+        name: sectionName.replace(/^\d+\.\s*/, ''),
+        items: [],
+      }
+      sections.push(currentSection)
+    }
+
+    if (!itemText) continue
+
+    if (!currentSection) {
+      sectionCounter++
+      itemCounter = 0
+      currentSection = {
+        id: `KPIs.${sectionCounter}`,
+        name: 'Показатели',
+        items: [],
+      }
+      sections.push(currentSection)
+    }
+
+    itemCounter++
+    currentSection.items.push({
+      id: `${currentSection.id}.${itemCounter}`,
+      text: itemText,
+      criteria: criteriaText,
+    })
+  }
+
+  const nonEmptySections = sections.filter(section => section.items.length > 0)
+  if (!nonEmptySections.length) return null
+
+  return {
+    id: 'KPIs',
+    name: 'Показатели',
+    estimatedTime: '',
+    sections: nonEmptySections,
+  }
+}
 
 function isChecklistSheet(headers) {
   const hasSection = findColumnByHeaders(headers, SECTION_HEADERS) !== -1
@@ -34,6 +95,12 @@ function parseChecklistXlsx(workbook, type, version, driveFileId) {
     const ws = workbook.Sheets[sheetName]
     const data = XLSX.utils.sheet_to_json(ws, { header: 1 })
     if (data.length < 3) continue
+
+    if (isKpiSheet(sheetName)) {
+      const parsedKpiSheet = parseKpiSheet(data)
+      if (parsedKpiSheet) sheets.push(parsedKpiSheet)
+      continue
+    }
 
     const row1 = data[0] || []
     let headers = (data[1] || []).map(h => h?.toString() ?? null)

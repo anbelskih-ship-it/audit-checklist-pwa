@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useAudit } from '../hooks/useAudit'
 import { useStructure } from '../hooks/useStructure'
+import { useAuth } from '../hooks/useAuth'
 import ProgressBar from '../components/ProgressBar'
 import { fillBadgeColor, fillBadgeBg } from '../utils/colors'
 import { calcMetrics } from '../utils/metrics'
@@ -12,6 +13,8 @@ import { saveAuditExportMeta, saveAuditSummary } from '../db/audits'
 import type { Section } from '../types'
 import { exportAuditToGoogleSheet, getExportFolderId } from '../export/google-sheet-export'
 import { formatAuditCardTitle } from './audit-list-format'
+import { downloadBlobFile } from '../export/file-download'
+import { getSectionEvalItems, getSheetEvalItems } from '../utils/checklist-items'
 
 type ViewMode = 'edit' | 'review'
 
@@ -37,6 +40,22 @@ export default function AuditOutlinePage() {
   const [pasteText, setPasteText] = useState('')
   const [exportingXlsx, setExportingXlsx] = useState(false)
   const navigate = useNavigate()
+  const { login } = useAuth()
+
+  const finishXlsxExport = async () => {
+    if (!structure || !audit) return
+
+    const result = await exportAuditToGoogleSheet(audit, structure)
+    await saveAuditExportMeta(audit.id, {
+      exportFileId: result.fileId,
+      exportFileName: result.fileName,
+      exportUrl: result.fileUrl,
+    })
+
+    alert(result.action === 'created'
+      ? `Создан файл: ${result.fileName}\n${result.fileUrl}`
+      : `Обновлен файл: ${result.fileName}\n${result.fileUrl}`)
+  }
 
   const handleExportXlsx = async () => {
     if (!structure || !audit) return
@@ -47,19 +66,22 @@ export default function AuditOutlinePage() {
 
     setExportingXlsx(true)
     try {
-      const result = await exportAuditToGoogleSheet(audit, structure)
-      await saveAuditExportMeta(audit.id, {
-        exportFileId: result.fileId,
-        exportFileName: result.fileName,
-        exportUrl: result.fileUrl,
-      })
-      alert(result.action === 'created'
-        ? `Создан файл: ${result.fileName}\n${result.fileUrl}`
-        : `Обновлен файл: ${result.fileName}\n${result.fileUrl}`)
+      await finishXlsxExport()
     } catch (e) {
       const message = e instanceof Error ? e.message : ''
       if (message === 'Not authenticated' || message === 'Drive auth expired') {
-        alert('Авторизация Google Drive истекла. Выйдите и зайдите заново, затем повторите выгрузку.')
+        const strategy = await login()
+        if (strategy === 'popup') {
+          try {
+            await finishXlsxExport()
+            return
+          } catch (retryError) {
+            const retryMessage = retryError instanceof Error ? retryError.message : ''
+            alert(`Не удалось выгрузить файл в Google Drive: ${retryMessage || 'неизвестная ошибка'}`)
+            return
+          }
+        }
+        alert('Подтвердите повторный вход через Google и повторите выгрузку, если она не началась автоматически.')
       } else if (message === 'EXPORT_FOLDER_NOT_CONFIGURED') {
         alert('Не задана папка выгрузки. Нужен VITE_EXPORT_FOLDER_ID.')
       } else {
@@ -73,12 +95,7 @@ export default function AuditOutlinePage() {
   const handleExportPdf = async () => {
     if (!structure || !audit) return
     const blob = await pdf(<AuditPdfReport structure={structure} audit={audit} />).toBlob()
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url
-    a.download = `${audit.name}.pdf`
-    a.click()
-    URL.revokeObjectURL(url)
+    downloadBlobFile(blob, `${audit.name}.pdf`)
   }
 
   const handleSavePastedSummary = async () => {
@@ -103,19 +120,19 @@ export default function AuditOutlinePage() {
   const getSheetMetrics = (sheetId: string) => {
     const sheet = structure.sheets.find(s => s.id === sheetId)
     if (!sheet) return { filled: 0, total: 0, yesCount: 0, scorePct: null }
-    const allItems = sheet.sections.flatMap(s => s.items.slice(1))
+    const allItems = getSheetEvalItems(sheet)
     return calcMetrics(allItems, audit.answers)
   }
 
   const getSectionMetrics = (section: Section) => {
-    return calcMetrics(section.items.slice(1), audit.answers)
+    return calcMetrics(getSectionEvalItems(section), audit.answers)
   }
 
   const handleSectionClick = (section: Section) => {
     if (viewMode === 'review') {
       setExpandedSection(expandedSection === section.id ? null : section.id)
     } else {
-      const firstEvalItem = section.items.slice(1)[0]
+      const firstEvalItem = getSectionEvalItems(section)[0]
       if (firstEvalItem) navigate(`/audit/${auditId}/fill/${firstEvalItem.id}`)
     }
   }
@@ -184,7 +201,7 @@ export default function AuditOutlinePage() {
             {isExpanded && (
               <div className="section-stack mb-sm">
                 {sheet.sections.map(section => {
-                  const evalItems = section.items.slice(1)
+                  const evalItems = getSectionEvalItems(section)
                   if (!evalItems.length) return null
                   const { filled: sFilled, total: sTotal, yesCount: sYes, scorePct: sScore } = getSectionMetrics(section)
                   const sFillPct = sTotal > 0 ? Math.round((sFilled / sTotal) * 100) : 0

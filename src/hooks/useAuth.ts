@@ -72,12 +72,14 @@ export function useAuth() {
       if (strategy === 'popup') {
         const result = await signInWithPopup(auth, googleProvider)
         saveDriveTokenFromCredential(result)
-        return
+        return strategy
       }
 
       await signInWithRedirect(auth, googleProvider)
+      return strategy
     } catch (error) {
       setAuthError(formatAuthError(error))
+      return null
     }
   }
 

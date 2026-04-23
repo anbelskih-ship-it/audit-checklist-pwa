@@ -9,6 +9,7 @@ import ProgressBar from '../components/ProgressBar'
 import CommentComposer from '../components/CommentComposer'
 import { calcMetrics } from '../utils/metrics'
 import type { CheckItem, Section } from '../types'
+import { getSectionEvalItems, getSheetEvalItems } from '../utils/checklist-items'
 
 interface FillItem {
   item: CheckItem
@@ -30,7 +31,7 @@ export default function ItemFillPage() {
     const items: FillItem[] = []
     for (const sheet of structure.sheets) {
       for (const section of sheet.sections) {
-        const evalItems = section.items.slice(1)
+        const evalItems = getSectionEvalItems(section)
         for (const item of evalItems) {
           items.push({
             item, sheetName: sheet.name, section,
@@ -46,9 +47,9 @@ export default function ItemFillPage() {
     if (!structure) return []
     return structure.sheets.flatMap(sheet =>
       sheet.sections
-        .filter(s => s.items.length > 1)
+        .filter(s => getSectionEvalItems(s).length > 0)
         .map(section => {
-          const evalItems = section.items.slice(1)
+          const evalItems = getSectionEvalItems(section)
           const answered = evalItems.filter(i =>
             audit?.answers[i.id]?.value !== null && audit?.answers[i.id]?.value !== undefined
           ).length
@@ -102,7 +103,7 @@ export default function ItemFillPage() {
     await saveAnswer(current.item.id, { value: val, comment: nextComment })
   }
 
-  const evalItems = current.section.items.slice(1)
+  const evalItems = getSectionEvalItems(current.section)
   const { filled: answeredCount, yesCount: onesCount, scorePct: sectionScorePct } = calcMetrics(evalItems, audit.answers)
 
   // Sheet navigation: find current sheet index + first items of prev/next sheets
@@ -110,7 +111,7 @@ export default function ItemFillPage() {
     s.sections.some(sec => sec.id === current.section.id)
   )
   const currentSheet = structure.sheets[currentSheetIndex]
-  const currentSheetItems = currentSheet ? currentSheet.sections.flatMap((section) => section.items.slice(1)) : []
+  const currentSheetItems = currentSheet ? getSheetEvalItems(currentSheet) : []
   const {
     filled: sheetAnsweredCount,
     total: sheetTotalCount,
@@ -124,7 +125,7 @@ export default function ItemFillPage() {
     const sheet = structure.sheets[sheetIdx]
     if (!sheet) return null
     for (const sec of sheet.sections) {
-      const evals = sec.items.slice(1)
+      const evals = getSectionEvalItems(sec)
       if (evals.length > 0) return evals[0].id
     }
     return null

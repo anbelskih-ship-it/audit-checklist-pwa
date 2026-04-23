@@ -1,5 +1,6 @@
 import { calcMetrics } from '../utils/metrics'
 import type { Audit, ChecklistStructure } from '../types'
+import { getSectionEvalItems, getSheetEvalItems } from '../utils/checklist-items'
 
 export interface PdfIssue {
   text: string
@@ -57,18 +58,17 @@ function formatStatus(status: Audit['status']): string {
 }
 
 export function buildPdfReportData(structure: ChecklistStructure, audit: Audit): PdfReportData {
-  const allEvalItems = structure.sheets.flatMap(sheet => sheet.sections.flatMap(section => section.items.slice(1)))
+  const allEvalItems = structure.sheets.flatMap(getSheetEvalItems)
   const allMetrics = calcMetrics(allEvalItems, audit.answers)
 
   const sheets = structure.sheets
     .map(sheet => {
-      const sheetEvalItems = sheet.sections.flatMap(section => section.items.slice(1))
+      const sheetEvalItems = getSheetEvalItems(sheet)
       const sheetMetrics = calcMetrics(sheetEvalItems, audit.answers)
 
       const issuesBySection = sheet.sections
         .map(section => {
-          const issues = section.items
-            .slice(1)
+          const issues = getSectionEvalItems(section)
             .map(item => audit.answers[item.id] ? { item, answer: audit.answers[item.id] } : null)
             .filter((entry): entry is { item: typeof section.items[number], answer: NonNullable<typeof audit.answers[string]> } => {
               return Boolean(entry && entry.answer.value === 0)

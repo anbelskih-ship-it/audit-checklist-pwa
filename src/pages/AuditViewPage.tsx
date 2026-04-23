@@ -4,6 +4,7 @@ import { useAudit } from '../hooks/useAudit'
 import { useStructure } from '../hooks/useStructure'
 import ProgressBar from '../components/ProgressBar'
 import { calcMetrics } from '../utils/metrics'
+import { getSectionEvalItems, getSheetEvalItems } from '../utils/checklist-items'
 
 export default function AuditViewPage() {
   const { auditId } = useParams<{ auditId: string }>()
@@ -19,7 +20,7 @@ export default function AuditViewPage() {
 
   if (!audit || !structure) return <div className="page center-content text-disabled">Загрузка...</div>
 
-  const allEvalItems = structure.sheets.flatMap(sh => sh.sections.flatMap(s => s.items.slice(1)))
+  const allEvalItems = structure.sheets.flatMap(getSheetEvalItems)
   const { filled: totalFilled, total: totalItems, yesCount: totalPassed } = calcMetrics(allEvalItems, audit.answers)
   const sheetSummaries = structure.sheets.map(sheet => {
     let sheetTotal = 0, sheetFilled = 0, sheetPassed = 0
@@ -27,7 +28,7 @@ export default function AuditViewPage() {
     const allItems: { id: string; text: string; comment: string; sectionName: string; value: 0 | 1 | null | undefined }[] = []
 
     for (const section of sheet.sections) {
-      const evalItems = section.items.slice(1)
+      const evalItems = getSectionEvalItems(section)
       for (const item of evalItems) {
         sheetTotal++
         const answer = audit.answers[item.id]
