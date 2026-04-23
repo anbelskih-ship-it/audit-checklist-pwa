@@ -23,25 +23,29 @@ type InputMethod = 'text' | 'phrases' | 'voice'
 type VoiceStatus = 'idle' | 'ready' | 'listening' | 'unsupported' | 'error'
 
 const PHRASES = [
-  'Нет регламента',
-  'Нет отчётности',
-  'Нет процесса',
-  'Не обучены',
-  'Нет ответственного',
-  'Не зафиксировано',
-  'Нет регулярности',
-  'Нет контроля',
-  'Нет аналитики',
-  'Не актуально',
-  'Есть, не используется',
-  'Аутсорсинг',
-  'Внедряется',
+  { label: 'Нет регламента', wide: false },
+  { label: 'Нет отчётности', wide: false },
+  { label: 'Нет процесса', wide: false },
+  { label: 'Не обучены', wide: false },
+  { label: 'Нет ответственного', wide: true },
+  { label: 'Не зафиксировано', wide: false },
+  { label: 'Нет регулярности', wide: false },
+  { label: 'Нет контроля', wide: false },
+  { label: 'Нет аналитики', wide: false },
+  { label: 'Не актуально', wide: false },
+  { label: 'Есть, не используется', wide: true },
+  { label: 'Аутсорсинг', wide: false },
+  { label: 'Внедряется', wide: false },
 ] as const
 
 interface CommentComposerProps {
   value: string
   onChange: (nextValue: string) => void
   onBlur?: (nextValue: string) => void
+}
+
+function resolveComposerState(state: CommentComposerState, value: string): CommentComposerState {
+  return value === state.workingComment ? state : createComposerState(value)
 }
 
 function buildChunk(state: CommentComposerState, text: string): string {
@@ -71,7 +75,7 @@ function hasPhrase(source: string, phrase: string): boolean {
 
 function getSelectedPhrases(state: CommentComposerState): Set<string> {
   const source = getPhraseSource(state)
-  return new Set(PHRASES.filter((phrase) => hasPhrase(source, phrase)))
+  return new Set(PHRASES.map((phrase) => phrase.label).filter((phrase) => hasPhrase(source, phrase)))
 }
 
 function getVoiceMessage(status: VoiceStatus, errorMessage: string): string {
@@ -161,23 +165,21 @@ export default function CommentComposer({ value, onChange, onBlur }: CommentComp
   const pendingVoiceTranscriptRef = useRef('')
   const silenceTimerRef = useRef<number | null>(null)
 
-  useEffect(() => {
-    setComposerState((current) =>
-      value === current.workingComment ? current : createComposerState(value),
-    )
-  }, [value])
+  const currentComposerState = resolveComposerState(composerState, value)
 
   useEffect(() => {
-    composerStateRef.current = composerState
-  }, [composerState])
+    composerStateRef.current = currentComposerState
+  }, [currentComposerState])
 
   useEffect(() => {
     inputMethodRef.current = inputMethod
   }, [inputMethod])
 
-  const selectedPhrases = getSelectedPhrases(composerState)
+  const selectedPhrases = getSelectedPhrases(currentComposerState)
   const showRewritePreview =
-    composerState.mode === 'rewrite' && !composerState.rewriteStarted && Boolean(composerState.originalComment)
+    currentComposerState.mode === 'rewrite'
+    && !currentComposerState.rewriteStarted
+    && Boolean(currentComposerState.originalComment)
 
   const clearSilenceTimer = () => {
     if (silenceTimerRef.current !== null) {
@@ -263,34 +265,41 @@ export default function CommentComposer({ value, onChange, onBlur }: CommentComp
   }
 
   useEffect(() => () => {
-    stopRecognition('idle')
+    clearSilenceTimer()
+    const recognition = recognitionRef.current
+    if (!recognition) return
+    recognition.onresult = null
+    recognition.onerror = null
+    recognition.onend = null
+    recognition.stop()
+    recognitionRef.current = null
   }, [])
 
-  useEffect(() => {
-    if (inputMethod !== 'voice') {
-      stopRecognition('idle')
-      setVoiceStatus('idle')
-      setVoiceError('')
-      setVoiceDraft('')
-      lastFinalTranscriptRef.current = ''
-      pendingVoiceTranscriptRef.current = ''
-      return
-    }
-
+  const prepareVoiceInput = () => {
     if (!window.isSecureContext) {
       setVoiceStatus('error')
       setVoiceError('Голосовой ввод работает только на localhost или через https.')
-      return
+      return false
     }
 
     if (!createConfiguredRecognition(window as typeof window & SpeechRecognitionSource)) {
       setVoiceStatus('unsupported')
       setVoiceError('')
-      return
+      return false
     }
 
     setVoiceStatus((current) => (current === 'listening' || current === 'error' ? current : 'ready'))
-  }, [inputMethod])
+    return true
+  }
+
+  const resetVoiceState = () => {
+    stopRecognition('idle')
+    setVoiceStatus('idle')
+    setVoiceError('')
+    setVoiceDraft('')
+    lastFinalTranscriptRef.current = ''
+    pendingVoiceTranscriptRef.current = ''
+  }
 
   const commitState = (next: CommentComposerState) => {
     const previous = composerStateRef.current
@@ -306,11 +315,11 @@ export default function CommentComposer({ value, onChange, onBlur }: CommentComp
   }
 
   const handleModeChange = (mode: CommentEditMode) => {
-    setComposerState((current) => setMode(current, mode))
+    commitState(setMode(composerStateRef.current, mode))
   }
 
   const handleTextChange = (nextValue: string) => {
-    commitState(applyTextInput(composerState, nextValue))
+    commitState(applyTextInput(composerStateRef.current, nextValue))
   }
 
   const handlePhraseClick = (phrase: string) => {
@@ -387,6 +396,18 @@ export default function CommentComposer({ value, onChange, onBlur }: CommentComp
     startRecognition()
   }
 
+  const handleInputMethodChange = (nextMethod: InputMethod) => {
+    setInputMethod(nextMethod)
+    inputMethodRef.current = nextMethod
+
+    if (nextMethod !== 'voice') {
+      resetVoiceState()
+      return
+    }
+
+    prepareVoiceInput()
+  }
+
   return (
     <section className="comment-composer">
       <div className="comment-composer__control-grid">
@@ -406,7 +427,7 @@ export default function CommentComposer({ value, onChange, onBlur }: CommentComp
           <span className="comment-composer__label">Способ ввода</span>
           <ToggleGroup
             value={inputMethod}
-            onChange={setInputMethod}
+            onChange={handleInputMethodChange}
             options={[
               { value: 'text', label: 'Текст' },
               { value: 'phrases', label: 'Фразы' },
@@ -420,13 +441,13 @@ export default function CommentComposer({ value, onChange, onBlur }: CommentComp
         <div className="comment-composer__phrases" aria-label="Быстрые фразы">
           {PHRASES.map((phrase) => (
             <button
-              key={phrase}
+              key={phrase.label}
               type="button"
-              className={`comment-composer__phrase ${selectedPhrases.has(phrase) ? 'comment-composer__phrase--active' : ''}`}
-              aria-pressed={selectedPhrases.has(phrase)}
-              onClick={() => handlePhraseClick(phrase)}
+              className={`comment-composer__phrase ${phrase.wide ? 'comment-composer__phrase--wide' : ''} ${selectedPhrases.has(phrase.label) ? 'comment-composer__phrase--active' : ''}`}
+              aria-pressed={selectedPhrases.has(phrase.label)}
+              onClick={() => handlePhraseClick(phrase.label)}
             >
-              {phrase}
+              <span className="comment-composer__phrase-label">{phrase.label}</span>
             </button>
           ))}
         </div>
@@ -464,13 +485,13 @@ export default function CommentComposer({ value, onChange, onBlur }: CommentComp
         {showRewritePreview && (
           <div className="comment-composer__rewrite-preview">
             <div className="comment-composer__rewrite-preview-label">Текущий комментарий</div>
-            <div>{composerState.originalComment}</div>
+            <div>{currentComposerState.originalComment}</div>
           </div>
         )}
         <textarea
           id={textareaId}
           className="comment-composer__textarea"
-          value={showRewritePreview ? '' : getVisibleComment(composerState)}
+          value={showRewritePreview ? '' : getVisibleComment(currentComposerState)}
           onChange={(event) => handleTextChange(event.target.value)}
           onBlur={() => onBlur?.(getCommittedComment(composerStateRef.current))}
           placeholder={showRewritePreview ? 'Введите новый комментарий...' : 'Комментарий...'}

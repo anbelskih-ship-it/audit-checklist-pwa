@@ -1,7 +1,8 @@
 import { HashRouter, Routes, Route, Navigate } from 'react-router-dom'
-import { useEffect, useState, createContext, useContext, type ReactNode } from 'react'
+import { useEffect, useState, type ReactNode } from 'react'
 import { useAuth } from './hooks/useAuth'
 import { getAllowedUser, type AllowedUser } from './db/users'
+import { AppUserContext, useAppUser, type AppUser } from './app-user-context'
 import AuditListPage from './pages/AuditListPage'
 import AuditOutlinePage from './pages/AuditOutlinePage'
 import AuditSettingsPage from './pages/AuditSettingsPage'
@@ -19,16 +20,6 @@ configureMasterFiles({
   na_file_id: '1EB3P4ILwfggCafPNwO-Vc5gZ4JjVVwFKDgQy-2t5WU8',
 })
 
-// Context for user role
-interface AppUser extends AllowedUser {
-  uid: string
-  displayName: string
-  photoURL: string
-}
-
-export const AppUserContext = createContext<AppUser | null>(null)
-export function useAppUser() { return useContext(AppUserContext)! }
-
 function RequireRole({
   role,
   children,
@@ -45,27 +36,21 @@ function RequireRole({
 
 export default function App() {
   const { user, loading, logout } = useAuth()
+  const [resolvedEmail, setResolvedEmail] = useState<string | null>(null)
   const [appUser, setAppUser] = useState<AppUser | null>(null)
-  const [roleLoading, setRoleLoading] = useState(true)
-  const [denied, setDenied] = useState(false)
+  const [deniedEmail, setDeniedEmail] = useState<string | null>(null)
 
   // Check user role after auth
   useEffect(() => {
-    if (!user) {
-      setAppUser(null)
-      setRoleLoading(false)
-      setDenied(false)
-      return
-    }
+    if (!user) return
 
     const email = user.email?.toLowerCase()
-    if (!email) {
-      setDenied(true)
-      setRoleLoading(false)
-      return
-    }
+    if (!email) return
+
+    let active = true
 
     getAllowedUser(email).then(allowed => {
+      if (!active) return
       if (allowed) {
         setAppUser({
           ...allowed,
@@ -73,12 +58,17 @@ export default function App() {
           displayName: user.displayName || allowed.name || email,
           photoURL: user.photoURL || '',
         })
-        setDenied(false)
+        setDeniedEmail(null)
       } else {
-        setDenied(true)
+        setAppUser(null)
+        setDeniedEmail(email)
       }
-      setRoleLoading(false)
+      setResolvedEmail(email)
     })
+
+    return () => {
+      active = false
+    }
   }, [user])
 
   useEffect(() => {
@@ -86,6 +76,10 @@ export default function App() {
       syncStructures()
     }
   }, [])
+
+  const email = user?.email?.toLowerCase() || null
+  const roleLoading = Boolean(user && email && resolvedEmail !== email)
+  const denied = Boolean((user && !email) || (email && deniedEmail === email))
 
   if (loading || roleLoading) {
     return (

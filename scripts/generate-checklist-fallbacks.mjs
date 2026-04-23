@@ -23,6 +23,10 @@ function isKpiSheet(sheetName) {
   return /kpis|показател/i.test(sheetName)
 }
 
+function isKpiIntroRow(itemText) {
+  return /отслеживаются следующие показатели/i.test(itemText)
+}
+
 function parseKpiSheet(data) {
   const sections = []
   let currentSection = null
@@ -48,7 +52,7 @@ function parseKpiSheet(data) {
       sections.push(currentSection)
     }
 
-    if (!itemText) continue
+    if (!itemText || isKpiIntroRow(itemText)) continue
 
     if (!currentSection) {
       sectionCounter++

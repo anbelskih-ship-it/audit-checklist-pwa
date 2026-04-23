@@ -59,8 +59,9 @@ export function useAudit(auditId: string) {
       await dbSaveAnswer(auditId, itemId, answer)
     } catch {
       // Revert on error — remove from pending, let next onSnapshot correct state
-      const { [itemId]: _, ...rest } = pendingAnswers.current
-      pendingAnswers.current = rest
+      const nextPending = { ...pendingAnswers.current }
+      delete nextPending[itemId]
+      pendingAnswers.current = nextPending
     }
   }, [auditId])
 

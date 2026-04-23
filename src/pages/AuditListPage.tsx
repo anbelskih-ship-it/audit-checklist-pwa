@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { listAudits, createAudit } from '../db/audits'
 import { useAuth } from '../hooks/useAuth'
-import { useAppUser } from '../App'
+import { useAppUser } from '../app-user-context'
 import { listAllowedUsers, type AllowedUser } from '../db/users'
 import type { Audit, ChecklistStructure } from '../types'
 import ProgressBar from '../components/ProgressBar'
@@ -17,6 +17,15 @@ import { getSectionEvalItems } from '../utils/checklist-items'
 
 const AUDIT_LIST_CACHE_KEY = 'audit-list-cache-v2'
 const AUDIT_PAGE_SIZE = 40
+
+function readAuditListCache(): Audit[] {
+  try {
+    const cached = window.localStorage.getItem(AUDIT_LIST_CACHE_KEY)
+    return cached ? (JSON.parse(cached) as Audit[]) : []
+  } catch {
+    return []
+  }
+}
 
 function countTotalItems(structure: ChecklistStructure): number {
   let total = 0
@@ -78,7 +87,7 @@ export default function AuditListPage() {
   const { logout } = useAuth()
   const appUser = useAppUser()
   const online = useOnline()
-  const [audits, setAudits] = useState<Audit[]>([])
+  const [audits, setAudits] = useState<Audit[]>(readAuditListCache)
   const [allowedUsers, setAllowedUsers] = useState<AllowedUser[]>([])
   const [structureTotals, setStructureTotals] = useState<Record<string, number>>({})
   const [structureItemIds, setStructureItemIds] = useState<Record<string, Set<string>>>({})
@@ -95,15 +104,6 @@ export default function AuditListPage() {
   const navigate = useNavigate()
 
   useEffect(() => {
-    try {
-      const cached = window.localStorage.getItem(AUDIT_LIST_CACHE_KEY)
-      if (cached) {
-        setAudits(JSON.parse(cached) as Audit[])
-      }
-    } catch {
-      // ignore broken cache
-    }
-
     listAudits(AUDIT_PAGE_SIZE).then(({ audits: items, nextCursor: cursor }) => {
       setAudits(items)
       setNextCursor(cursor)

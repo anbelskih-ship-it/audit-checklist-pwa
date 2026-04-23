@@ -23,17 +23,22 @@ export async function loadStructureWithSync(
 }
 
 export function useStructure(type: 'АСП' | 'НА') {
-  const [structure, setStructure] = useState<ChecklistStructure | null>(null)
-  const [loading, setLoading] = useState(true)
+  const [state, setState] = useState<{
+    type: 'АСП' | 'НА'
+    structure: ChecklistStructure | null
+    loading: boolean
+  }>({
+    type,
+    structure: null,
+    loading: true,
+  })
 
   useEffect(() => {
     let active = true
 
-    setLoading(true)
     loadStructureWithSync(type, typeof navigator !== 'undefined' ? navigator.onLine : false).then(s => {
       if (!active) return
-      setStructure(s)
-      setLoading(false)
+      setState({ type, structure: s, loading: false })
     })
 
     return () => {
@@ -41,5 +46,8 @@ export function useStructure(type: 'АСП' | 'НА') {
     }
   }, [type])
 
-  return { structure, loading }
+  return {
+    structure: state.type === type ? state.structure : null,
+    loading: state.type !== type || state.loading,
+  }
 }

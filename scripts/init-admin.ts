@@ -2,7 +2,7 @@
  * One-time script: adds initial admin user to Firestore allowedUsers collection.
  * Run: npx tsx scripts/init-admin.ts
  */
-import { initializeApp, cert } from 'firebase-admin/app'
+import { initializeApp } from 'firebase-admin/app'
 import { getFirestore } from 'firebase-admin/firestore'
 
 // Uses Application Default Credentials

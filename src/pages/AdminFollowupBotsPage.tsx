@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Navigate, useNavigate } from 'react-router-dom'
-import { useAppUser } from '../App'
+import { useAppUser } from '../app-user-context'
 
 type LifecycleStatus =
   | 'draft'

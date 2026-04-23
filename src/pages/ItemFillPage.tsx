@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect, useCallback } from 'react'
+import { useState, useMemo, useCallback } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useAudit } from '../hooks/useAudit'
 import { useStructure } from '../hooks/useStructure'
@@ -23,7 +23,7 @@ export default function ItemFillPage() {
   const { structure } = useStructure(audit?.type || 'АСП')
   const [searchOpen, setSearchOpen] = useState(false)
   const [sectionJumpOpen, setSectionJumpOpen] = useState(false)
-  const [comment, setComment] = useState('')
+  const [commentDrafts, setCommentDrafts] = useState<Record<string, string>>({})
   const navigate = useNavigate()
 
   const allItems = useMemo(() => {
@@ -68,10 +68,7 @@ export default function ItemFillPage() {
   const currentIndex = allItems.findIndex(i => i.item.id === itemId)
   const current = allItems[currentIndex]
   const currentAnswer = audit?.answers[itemId!]
-
-  useEffect(() => {
-    setComment(currentAnswer?.comment || '')
-  }, [itemId, currentAnswer?.comment])
+  const comment = itemId ? (commentDrafts[itemId] ?? currentAnswer?.comment ?? '') : ''
 
   const goTo = useCallback((idx: number) => {
     if (idx >= 0 && idx < allItems.length) {
@@ -101,6 +98,11 @@ export default function ItemFillPage() {
     if (nextComment === (currentAnswer?.comment || '')) return
     const val = currentAnswer?.value ?? null
     await saveAnswer(current.item.id, { value: val, comment: nextComment })
+  }
+
+  const handleCommentChange = (nextComment: string) => {
+    if (!itemId) return
+    setCommentDrafts((currentDrafts) => ({ ...currentDrafts, [itemId]: nextComment }))
   }
 
   const evalItems = getSectionEvalItems(current.section)
@@ -214,7 +216,7 @@ export default function ItemFillPage() {
         )}
 
         <ScoreToggle value={currentAnswer?.value ?? null} onChange={handleScore} />
-        <CommentComposer value={comment} onChange={setComment} onBlur={handleCommentBlur} />
+        <CommentComposer key={itemId} value={comment} onChange={handleCommentChange} onBlur={handleCommentBlur} />
       </div>
 
       <div className="btn-group-bottom">

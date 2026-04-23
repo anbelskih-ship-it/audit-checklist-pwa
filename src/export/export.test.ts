@@ -44,7 +44,7 @@ describe('generateFilledXlsx', () => {
 
     const resultWb = XLSX.read(result)
     const ws = resultWb.Sheets['01 Тест']
-    const resultData: any[][] = XLSX.utils.sheet_to_json(ws, { header: 1 })
+    const resultData = XLSX.utils.sheet_to_json<(string | number | null)[]>(ws, { header: 1 })
     expect(resultData[2][6]).toBe(1)
     expect(resultData[3][6]).toBe(0)
     expect(resultData[3][5]).toBe('Проблема')

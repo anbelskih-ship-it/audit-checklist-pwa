@@ -428,6 +428,20 @@ describe('CommentComposer', () => {
     expect(screen.getByRole('textbox', { name: 'Комментарий' })).toHaveValue('Нет контроля')
   })
 
+  it('keeps short phrases compact and leaves long phrases wide in the given order', () => {
+    render(<Harness />)
+
+    fireEvent.click(screen.getByRole('button', { name: 'Фразы' }))
+
+    const phraseButtons = screen.getAllByRole('button').map((button) => button.textContent).filter(Boolean)
+    expect(phraseButtons).toContain('Нет регламента')
+    expect(phraseButtons).toContain('Есть, не используется')
+
+    expect(screen.getByRole('button', { name: 'Нет контроля' }).className).not.toContain('comment-composer__phrase--wide')
+    expect(screen.getByRole('button', { name: 'Нет ответственного' }).className).toContain('comment-composer__phrase--wide')
+    expect(screen.getByRole('button', { name: 'Есть, не используется' }).className).toContain('comment-composer__phrase--wide')
+  })
+
   it('shows a fallback message when voice input is unsupported', () => {
     render(<Harness initialValue="База" />)
 

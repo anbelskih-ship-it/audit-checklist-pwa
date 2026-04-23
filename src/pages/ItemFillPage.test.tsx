@@ -140,13 +140,13 @@ describe('ItemFillPage', () => {
     renderPage()
 
     fireEvent.click(screen.getByRole('button', { name: 'Фразы' }))
-    fireEvent.click(screen.getByRole('button', { name: 'Нет регулярного контроля' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Нет регулярности' }))
     fireEvent.click(screen.getByRole('button', { name: 'Да' }))
 
     await waitFor(() => {
       expect(saveAnswerMock).toHaveBeenCalledWith('item-1', {
         value: 1,
-        comment: 'Нет регулярного контроля',
+        comment: 'Нет регулярности',
       })
     })
   })
@@ -161,12 +161,12 @@ describe('ItemFillPage', () => {
     renderPage()
 
     fireEvent.click(screen.getByRole('button', { name: 'Фразы' }))
-    fireEvent.click(screen.getByRole('button', { name: 'Нет регулярного контроля' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Нет регулярности' }))
 
     await waitFor(() => {
       expect(saveAnswerMock).toHaveBeenCalledWith('item-1', {
         value: null,
-        comment: 'Нет регулярного контроля',
+        comment: 'Нет регулярности',
       })
     })
   })

@@ -24,7 +24,7 @@ export function configureMasterFiles(config: { asp_file_id: string; na_file_id: 
 export async function syncStructures(): Promise<{ updated: string[] }> {
   const updated: string[] = []
 
-  for (const [_key, { type, fileId }] of Object.entries(MASTER_FILES)) {
+  for (const { type, fileId } of Object.values(MASTER_FILES)) {
     try {
       const meta = await getFileMetadata(fileId)
       const existing = await getStructure(type)

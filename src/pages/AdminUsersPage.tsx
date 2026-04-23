@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Navigate, useNavigate } from 'react-router-dom'
 import { listAllowedUsers, addAllowedUser, removeAllowedUser, updateUserRole, type AllowedUser, type UserRole } from '../db/users'
-import { useAppUser } from '../App'
+import { useAppUser } from '../app-user-context'
 
 export default function AdminUsersPage() {
   const appUser = useAppUser()

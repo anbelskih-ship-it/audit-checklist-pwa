@@ -55,13 +55,6 @@ describe('loadStructureWithSync', () => {
       driveFileId: 'file1',
       sheets: [],
     }
-    const refreshed: ChecklistStructure = {
-      type: 'АСП',
-      version: 'new',
-      driveFileId: 'file1',
-      sheets: [{ id: 'KPIs', name: 'Показатели', estimatedTime: '', sections: [] }],
-    }
-
     getStructureMock.mockResolvedValueOnce(cached)
     syncStructuresMock.mockResolvedValue({ updated: ['АСП'] })
 
