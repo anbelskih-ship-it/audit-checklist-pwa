@@ -39,6 +39,8 @@ export default function App() {
   const [resolvedEmail, setResolvedEmail] = useState<string | null>(null)
   const [appUser, setAppUser] = useState<AppUser | null>(null)
   const [deniedEmail, setDeniedEmail] = useState<string | null>(null)
+  const [roleErrorEmail, setRoleErrorEmail] = useState<string | null>(null)
+  const [roleLookupAttempt, setRoleLookupAttempt] = useState(0)
 
   // Check user role after auth
   useEffect(() => {
@@ -63,13 +65,20 @@ export default function App() {
         setAppUser(null)
         setDeniedEmail(email)
       }
+      setRoleErrorEmail(null)
+      setResolvedEmail(email)
+    }).catch(() => {
+      if (!active) return
+      setAppUser(null)
+      setDeniedEmail(null)
+      setRoleErrorEmail(email)
       setResolvedEmail(email)
     })
 
     return () => {
       active = false
     }
-  }, [user])
+  }, [user, roleLookupAttempt])
 
   useEffect(() => {
     if (navigator.onLine) {
@@ -80,6 +89,7 @@ export default function App() {
   const email = user?.email?.toLowerCase() || null
   const roleLoading = Boolean(user && email && resolvedEmail !== email)
   const denied = Boolean((user && !email) || (email && deniedEmail === email))
+  const roleLookupFailed = Boolean(email && roleErrorEmail === email)
 
   if (loading || roleLoading) {
     return (
@@ -91,6 +101,34 @@ export default function App() {
 
   if (!user) {
     return <LoginPage />
+  }
+
+  if (roleLookupFailed) {
+    return (
+      <div className="center-screen">
+        <div className="auth-card">
+          <div className="auth-icon">⚠️</div>
+          <h1 className="auth-title">Не удалось проверить доступ</h1>
+          <p className="auth-subtitle">
+            Не получилось получить роль для аккаунта <strong>{user.email}</strong>.
+          </p>
+          <p className="auth-hint">
+            Проверьте соединение и попробуйте ещё раз.
+          </p>
+          <div className="btn-group">
+            <button className="btn-primary" onClick={() => {
+              setResolvedEmail(null)
+              setRoleErrorEmail(null)
+              setRoleLookupAttempt((current) => current + 1)
+            }}
+            >
+              Повторить
+            </button>
+            <button onClick={logout}>Выйти</button>
+          </div>
+        </div>
+      </div>
+    )
   }
 
   if (denied) {

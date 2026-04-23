@@ -6,6 +6,7 @@ import {
   createComposerState,
   getCommittedComment,
   getVisibleComment,
+  removePhraseSelection,
   setMode,
 } from './comment-composer-state'
 
@@ -73,6 +74,13 @@ describe('comment-composer-state', () => {
 
     expect(getVisibleComment(state)).toBe('Новое голосом')
     expect(getCommittedComment(state)).toBe('Новое голосом')
+  })
+
+  it('removes every repeated selected phrase when toggled off', () => {
+    const state = removePhraseSelection(createComposerState('Нет контроля, База, Нет контроля'), 'Нет контроля')
+
+    expect(getVisibleComment(state)).toBe('База')
+    expect(getCommittedComment(state)).toBe('База')
   })
 
   it('continues the rewritten version after switching back to append mode and rewriting again', () => {

@@ -130,6 +130,35 @@ describe('ItemFillPage', () => {
     })
   })
 
+  it('drops a stale local draft after the audit comment is refreshed from source of truth', async () => {
+    let currentAudit = createAudit({ value: 0, comment: 'Старый комментарий' })
+    useAuditMock.mockImplementation(() => ({
+      audit: currentAudit,
+      loading: false,
+      saveAnswer: saveAnswerMock,
+    }))
+
+    const view = renderPage()
+
+    const textbox = screen.getByRole('textbox', { name: 'Комментарий' })
+    fireEvent.change(textbox, { target: { value: 'Локальный draft' } })
+    expect(textbox).toHaveValue('Локальный draft')
+
+    currentAudit = createAudit({ value: 0, comment: 'Комментарий с сервера' })
+    view.rerender(
+      <MemoryRouter initialEntries={['/audit/audit-1/fill/item-1']}>
+        <Routes>
+          <Route path="/audit/:auditId/fill/:itemId" element={<ItemFillPage />} />
+          <Route path="/audit/:auditId" element={<div>Оглавление аудита</div>} />
+        </Routes>
+      </MemoryRouter>,
+    )
+
+    await waitFor(() => {
+      expect(screen.getByRole('textbox', { name: 'Комментарий' })).toHaveValue('Комментарий с сервера')
+    })
+  })
+
   it('passes the latest comment to handleScore after a composer phrase selection', async () => {
     useAuditMock.mockReturnValue({
       audit: createAudit({ value: null, comment: '' }),

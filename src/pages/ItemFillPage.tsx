@@ -17,13 +17,18 @@ interface FillItem {
   section: Section
 }
 
+interface CommentDraft {
+  value: string
+  baseComment: string
+}
+
 export default function ItemFillPage() {
   const { auditId, itemId } = useParams<{ auditId: string; itemId: string }>()
   const { audit, saveAnswer } = useAudit(auditId!)
   const { structure } = useStructure(audit?.type || 'АСП')
   const [searchOpen, setSearchOpen] = useState(false)
   const [sectionJumpOpen, setSectionJumpOpen] = useState(false)
-  const [commentDrafts, setCommentDrafts] = useState<Record<string, string>>({})
+  const [commentDrafts, setCommentDrafts] = useState<Record<string, CommentDraft>>({})
   const navigate = useNavigate()
 
   const allItems = useMemo(() => {
@@ -68,7 +73,11 @@ export default function ItemFillPage() {
   const currentIndex = allItems.findIndex(i => i.item.id === itemId)
   const current = allItems[currentIndex]
   const currentAnswer = audit?.answers[itemId!]
-  const comment = itemId ? (commentDrafts[itemId] ?? currentAnswer?.comment ?? '') : ''
+  const currentComment = currentAnswer?.comment ?? ''
+  const activeDraft = itemId ? commentDrafts[itemId] : undefined
+  const comment = itemId && activeDraft && activeDraft.baseComment === currentComment
+    ? activeDraft.value
+    : currentComment
 
   const goTo = useCallback((idx: number) => {
     if (idx >= 0 && idx < allItems.length) {
@@ -102,7 +111,13 @@ export default function ItemFillPage() {
 
   const handleCommentChange = (nextComment: string) => {
     if (!itemId) return
-    setCommentDrafts((currentDrafts) => ({ ...currentDrafts, [itemId]: nextComment }))
+    setCommentDrafts((currentDrafts) => ({
+      ...currentDrafts,
+      [itemId]: {
+        value: nextComment,
+        baseComment: currentComment,
+      },
+    }))
   }
 
   const evalItems = getSectionEvalItems(current.section)

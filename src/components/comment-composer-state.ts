@@ -48,7 +48,7 @@ function removeChunk(source: string, chunk: string): string {
 
   const escapedChunk = trimmedChunk.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
   const nextValue = source
-    .replace(new RegExp(`(^|,\\s*)${escapedChunk}(?=,\\s*|$)`), '')
+    .replace(new RegExp(`(^|,\\s*)${escapedChunk}(?=,\\s*|$)`, 'g'), '')
     .replace(/^,\s*/, '')
     .replace(/,\s*,/g, ', ')
     .replace(/\s{2,}/g, ' ')

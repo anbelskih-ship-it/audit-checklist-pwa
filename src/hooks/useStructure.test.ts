@@ -61,7 +61,34 @@ describe('loadStructureWithSync', () => {
     const result = await loadStructureWithSync('АСП', true)
 
     expect(syncStructuresMock).toHaveBeenCalledTimes(1)
-    expect(getStructureMock).toHaveBeenCalledTimes(1)
     expect(result).toEqual(cached)
+    await vi.waitFor(() => {
+      expect(getStructureMock).toHaveBeenCalledTimes(2)
+    })
+  })
+
+  it('notifies listeners with a refreshed structure after background sync from cache', async () => {
+    const cached: ChecklistStructure = {
+      type: 'АСП',
+      version: 'old',
+      driveFileId: 'file1',
+      sheets: [],
+    }
+    const refreshed: ChecklistStructure = {
+      ...cached,
+      version: 'new',
+    }
+    const onFresh = vi.fn()
+
+    getStructureMock.mockResolvedValueOnce(cached).mockResolvedValueOnce(refreshed)
+    syncStructuresMock.mockResolvedValue({ updated: ['АСП'] })
+
+    const result = await loadStructureWithSync('АСП', true, { onFresh })
+
+    expect(result).toEqual(cached)
+    await vi.waitFor(() => {
+      expect(getStructureMock).toHaveBeenCalledTimes(2)
+      expect(onFresh).toHaveBeenCalledWith(refreshed)
+    })
   })
 })

@@ -5,12 +5,20 @@ import type { ChecklistStructure } from '../types'
 
 export async function loadStructureWithSync(
   type: 'АСП' | 'НА',
-  canSync: boolean
+  canSync: boolean,
+  options?: { onFresh?: (structure: ChecklistStructure) => void }
 ): Promise<ChecklistStructure | null> {
   const cached = await getStructure(type)
   if (cached) {
     if (canSync) {
-      void syncStructures().catch(() => undefined)
+      void syncStructures()
+        .then(async () => {
+          const refreshed = await getStructure(type)
+          if (refreshed) {
+            options?.onFresh?.(refreshed)
+          }
+        })
+        .catch(() => undefined)
     }
     return cached
   }
@@ -19,6 +27,9 @@ export async function loadStructureWithSync(
 
   await syncStructures()
   const refreshed = await getStructure(type)
+  if (refreshed) {
+    options?.onFresh?.(refreshed)
+  }
   return refreshed || cached || null
 }
 
@@ -36,7 +47,12 @@ export function useStructure(type: 'АСП' | 'НА') {
   useEffect(() => {
     let active = true
 
-    loadStructureWithSync(type, typeof navigator !== 'undefined' ? navigator.onLine : false).then(s => {
+    loadStructureWithSync(type, typeof navigator !== 'undefined' ? navigator.onLine : false, {
+      onFresh: (fresh) => {
+        if (!active) return
+        setState({ type, structure: fresh, loading: false })
+      },
+    }).then(s => {
       if (!active) return
       setState({ type, structure: s, loading: false })
     })

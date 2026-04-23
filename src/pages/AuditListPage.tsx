@@ -103,6 +103,17 @@ export default function AuditListPage() {
   const [loadingMore, setLoadingMore] = useState(false)
   const navigate = useNavigate()
 
+  const applyStructureMetrics = (type: 'АСП' | 'НА', structure: ChecklistStructure) => {
+    setStructureTotals((current) => ({
+      ...current,
+      [type]: countTotalItems(structure),
+    }))
+    setStructureItemIds((current) => ({
+      ...current,
+      [type]: collectEvalItemIds(structure),
+    }))
+  }
+
   useEffect(() => {
     listAudits(AUDIT_PAGE_SIZE).then(({ audits: items, nextCursor: cursor }) => {
       setAudits(items)
@@ -118,8 +129,12 @@ export default function AuditListPage() {
     const loadStructureTotals = async () => {
       const canSync = typeof navigator !== 'undefined' ? navigator.onLine : false
       const [asp, na] = await Promise.all([
-        loadStructureWithSync('АСП', canSync),
-        loadStructureWithSync('НА', canSync),
+        loadStructureWithSync('АСП', canSync, {
+          onFresh: (structure) => applyStructureMetrics('АСП', structure),
+        }),
+        loadStructureWithSync('НА', canSync, {
+          onFresh: (structure) => applyStructureMetrics('НА', structure),
+        }),
       ])
       const totals: Record<string, number> = {}
       const itemIds: Record<string, Set<string>> = {}
