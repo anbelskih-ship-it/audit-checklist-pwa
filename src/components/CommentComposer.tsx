@@ -32,7 +32,7 @@ const PHRASES = [
   { label: 'Нет регулярности', wide: false },
   { label: 'Нет контроля', wide: false },
   { label: 'Нет аналитики', wide: false },
-  { label: 'Не актуально', wide: false },
+  { label: 'Не актуально', wide: true },
   { label: 'Есть, не используется', wide: true },
   { label: 'Аутсорсинг', wide: false },
   { label: 'Внедряется', wide: false },
