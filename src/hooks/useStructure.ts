@@ -8,6 +8,13 @@ export async function loadStructureWithSync(
   canSync: boolean
 ): Promise<ChecklistStructure | null> {
   const cached = await getStructure(type)
+  if (cached) {
+    if (canSync) {
+      void syncStructures().catch(() => undefined)
+    }
+    return cached
+  }
+
   if (!canSync) return cached || null
 
   await syncStructures()

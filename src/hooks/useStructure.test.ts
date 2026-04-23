@@ -48,7 +48,7 @@ describe('loadStructureWithSync', () => {
     expect(result).toBeNull()
   })
 
-  it('returns refreshed structure when cache exists and online sync updates it', async () => {
+  it('returns cached structure immediately when cache exists', async () => {
     const cached: ChecklistStructure = {
       type: 'АСП',
       version: 'old',
@@ -62,15 +62,13 @@ describe('loadStructureWithSync', () => {
       sheets: [{ id: 'KPIs', name: 'Показатели', estimatedTime: '', sections: [] }],
     }
 
-    getStructureMock
-      .mockResolvedValueOnce(cached)
-      .mockResolvedValueOnce(refreshed)
+    getStructureMock.mockResolvedValueOnce(cached)
     syncStructuresMock.mockResolvedValue({ updated: ['АСП'] })
 
     const result = await loadStructureWithSync('АСП', true)
 
     expect(syncStructuresMock).toHaveBeenCalledTimes(1)
-    expect(getStructureMock).toHaveBeenCalledTimes(2)
-    expect(result).toEqual(refreshed)
+    expect(getStructureMock).toHaveBeenCalledTimes(1)
+    expect(result).toEqual(cached)
   })
 })

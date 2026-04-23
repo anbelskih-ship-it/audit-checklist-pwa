@@ -60,6 +60,7 @@ describe('parseChecklistXlsx', () => {
     const wb = XLSX.utils.book_new()
     const kpiData = [
       ['', '', '', 'бенчмарк/рекомендация'],
+      ['', '', 'Отслеживаются следующие показатели', ''],
       ['', '1. Использование платформы', 'Средний срок хранения по проданным АМ', '40'],
       ['', '', 'Доля быстрых продаж в первые 15 дней публикации', '0'],
       ['', '2. Найм и адаптация', 'Кол-во оценщиков ТИ/ТА', ''],
@@ -73,7 +74,10 @@ describe('parseChecklistXlsx', () => {
     expect(result.sheets[0].id).toBe('KPIs')
     expect(result.sheets[0].name).toBe('Показатели')
     expect(result.sheets[0].sections).toHaveLength(2)
+    expect(result.sheets[0].sections[0].id).toBe('KPIs.2')
     expect(result.sheets[0].sections[0].name).toBe('Использование платформы')
+    expect(result.sheets[0].sections[0].items).toHaveLength(2)
+    expect(result.sheets[0].sections[0].items[0].id).toBe('KPIs.2.1')
     expect(result.sheets[0].sections[0].items[0].text).toBe('Средний срок хранения по проданным АМ')
     expect(result.sheets[0].sections[0].items[0].criteria).toBe('40')
   })

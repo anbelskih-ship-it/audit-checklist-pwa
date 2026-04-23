@@ -11,6 +11,10 @@ function isKpiSheet(sheetName: string): boolean {
   return /kpis|показател/i.test(sheetName)
 }
 
+function isKpiIntroRow(itemText: string): boolean {
+  return /отслеживаются следующие показатели/i.test(itemText)
+}
+
 function parseKpiSheet(
   data: (string | number | null)[][]
 ): SheetBlock | null {
@@ -39,6 +43,15 @@ function parseKpiSheet(
     }
 
     if (!itemText) continue
+
+    if (isKpiIntroRow(itemText)) {
+      if (currentSection) {
+        itemCounter++
+      } else if (sectionCounter === 0) {
+        sectionCounter = 1
+      }
+      continue
+    }
 
     if (!currentSection) {
       sectionCounter++
