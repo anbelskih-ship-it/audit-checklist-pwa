@@ -415,8 +415,22 @@ describe('CommentComposer', () => {
     expect(onBlur).toHaveBeenCalledWith('База, Фраза после тишины')
   })
 
-  it('highlights selected phrases and does not duplicate them on repeated click', () => {
+  it('highlights selected phrases after the first click', () => {
     render(<Harness />)
+
+    fireEvent.click(screen.getByRole('button', { name: 'Фразы' }))
+    const phrase = screen.getByRole('button', { name: 'Нет контроля' })
+
+    fireEvent.click(phrase)
+
+    expect(phrase).toHaveAttribute('aria-pressed', 'true')
+    expect(screen.getByRole('textbox', { name: 'Комментарий' })).toHaveValue('Нет контроля')
+  })
+
+  it('removes a selected phrase from highlight and comment on repeated click', () => {
+    const onBlur = vi.fn()
+
+    render(<Harness initialValue="База" onBlur={onBlur} />)
 
     fireEvent.click(screen.getByRole('button', { name: 'Фразы' }))
     const phrase = screen.getByRole('button', { name: 'Нет контроля' })
@@ -424,8 +438,9 @@ describe('CommentComposer', () => {
     fireEvent.click(phrase)
     fireEvent.click(phrase)
 
-    expect(phrase).toHaveAttribute('aria-pressed', 'true')
-    expect(screen.getByRole('textbox', { name: 'Комментарий' })).toHaveValue('Нет контроля')
+    expect(phrase).toHaveAttribute('aria-pressed', 'false')
+    expect(screen.getByRole('textbox', { name: 'Комментарий' })).toHaveValue('База')
+    expect(onBlur).toHaveBeenLastCalledWith('База')
   })
 
   it('keeps short phrases compact and leaves long phrases wide in the given order', () => {

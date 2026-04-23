@@ -1,6 +1,7 @@
 import { useEffect, useId, useRef, useState } from 'react'
 import {
   applyPhraseSelection,
+  removePhraseSelection,
   applyTextInput,
   applyVoiceTranscript,
   createComposerState,
@@ -325,6 +326,8 @@ export default function CommentComposer({ value, onChange, onBlur }: CommentComp
   const handlePhraseClick = (phrase: string) => {
     const currentState = composerStateRef.current
     if (getSelectedPhrases(currentState).has(phrase)) {
+      const nextValue = commitState(removePhraseSelection(currentState, phrase))
+      onBlur?.(nextValue)
       return
     }
 

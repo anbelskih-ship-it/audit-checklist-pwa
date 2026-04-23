@@ -42,6 +42,19 @@ function applyChunk(state: CommentComposerState, chunk: string): CommentComposer
   }
 }
 
+function removeChunk(source: string, chunk: string): string {
+  const trimmedChunk = chunk.trim()
+  if (!trimmedChunk) return source
+
+  const nextValue = source
+    .split(',')
+    .map((part) => part.trim())
+    .filter((part) => part && part !== trimmedChunk)
+    .join(', ')
+
+  return nextValue
+}
+
 export function applyTextInput(state: CommentComposerState, nextValue: string): CommentComposerState {
   if (state.workingComment === nextValue) return state
 
@@ -64,6 +77,16 @@ export function applyTextInput(state: CommentComposerState, nextValue: string): 
 
 export function applyPhraseSelection(state: CommentComposerState, phrase: string): CommentComposerState {
   return applyChunk(state, phrase)
+}
+
+export function removePhraseSelection(state: CommentComposerState, phrase: string): CommentComposerState {
+  const nextValue = removeChunk(state.workingComment, phrase)
+  if (nextValue === state.workingComment) return state
+
+  return {
+    ...state,
+    workingComment: nextValue,
+  }
 }
 
 export function applyVoiceTranscript(state: CommentComposerState, transcript: string): CommentComposerState {
