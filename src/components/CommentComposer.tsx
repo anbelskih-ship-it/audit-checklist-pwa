@@ -144,6 +144,7 @@ function ToggleGroup<T extends string>({
 }
 
 export default function CommentComposer({ value, onChange, onBlur }: CommentComposerProps) {
+  const VOICE_SILENCE_MS = 3000
   const [composerState, setComposerState] = useState(() => createComposerState(value))
   const [inputMethod, setInputMethod] = useState<InputMethod>('text')
   const [voiceStatus, setVoiceStatus] = useState<VoiceStatus>('idle')
@@ -154,6 +155,8 @@ export default function CommentComposer({ value, onChange, onBlur }: CommentComp
   const inputMethodRef = useRef(inputMethod)
   const recognitionRef = useRef<SpeechRecognitionLike | null>(null)
   const lastFinalTranscriptRef = useRef('')
+  const pendingVoiceTranscriptRef = useRef('')
+  const silenceTimerRef = useRef<number | null>(null)
 
   useEffect(() => {
     setComposerState((current) =>
@@ -173,7 +176,43 @@ export default function CommentComposer({ value, onChange, onBlur }: CommentComp
   const showRewritePreview =
     composerState.mode === 'rewrite' && !composerState.rewriteStarted && Boolean(composerState.originalComment)
 
-  const stopRecognition = (nextStatus: VoiceStatus = 'ready') => {
+  const clearSilenceTimer = () => {
+    if (silenceTimerRef.current !== null) {
+      window.clearTimeout(silenceTimerRef.current)
+      silenceTimerRef.current = null
+    }
+  }
+
+  const commitPendingVoiceDraft = () => {
+    const transcript = normalizeTranscript(pendingVoiceTranscriptRef.current)
+    if (!transcript) return
+    if (transcript === lastFinalTranscriptRef.current) {
+      pendingVoiceTranscriptRef.current = ''
+      return
+    }
+
+    const currentState = composerStateRef.current
+    const nextValue = commitState(applyVoiceTranscript(currentState, buildChunk(currentState, transcript)))
+    onBlur?.(nextValue)
+    lastFinalTranscriptRef.current = transcript
+    pendingVoiceTranscriptRef.current = ''
+    setVoiceDraft('')
+    setVoiceError('')
+  }
+
+  const scheduleSilenceCommit = () => {
+    clearSilenceTimer()
+    silenceTimerRef.current = window.setTimeout(() => {
+      commitPendingVoiceDraft()
+      stopRecognition('ready')
+    }, VOICE_SILENCE_MS)
+  }
+
+  const stopRecognition = (nextStatus: VoiceStatus = 'ready', options?: { commitDraft?: boolean }) => {
+    clearSilenceTimer()
+    if (options?.commitDraft) {
+      commitPendingVoiceDraft()
+    }
     const recognition = recognitionRef.current
     if (!recognition) {
       setVoiceStatus(nextStatus)
@@ -231,6 +270,7 @@ export default function CommentComposer({ value, onChange, onBlur }: CommentComp
       setVoiceError('')
       setVoiceDraft('')
       lastFinalTranscriptRef.current = ''
+      pendingVoiceTranscriptRef.current = ''
       return
     }
 
@@ -289,14 +329,18 @@ export default function CommentComposer({ value, onChange, onBlur }: CommentComp
 
     const transcript = normalizeTranscript(result[0]?.transcript ?? '')
     if (!transcript) return
+    pendingVoiceTranscriptRef.current = transcript
     setVoiceDraft(transcript)
+    scheduleSilenceCommit()
 
     if (!result?.isFinal) return
     if (transcript === lastFinalTranscriptRef.current) return
 
+    clearSilenceTimer()
     lastFinalTranscriptRef.current = transcript
     const nextValue = commitState(applyVoiceTranscript(currentState, buildChunk(currentState, transcript)))
     onBlur?.(nextValue)
+    pendingVoiceTranscriptRef.current = ''
     setVoiceError('')
     setVoiceDraft('')
   }
@@ -306,6 +350,7 @@ export default function CommentComposer({ value, onChange, onBlur }: CommentComp
     recognitionRef.current = null
     setVoiceStatus('error')
     setVoiceError(getVoiceErrorMessage(event))
+    pendingVoiceTranscriptRef.current = ''
     setVoiceDraft('')
   }
 
@@ -316,14 +361,14 @@ export default function CommentComposer({ value, onChange, onBlur }: CommentComp
     if (inputMethodRef.current !== 'voice') return
 
     setVoiceStatus((current) => (current === 'listening' ? 'ready' : current))
+    pendingVoiceTranscriptRef.current = ''
     setVoiceDraft('')
   }
 
   const handleVoiceToggle = () => {
     if (voiceStatus === 'listening') {
-      stopRecognition('ready')
+      stopRecognition('ready', { commitDraft: true })
       setVoiceError('')
-      setVoiceDraft('')
       return
     }
 
@@ -335,6 +380,7 @@ export default function CommentComposer({ value, onChange, onBlur }: CommentComp
     }
 
     lastFinalTranscriptRef.current = ''
+    pendingVoiceTranscriptRef.current = ''
     startRecognition()
   }
 

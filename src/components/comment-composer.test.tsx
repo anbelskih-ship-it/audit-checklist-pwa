@@ -34,6 +34,7 @@ describe('CommentComposer', () => {
   })
 
   afterEach(() => {
+    vi.useRealTimers()
     delete (window as typeof window & { SpeechRecognition?: unknown }).SpeechRecognition
     delete (window as typeof window & { webkitSpeechRecognition?: unknown }).webkitSpeechRecognition
   })
@@ -315,6 +316,103 @@ describe('CommentComposer', () => {
     })
 
     expect(onBlur).toHaveBeenCalledWith('База, Голос')
+  })
+
+  it('commits the last voice draft when the user stops recording manually', () => {
+    const onBlur = vi.fn()
+
+    class FakeRecognition {
+      static instances: FakeRecognition[] = []
+      lang = ''
+      continuous = false
+      interimResults = false
+      maxAlternatives = 0
+      onresult: ((event: { results: { 0: { 0: { transcript: string }; isFinal: boolean }; length: number }; resultIndex: number }) => void) | null = null
+      onerror = null
+      onend: (() => void) | null = null
+
+      constructor() {
+        FakeRecognition.instances.push(this)
+      }
+
+      start() {}
+
+      stop() {}
+    }
+
+    ;(window as typeof window & { SpeechRecognition?: typeof FakeRecognition }).SpeechRecognition = FakeRecognition
+
+    render(<Harness initialValue="База" onBlur={onBlur} />)
+
+    fireEvent.click(screen.getByRole('button', { name: 'Голос' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Начать запись' }))
+
+    act(() => {
+      FakeRecognition.instances.at(-1)?.onresult?.({
+        resultIndex: 0,
+        results: {
+          0: {
+            0: { transcript: 'Черновая фраза' },
+            isFinal: false,
+          },
+          length: 1,
+        },
+      })
+    })
+
+    fireEvent.click(screen.getByRole('button', { name: 'Остановить запись' }))
+
+    expect(onBlur).toHaveBeenCalledWith('База, Черновая фраза')
+  })
+
+  it('commits the last voice draft after 3 seconds of silence', () => {
+    vi.useFakeTimers()
+    const onBlur = vi.fn()
+
+    class FakeRecognition {
+      static instances: FakeRecognition[] = []
+      lang = ''
+      continuous = false
+      interimResults = false
+      maxAlternatives = 0
+      onresult: ((event: { results: { 0: { 0: { transcript: string }; isFinal: boolean }; length: number }; resultIndex: number }) => void) | null = null
+      onerror = null
+      onend: (() => void) | null = null
+
+      constructor() {
+        FakeRecognition.instances.push(this)
+      }
+
+      start() {}
+
+      stop() {}
+    }
+
+    ;(window as typeof window & { SpeechRecognition?: typeof FakeRecognition }).SpeechRecognition = FakeRecognition
+
+    render(<Harness initialValue="База" onBlur={onBlur} />)
+
+    fireEvent.click(screen.getByRole('button', { name: 'Голос' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Начать запись' }))
+
+    act(() => {
+      FakeRecognition.instances.at(-1)?.onresult?.({
+        resultIndex: 0,
+        results: {
+          0: {
+            0: { transcript: 'Фраза после тишины' },
+            isFinal: false,
+          },
+          length: 1,
+        },
+      })
+    })
+
+    act(() => {
+      vi.advanceTimersByTime(3000)
+    })
+
+    expect(onBlur).toHaveBeenCalledWith('База, Фраза после тишины')
   })
 
   it('highlights selected phrases and does not duplicate them on repeated click', () => {
