@@ -29,6 +29,7 @@ jobs:
         run: npm run build
         env:
           GITHUB_PAGES: 1
+          VITE_EXPORT_FOLDER_ID: 1ZroLpnjBrlU6FtCddjJGJBupSA0nBufR
 
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v4

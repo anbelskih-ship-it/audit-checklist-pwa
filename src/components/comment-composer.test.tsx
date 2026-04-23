@@ -1,7 +1,7 @@
 import '@testing-library/jest-dom/vitest'
 import { useState } from 'react'
 import { act, fireEvent, render, screen } from '@testing-library/react'
-import { afterEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import CommentComposer from './CommentComposer'
 
 interface HarnessProps {
@@ -26,6 +26,13 @@ function Harness({ initialValue = '', onChange, onBlur }: HarnessProps) {
 }
 
 describe('CommentComposer', () => {
+  beforeEach(() => {
+    Object.defineProperty(window, 'isSecureContext', {
+      configurable: true,
+      value: true,
+    })
+  })
+
   afterEach(() => {
     delete (window as typeof window & { SpeechRecognition?: unknown }).SpeechRecognition
     delete (window as typeof window & { webkitSpeechRecognition?: unknown }).webkitSpeechRecognition
@@ -208,12 +215,13 @@ describe('CommentComposer', () => {
     expect(screen.getByText('Голосовой ввод доступен. Нажмите «Начать запись», чтобы добавить фразу.')).toBeInTheDocument()
   })
 
-  it('keeps the old comment visible after switching to rewrite before first input', () => {
+  it('keeps the old comment visible as a preview after switching to rewrite before first input', () => {
     render(<Harness initialValue="Текущий комментарий" />)
 
     fireEvent.click(screen.getByRole('button', { name: 'Переписать' }))
 
-    expect(screen.getByRole('textbox', { name: 'Комментарий' })).toHaveValue('Текущий комментарий')
+    expect(screen.getAllByText('Текущий комментарий')).toHaveLength(2)
+    expect(screen.getByRole('textbox', { name: 'Комментарий' })).toHaveValue('')
   })
 
   it('calls onChange with the appended value in append mode', () => {
@@ -236,7 +244,8 @@ describe('CommentComposer', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Переписать' }))
 
     expect(onChange).not.toHaveBeenCalled()
-    expect(screen.getByRole('textbox', { name: 'Комментарий' })).toHaveValue('База')
+    expect(screen.getByText('База')).toBeInTheDocument()
+    expect(screen.getByRole('textbox', { name: 'Комментарий' })).toHaveValue('')
   })
 
   it('replaces the old comment with the first rewrite phrase', () => {

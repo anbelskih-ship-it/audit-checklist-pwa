@@ -917,6 +917,29 @@ select {
   border-left: 3px solid var(--color-danger);
 }
 
+.review-items-list {
+  padding: var(--space-2) 0 var(--space-1);
+}
+
+.review-sheet-card--issues {
+  border: 1px solid color-mix(in srgb, var(--color-danger) 22%, var(--color-border-light));
+  box-shadow: none;
+}
+
+.review-issue-count {
+  min-width: 28px;
+  height: 28px;
+  padding: 0 var(--space-3);
+  border-radius: var(--radius-pill);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-bg-danger);
+  color: var(--color-danger-darker);
+  font-size: var(--font-size-caption);
+  font-weight: 700;
+}
+
 .issue-item-section {
   font-size: var(--font-size-sm);
   color: var(--color-text-disabled);
@@ -948,6 +971,60 @@ select {
   height: 20px;
   min-height: auto;
   accent-color: var(--color-primary);
+}
+
+.review-filter-row {
+  display: flex;
+  justify-content: flex-start;
+  margin: 0 0 var(--space-7);
+}
+
+.ios-switch {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-4);
+  min-height: 44px;
+  padding: var(--space-2) var(--space-5) var(--space-2) var(--space-2);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-pill);
+  background: var(--color-surface);
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-body-sm);
+  font-weight: 600;
+  box-shadow: var(--shadow-card);
+}
+
+.ios-switch__track {
+  width: 52px;
+  height: 32px;
+  border-radius: var(--radius-pill);
+  background: var(--color-border);
+  padding: 3px;
+  transition: background 0.18s ease;
+}
+
+.ios-switch__thumb {
+  display: block;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: var(--color-surface);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.22);
+  transform: translateX(0);
+  transition: transform 0.18s ease;
+}
+
+.ios-switch--on {
+  border-color: color-mix(in srgb, var(--color-primary) 40%, var(--color-border));
+  color: var(--color-text-primary);
+}
+
+.ios-switch--on .ios-switch__track {
+  background: var(--color-primary);
+}
+
+.ios-switch--on .ios-switch__thumb {
+  transform: translateX(20px);
 }
 
 /* === New audit form === */

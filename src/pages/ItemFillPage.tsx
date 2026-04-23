@@ -78,7 +78,14 @@ export default function ItemFillPage() {
     }
   }, [allItems, auditId, navigate])
 
-  const goNext = useCallback(() => goTo(currentIndex + 1), [goTo, currentIndex])
+  const isLastItem = currentIndex === allItems.length - 1
+  const goNext = useCallback(() => {
+    if (isLastItem) {
+      navigate(`/audit/${auditId}`)
+      return
+    }
+    goTo(currentIndex + 1)
+  }, [auditId, currentIndex, goTo, isLastItem, navigate])
   const goPrev = useCallback(() => goTo(currentIndex - 1), [goTo, currentIndex])
 
   const swipe = useSwipe(goNext, goPrev)
@@ -211,7 +218,9 @@ export default function ItemFillPage() {
 
       <div className="btn-group-bottom">
         <button onClick={goPrev} disabled={currentIndex === 0}>← Назад</button>
-        <button className="btn-primary btn-primary--nav" onClick={goNext} disabled={currentIndex === allItems.length - 1}>Далее →</button>
+        <button className="btn-primary btn-primary--nav" onClick={goNext}>
+          {isLastItem ? 'Завершить →' : 'Далее →'}
+        </button>
       </div>
 
       <SearchDialog structure={structure} open={searchOpen} onClose={() => setSearchOpen(false)}

@@ -71,20 +71,12 @@ function getSelectedPhrases(state: CommentComposerState): Set<string> {
   return new Set(PHRASES.filter((phrase) => hasPhrase(source, phrase)))
 }
 
-function removePhrase(comment: string, phrase: string): string {
-  return comment
-    .replace(new RegExp(`(^|,\\s*)${escapeRegExp(phrase)}(?=,\\s*|$)`, 'g'), '$1')
-    .replace(/,\s*,+/g, ', ')
-    .replace(/^,\s*|\s*,\s*$/g, '')
-    .trim()
-}
-
 function getVoiceMessage(status: VoiceStatus, errorMessage: string): string {
   switch (status) {
     case 'ready':
-      return 'Голосовой ввод доступен. Лучше всего работает в Chrome или Edge. Нажмите «Начать запись».'
+      return 'Голосовой ввод доступен. Нажмите «Начать запись», чтобы добавить фразу.'
     case 'unsupported':
-      return 'Голосовой ввод недоступен в этом браузере. Откройте страницу в Chrome или Edge.'
+      return 'Голосовой ввод недоступен на этом устройстве.'
     case 'listening':
       return 'Идёт запись. Говорите короткими фразами.'
     case 'error':
@@ -161,7 +153,7 @@ export default function CommentComposer({ value, onChange, onBlur }: CommentComp
   const composerStateRef = useRef(composerState)
   const inputMethodRef = useRef(inputMethod)
   const recognitionRef = useRef<SpeechRecognitionLike | null>(null)
-  const keepListeningRef = useRef(false)
+  const lastFinalTranscriptRef = useRef('')
 
   useEffect(() => {
     setComposerState((current) =>
@@ -182,7 +174,6 @@ export default function CommentComposer({ value, onChange, onBlur }: CommentComp
     composerState.mode === 'rewrite' && !composerState.rewriteStarted && Boolean(composerState.originalComment)
 
   const stopRecognition = (nextStatus: VoiceStatus = 'ready') => {
-    keepListeningRef.current = false
     const recognition = recognitionRef.current
     if (!recognition) {
       setVoiceStatus(nextStatus)
@@ -204,7 +195,6 @@ export default function CommentComposer({ value, onChange, onBlur }: CommentComp
     if (!recognition) {
       setVoiceStatus('unsupported')
       setVoiceError('')
-      keepListeningRef.current = false
       return
     }
 
@@ -222,7 +212,6 @@ export default function CommentComposer({ value, onChange, onBlur }: CommentComp
       recognition.onerror = null
       recognition.onend = null
       recognitionRef.current = null
-      keepListeningRef.current = false
       setVoiceStatus('error')
       setVoiceDraft('')
       setVoiceError(
@@ -241,6 +230,7 @@ export default function CommentComposer({ value, onChange, onBlur }: CommentComp
       setVoiceStatus('idle')
       setVoiceError('')
       setVoiceDraft('')
+      lastFinalTranscriptRef.current = ''
       return
     }
 
@@ -283,8 +273,6 @@ export default function CommentComposer({ value, onChange, onBlur }: CommentComp
   const handlePhraseClick = (phrase: string) => {
     const currentState = composerStateRef.current
     if (getSelectedPhrases(currentState).has(phrase)) {
-      const nextValue = commitState(applyTextInput(currentState, removePhrase(getCommittedComment(currentState), phrase)))
-      onBlur?.(nextValue)
       return
     }
 
@@ -304,7 +292,9 @@ export default function CommentComposer({ value, onChange, onBlur }: CommentComp
     setVoiceDraft(transcript)
 
     if (!result?.isFinal) return
+    if (transcript === lastFinalTranscriptRef.current) return
 
+    lastFinalTranscriptRef.current = transcript
     const nextValue = commitState(applyVoiceTranscript(currentState, buildChunk(currentState, transcript)))
     onBlur?.(nextValue)
     setVoiceError('')
@@ -314,7 +304,6 @@ export default function CommentComposer({ value, onChange, onBlur }: CommentComp
   const handleVoiceError = (recognition: SpeechRecognitionLike, event: SpeechRecognitionErrorEventLike) => {
     if (recognitionRef.current !== recognition) return
     recognitionRef.current = null
-    keepListeningRef.current = false
     setVoiceStatus('error')
     setVoiceError(getVoiceErrorMessage(event))
     setVoiceDraft('')
@@ -325,13 +314,6 @@ export default function CommentComposer({ value, onChange, onBlur }: CommentComp
     recognitionRef.current = null
 
     if (inputMethodRef.current !== 'voice') return
-    if (keepListeningRef.current) {
-      window.setTimeout(() => {
-        if (inputMethodRef.current !== 'voice' || !keepListeningRef.current || recognitionRef.current) return
-        startRecognition()
-      }, 150)
-      return
-    }
 
     setVoiceStatus((current) => (current === 'listening' ? 'ready' : current))
     setVoiceDraft('')
@@ -352,7 +334,7 @@ export default function CommentComposer({ value, onChange, onBlur }: CommentComp
       return
     }
 
-    keepListeningRef.current = true
+    lastFinalTranscriptRef.current = ''
     startRecognition()
   }
 

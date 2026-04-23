@@ -21,6 +21,50 @@ export default function AuditViewPage() {
 
   const allEvalItems = structure.sheets.flatMap(sh => sh.sections.flatMap(s => s.items.slice(1)))
   const { filled: totalFilled, total: totalItems, yesCount: totalPassed } = calcMetrics(allEvalItems, audit.answers)
+  const sheetSummaries = structure.sheets.map(sheet => {
+    let sheetTotal = 0, sheetFilled = 0, sheetPassed = 0
+    const issues: { id: string; text: string; comment: string; sectionName: string }[] = []
+    const allItems: { id: string; text: string; comment: string; sectionName: string; value: 0 | 1 | null | undefined }[] = []
+
+    for (const section of sheet.sections) {
+      const evalItems = section.items.slice(1)
+      for (const item of evalItems) {
+        sheetTotal++
+        const answer = audit.answers[item.id]
+        const value = answer?.value
+        const viewItem = {
+          id: item.id,
+          text: item.text,
+          comment: answer?.comment || '',
+          sectionName: section.name,
+          value,
+        }
+        allItems.push(viewItem)
+        if (value !== null && value !== undefined) {
+          sheetFilled++
+          if (value === 1) {
+            sheetPassed++
+          } else {
+            issues.push({
+              id: item.id,
+              text: item.text,
+              comment: answer?.comment || '',
+              sectionName: section.name,
+            })
+          }
+        }
+      }
+    }
+
+    return {
+      sheet,
+      sheetTotal,
+      sheetFilled,
+      sheetPassed,
+      issues,
+      allItems,
+    }
+  })
 
   return (
     <div className="page">
@@ -48,51 +92,47 @@ export default function AuditViewPage() {
         </div>
       </div>
 
-      <label className="check-label mb-md">
-        <input type="checkbox" checked={showOnlyIssues} onChange={e => setShowOnlyIssues(e.target.checked)} />
-        Показать только зоны роста
-      </label>
+      <div className="review-filter-row">
+        <button
+          type="button"
+          role="switch"
+          aria-label="Только зоны роста"
+          aria-checked={showOnlyIssues}
+          className={`ios-switch ${showOnlyIssues ? 'ios-switch--on' : ''}`}
+          onClick={() => {
+            setShowOnlyIssues(current => !current)
+            setExpandedSheet(null)
+          }}
+        >
+          <span className="ios-switch__track" aria-hidden="true">
+            <span className="ios-switch__thumb" />
+          </span>
+          <span className="ios-switch__text">
+            {showOnlyIssues ? 'Только зоны роста' : 'Все пункты'}
+          </span>
+        </button>
+      </div>
 
-      {structure.sheets.map(sheet => {
-        let sheetTotal = 0, sheetFilled = 0, sheetPassed = 0
-        const issues: { text: string; comment: string; sectionName: string }[] = []
-
-        for (const section of sheet.sections) {
-          const evalItems = section.items.slice(1) // skip section header
-          for (const item of evalItems) {
-            sheetTotal++
-            const a = audit.answers[item.id]
-            if (a?.value !== null && a?.value !== undefined) {
-              sheetFilled++
-              if (a.value === 1) sheetPassed++
-              else issues.push({ text: item.text, comment: a.comment, sectionName: section.name })
-            }
-          }
-        }
-
+      {sheetSummaries.map(({ sheet, sheetTotal, sheetFilled, sheetPassed, issues, allItems }) => {
         if (showOnlyIssues && issues.length === 0) return null
 
         return (
           <div key={sheet.id} className="mb-sm">
-            <div className="card" onClick={() => setExpandedSheet(expandedSheet === sheet.id ? null : sheet.id)}>
+            <div
+              className={`card ${showOnlyIssues ? 'review-sheet-card--issues' : ''}`}
+              onClick={() => !showOnlyIssues && setExpandedSheet(expandedSheet === sheet.id ? null : sheet.id)}
+            >
               <div className="flex-between">
                 <span className="card-title">{sheet.name}</span>
-                {issues.length > 0 && <span style={{ color: 'var(--color-danger)', fontSize: 'var(--font-size-caption)', fontWeight: 500 }}>{issues.length}</span>}
+                {issues.length > 0 && <span className="review-issue-count">{issues.length}</span>}
               </div>
               <ProgressBar filled={sheetPassed} total={sheetFilled || sheetTotal} />
             </div>
 
-            {expandedSheet === sheet.id && (
-              <div style={{ padding: '4px 0' }}>
-                {(showOnlyIssues ? issues : sheet.sections.flatMap(sec =>
-                  sec.items.slice(1).map(item => ({
-                    text: item.text,
-                    comment: audit.answers[item.id]?.comment || '',
-                    sectionName: sec.name,
-                    value: audit.answers[item.id]?.value,
-                  }))
-                )).map((item, i) => (
-                  <div key={i} className={`issue-item ${'value' in item && item.value === 1 ? 'issue-item--pass' : 'issue-item--fail'}`}>
+            {(showOnlyIssues || expandedSheet === sheet.id) && (
+              <div className="review-items-list">
+                {(showOnlyIssues ? issues : allItems).map((item) => (
+                  <div key={item.id} className={`issue-item ${'value' in item && item.value === 1 ? 'issue-item--pass' : 'issue-item--fail'}`}>
                     <div className="issue-item-section">{item.sectionName}</div>
                     <div className="issue-item-text">{item.text}</div>
                     {item.comment && <div className="issue-item-comment">{item.comment}</div>}

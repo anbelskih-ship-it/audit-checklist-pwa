@@ -79,6 +79,7 @@ function renderPage() {
     <MemoryRouter initialEntries={['/audit/audit-1/fill/item-1']}>
       <Routes>
         <Route path="/audit/:auditId/fill/:itemId" element={<ItemFillPage />} />
+        <Route path="/audit/:auditId" element={<div>Оглавление аудита</div>} />
       </Routes>
     </MemoryRouter>,
   )
@@ -88,6 +89,10 @@ describe('ItemFillPage', () => {
   beforeEach(() => {
     saveAnswerMock.mockReset()
     useStructureMock.mockReturnValue({ structure, loading: false })
+    Object.defineProperty(window, 'isSecureContext', {
+      configurable: true,
+      value: true,
+    })
   })
 
   it('renders CommentComposer controls and keeps current answer comment in the field', () => {
@@ -220,5 +225,19 @@ describe('ItemFillPage', () => {
     })
 
     delete (window as typeof window & { SpeechRecognition?: unknown }).SpeechRecognition
+  })
+
+  it('returns to the audit outline from the last item', async () => {
+    useAuditMock.mockReturnValue({
+      audit: createAudit({ value: 1, comment: '' }),
+      loading: false,
+      saveAnswer: saveAnswerMock,
+    })
+
+    renderPage()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Завершить →' }))
+
+    expect(await screen.findByText('Оглавление аудита')).toBeInTheDocument()
   })
 })
