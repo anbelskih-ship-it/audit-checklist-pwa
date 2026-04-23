@@ -443,6 +443,22 @@ describe('CommentComposer', () => {
     expect(onBlur).toHaveBeenLastCalledWith('База')
   })
 
+  it('removes a selected phrase with an internal comma consistently', () => {
+    const onBlur = vi.fn()
+
+    render(<Harness initialValue="База" onBlur={onBlur} />)
+
+    fireEvent.click(screen.getByRole('button', { name: 'Фразы' }))
+    const phrase = screen.getByRole('button', { name: 'Есть, не используется' })
+
+    fireEvent.click(phrase)
+    fireEvent.click(phrase)
+
+    expect(phrase).toHaveAttribute('aria-pressed', 'false')
+    expect(screen.getByRole('textbox', { name: 'Комментарий' })).toHaveValue('База')
+    expect(onBlur).toHaveBeenLastCalledWith('База')
+  })
+
   it('keeps short phrases compact and leaves long phrases wide in the given order', () => {
     render(<Harness />)
 

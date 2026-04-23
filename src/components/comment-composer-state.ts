@@ -46,11 +46,14 @@ function removeChunk(source: string, chunk: string): string {
   const trimmedChunk = chunk.trim()
   if (!trimmedChunk) return source
 
+  const escapedChunk = trimmedChunk.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
   const nextValue = source
-    .split(',')
-    .map((part) => part.trim())
-    .filter((part) => part && part !== trimmedChunk)
-    .join(', ')
+    .replace(new RegExp(`(^|,\\s*)${escapedChunk}(?=,\\s*|$)`), '')
+    .replace(/^,\s*/, '')
+    .replace(/,\s*,/g, ', ')
+    .replace(/\s{2,}/g, ' ')
+    .trim()
+    .replace(/,\s*$/, '')
 
   return nextValue
 }
