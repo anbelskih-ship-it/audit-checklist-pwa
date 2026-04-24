@@ -1,6 +1,7 @@
 import { Document, Font, Page, StyleSheet, Text, View } from '@react-pdf/renderer'
 import type { Audit, ChecklistStructure } from '../types'
 import { buildPdfReportData } from './pdf-report-data'
+import { buildPdfIssueBlocks } from './pdf-report-layout'
 import ysGeoRegular from '../assets/fonts/ys-geo-regular.ttf'
 import ysGeoBold from '../assets/fonts/ys-geo-bold.ttf'
 
@@ -28,8 +29,8 @@ const colors = {
 }
 
 export const PDF_PAGINATION_GUARDS = {
-  sheetMinPresenceAhead: 72,
-  issueGroupMinPresenceAhead: 28,
+  sheetMinPresenceAhead: 56,
+  issueGroupMinPresenceAhead: 20,
 } as const
 
 export const PDF_LAYOUT_TOKENS = {
@@ -202,11 +203,27 @@ const styles = StyleSheet.create({
     borderLeft: `3 solid ${colors.danger}`,
     backgroundColor: '#fff5f3',
   },
+  issueItemCompact: {
+    paddingTop: 7,
+    paddingBottom: 7,
+    paddingHorizontal: 8,
+    paddingLeft: 10,
+    marginBottom: 5,
+  },
+  issueItemContinuation: {
+    borderLeft: `3 solid ${colors.warning}`,
+    backgroundColor: '#fffaf0',
+  },
   issueText: {
     fontSize: 9.5,
     lineHeight: 1.4,
     color: colors.ink,
     marginBottom: 3,
+  },
+  issueTextCompact: {
+    fontSize: 8.8,
+    lineHeight: 1.32,
+    marginBottom: 2,
   },
   issueCommentLabel: {
     fontSize: 7.5,
@@ -214,10 +231,17 @@ const styles = StyleSheet.create({
     marginBottom: 1,
     textTransform: 'uppercase',
   },
+  issueCommentLabelContinuation: {
+    color: colors.warning,
+  },
   issueComment: {
     fontSize: 8.5,
     lineHeight: 1.35,
     color: colors.muted,
+  },
+  issueCommentCompact: {
+    fontSize: 8.1,
+    lineHeight: 1.28,
   },
 })
 
@@ -312,16 +336,50 @@ export function AuditPdfReport({ structure, audit }: Props) {
                 minPresenceAhead={PDF_PAGINATION_GUARDS.issueGroupMinPresenceAhead}
               >
                 <Text style={styles.issueGroupTitle}>{group.sectionName}</Text>
-                {group.issues.map((issue, index) => (
-                  <View key={`${sheet.id}-${group.sectionName}-${index}`} style={styles.issueItem}>
-                    <Text style={styles.issueText}>{issue.text}</Text>
-                    {issue.comment ? (
-                      <>
-                        <Text style={styles.issueCommentLabel}>Комментарий консультанта</Text>
-                        <Text style={styles.issueComment}>{issue.comment}</Text>
-                      </>
-                    ) : null}
-                  </View>
+                {group.issues.flatMap((issue, index) => (
+                  buildPdfIssueBlocks(issue).map((block, blockIndex) => {
+                    const issueItemStyle = block.isContinuation
+                      ? (block.density === 'compact'
+                        ? [styles.issueItem, styles.issueItemCompact, styles.issueItemContinuation]
+                        : [styles.issueItem, styles.issueItemContinuation])
+                      : (block.density === 'compact'
+                        ? [styles.issueItem, styles.issueItemCompact]
+                        : styles.issueItem)
+
+                    const issueTextStyle = block.density === 'compact'
+                      ? [styles.issueText, styles.issueTextCompact]
+                      : styles.issueText
+
+                    const issueCommentLabelStyle = block.isContinuation
+                      ? [styles.issueCommentLabel, styles.issueCommentLabelContinuation]
+                      : styles.issueCommentLabel
+
+                    const issueCommentStyle = block.density === 'compact'
+                      ? [styles.issueComment, styles.issueCommentCompact]
+                      : styles.issueComment
+
+                    return (
+                      <View
+                        key={`${sheet.id}-${group.sectionName}-${index}-${blockIndex}`}
+                        style={issueItemStyle}
+                        wrap={false}
+                      >
+                        <Text style={issueTextStyle}>
+                          {block.text}
+                        </Text>
+                        {block.comment ? (
+                          <>
+                            <Text style={issueCommentLabelStyle}>
+                              {block.isContinuation ? 'Продолжение комментария' : 'Комментарий консультанта'}
+                            </Text>
+                            <Text style={issueCommentStyle}>
+                              {block.comment}
+                            </Text>
+                          </>
+                        ) : null}
+                      </View>
+                    )
+                  })
                 ))}
               </View>
             ))}

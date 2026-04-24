@@ -93,8 +93,8 @@ describe('buildPdfReportData', () => {
   })
 
   it('adds pagination guards so PDF blocks do not split awkwardly', () => {
-    expect(PDF_PAGINATION_GUARDS.sheetMinPresenceAhead).toBe(72)
-    expect(PDF_PAGINATION_GUARDS.issueGroupMinPresenceAhead).toBe(28)
+    expect(PDF_PAGINATION_GUARDS.sheetMinPresenceAhead).toBe(56)
+    expect(PDF_PAGINATION_GUARDS.issueGroupMinPresenceAhead).toBe(20)
   })
 
   it('uses tighter layout tokens for a cleaner first page rhythm', () => {
