@@ -28,8 +28,8 @@ const colors = {
 }
 
 export const PDF_PAGINATION_GUARDS = {
-  sheetMinPresenceAhead: 160,
-  issueGroupMinPresenceAhead: 56,
+  sheetMinPresenceAhead: 72,
+  issueGroupMinPresenceAhead: 28,
 } as const
 
 export const PDF_LAYOUT_TOKENS = {
@@ -313,7 +313,7 @@ export function AuditPdfReport({ structure, audit }: Props) {
               >
                 <Text style={styles.issueGroupTitle}>{group.sectionName}</Text>
                 {group.issues.map((issue, index) => (
-                  <View key={`${sheet.id}-${group.sectionName}-${index}`} style={styles.issueItem} wrap={false}>
+                  <View key={`${sheet.id}-${group.sectionName}-${index}`} style={styles.issueItem}>
                     <Text style={styles.issueText}>{issue.text}</Text>
                     {issue.comment ? (
                       <>

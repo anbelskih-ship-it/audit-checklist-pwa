@@ -7,6 +7,27 @@ export const CRITERIA_HEADERS = ['Критерии выполнения опер
 
 export const SKIP_SHEETS = ['Сводный результат', 'Лист3']
 
+const CANONICAL_SECTION_COL = 1
+const CANONICAL_ITEM_COL = 3
+
+function hasCanonicalChecklistColumns(headers: (string | null)[]): boolean {
+  const sectionHeader = headers[CANONICAL_SECTION_COL] ?? null
+  const itemHeader = headers[CANONICAL_ITEM_COL] ?? null
+
+  return findColumnByHeaders([sectionHeader], SECTION_HEADERS) !== -1
+    && findColumnByHeaders([itemHeader], ITEM_HEADERS) !== -1
+}
+
+function isServiceChecklistRow(
+  currentSection: Section | null,
+  sectionName: string | null,
+  itemText: string | undefined,
+): boolean {
+  if (currentSection || sectionName || !itemText) return false
+
+  return /отслеживаются следующие показатели/i.test(itemText)
+}
+
 export function findColumnByHeaders(headers: (string | null)[], candidates: string[]): number {
   for (const candidate of candidates) {
     const idx = headers.findIndex(h =>
@@ -50,8 +71,9 @@ export function parseChecklistXlsx(
       if (!isChecklistSheet(headers)) continue
     }
 
-    const sectionCol = findColumnByHeaders(headers, SECTION_HEADERS)
-    let itemCol = findColumnByHeaders(headers, ITEM_HEADERS)
+    const usesCanonicalColumns = hasCanonicalChecklistColumns(headers)
+    const sectionCol = usesCanonicalColumns ? CANONICAL_SECTION_COL : findColumnByHeaders(headers, SECTION_HEADERS)
+    let itemCol = usesCanonicalColumns ? CANONICAL_ITEM_COL : findColumnByHeaders(headers, ITEM_HEADERS)
     const criteriaCol = findColumnByHeaders(headers, CRITERIA_HEADERS)
 
     // Fallback: if we have section col but no item col, use the column after the second "№"
@@ -97,8 +119,8 @@ export function parseChecklistXlsx(
       const row = data[r]
       if (!row) continue
 
-      const sectionName = sectionCol >= 0 ? row[sectionCol]?.toString()?.trim() : null
-      const itemText = row[itemCol]?.toString()?.trim()
+      const sectionName = sectionCol >= 0 ? row[sectionCol]?.toString()?.trim() || null : null
+      const itemText = row[itemCol]?.toString()?.trim() || ''
       const criteriaText = criteriaCol >= 0 ? row[criteriaCol]?.toString()?.trim() : ''
 
       if (sectionName) {
@@ -110,6 +132,10 @@ export function parseChecklistXlsx(
           items: [],
         }
         sections.push(currentSection)
+      }
+
+      if (isServiceChecklistRow(currentSection, sectionName, itemText)) {
+        continue
       }
 
       if (itemText) {

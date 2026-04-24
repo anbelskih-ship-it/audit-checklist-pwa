@@ -81,4 +81,43 @@ describe('parseChecklistXlsx', () => {
     expect(result.sheets[0].sections[0].items[0].text).toBe('Средний срок хранения по проданным АМ')
     expect(result.sheets[0].sections[0].items[0].criteria).toBe('40')
   })
+
+  it('reads section from column B and item text from column D starting on row 2', () => {
+    const wb = XLSX.utils.book_new()
+    const data = [
+      ['№', 'Шаги процесса / Этапы операций', '№№', 'Операции процесса', 'Комментарий Консультанта', 'Результат (1/0)'],
+      [1, 'Использование платформы', 1, 'Средний срок хранения по проданным АМ', '', ''],
+      ['', '', 2, 'Доля быстрых продаж в первые 15 дней публикации', '', ''],
+      [2, 'Персонал', 1, 'Кол-во оценщиков ТИ/ТА', '', ''],
+    ]
+    const ws = XLSX.utils.aoa_to_sheet(data)
+    XLSX.utils.book_append_sheet(wb, ws, '11 Показатели')
+
+    const result = parseChecklistXlsx(wb, 'АСП', '2026-04-24', 'file123')
+
+    expect(result.sheets[0].sections[0].name).toBe('Использование платформы')
+    expect(result.sheets[0].sections[0].items[0].text).toBe('Средний срок хранения по проданным АМ')
+    expect(result.sheets[0].sections[0].items[1].text).toBe('Доля быстрых продаж в первые 15 дней публикации')
+    expect(result.sheets[0].sections[1].name).toBe('Персонал')
+    expect(result.sheets[0].sections[1].items[0].text).toBe('Кол-во оценщиков ТИ/ТА')
+  })
+
+  it('skips service rows before the first real section in the unified metrics sheet', () => {
+    const wb = XLSX.utils.book_new()
+    const data = [
+      ['№', 'Шаги процесса / Этапы операций', '№№', 'Операции процесса', 'Комментарий Консультанта', 'Результат (1/0)'],
+      ['', '', '№№', 'Отслеживаются следующие показатели', '', ''],
+      [1, 'Использование платформы', 1, 'Средний срок хранения по проданным АМ', '', ''],
+      ['', '', 2, 'Доля быстрых продаж в первые 15 дней публикации', '', ''],
+    ]
+    const ws = XLSX.utils.aoa_to_sheet(data)
+    XLSX.utils.book_append_sheet(wb, ws, '11 Показатели')
+
+    const result = parseChecklistXlsx(wb, 'АСП', '2026-04-24', 'file123')
+
+    expect(result.sheets[0].sections).toHaveLength(1)
+    expect(result.sheets[0].sections[0].name).toBe('Использование платформы')
+    expect(result.sheets[0].sections[0].items).toHaveLength(2)
+    expect(result.sheets[0].sections[0].items[0].text).toBe('Средний срок хранения по проданным АМ')
+  })
 })
