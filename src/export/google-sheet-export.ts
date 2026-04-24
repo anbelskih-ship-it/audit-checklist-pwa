@@ -1,5 +1,5 @@
 import * as XLSX from 'xlsx'
-import { SKIP_SHEETS } from '../parser/xlsx-parser'
+import { findColumnByHeaders, ITEM_HEADERS, SKIP_SHEETS } from '../parser/xlsx-parser'
 import {
   clearSpreadsheetRanges,
   copySpreadsheetFile,
@@ -11,8 +11,9 @@ import {
   type SpreadsheetValueUpdate,
 } from '../drive/drive-api'
 import type { Audit, ChecklistStructure } from '../types'
-import { getExportRowItemText, resolveSheetExportLayout } from './sheet-layout'
 const EXPORT_FOLDER_ID = import.meta.env.VITE_EXPORT_FOLDER_ID || ''
+const COMMENT_HEADERS = ['Комментарий Консультанта', 'Комментарий', 'комментарий']
+const SCORE_HEADERS = ['Результат (1/0)', 'Результат', 'Статус']
 
 function sanitizePart(value: string): string {
   return value
@@ -69,14 +70,23 @@ function buildSpreadsheetUpdates(
     const data: (string | number | null)[][] = XLSX.utils.sheet_to_json(ws, { header: 1 })
     if (data.length < 3) continue
 
-    const { headerRowIndex, itemCol, commentCol, scoreCol, isKpiSheet } = resolveSheetExportLayout(data, sheetName, sheet.name)
+    let headers = (data[1] || []).map(h => h?.toString() ?? null)
+    let headerRowIndex = 1
+    if (findColumnByHeaders(headers, ITEM_HEADERS) === -1) {
+      headers = (data[0] || []).map(h => h?.toString() ?? null)
+      headerRowIndex = 0
+    }
+
+    const itemCol = findColumnByHeaders(headers, ITEM_HEADERS)
+    const commentCol = findColumnByHeaders(headers, COMMENT_HEADERS)
+    const scoreCol = findColumnByHeaders(headers, SCORE_HEADERS)
 
     if (scoreCol === -1 || itemCol === -1) continue
 
     for (const section of sheet.sections) {
       for (const item of section.items) {
         for (let r = headerRowIndex + 1; r < data.length; r++) {
-          if (getExportRowItemText(data[r], itemCol, isKpiSheet) !== item.text) continue
+          if (data[r]?.[itemCol]?.toString()?.trim() !== item.text) continue
 
           const scoreRange = toA1(sheetName, r, scoreCol)
           clearRanges.push(scoreRange)

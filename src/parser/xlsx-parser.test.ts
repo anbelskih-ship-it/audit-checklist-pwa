@@ -56,48 +56,29 @@ describe('parseChecklistXlsx', () => {
     expect(result.sheets[0].sections[1].items).toHaveLength(1)
   })
 
-  it('parses KPI sheet as a separate checklist block', () => {
+  it('parses metrics sheet with the common checklist format', () => {
     const wb = XLSX.utils.book_new()
-    const kpiData = [
-      ['', '', '', 'бенчмарк/рекомендация'],
-      ['', '', 'Отслеживаются следующие показатели', ''],
-      ['', '1. Использование платформы', 'Средний срок хранения по проданным АМ', '40'],
-      ['', '', 'Доля быстрых продаж в первые 15 дней публикации', '0'],
-      ['', '2. Найм и адаптация', 'Кол-во оценщиков ТИ/ТА', ''],
+    const metricsData = [
+      ['Показатели', null, null, null, null, null, '1 час'],
+      ['№', 'Шаги процесса / Этапы операций', '№№', 'Операции процесса', 'Критерии выполнения операции', 'Комментарий Консультанта', 'Результат (1/0)'],
+      [1, 'Использование платформы', 1, 'Средний срок хранения по проданным АМ', '40', null, null],
+      [null, null, 2, 'Доля быстрых продаж в первые 15 дней публикации', '0', null, null],
+      [2, 'Найм и адаптация', 1, 'Кол-во оценщиков ТИ/ТА', '', null, null],
     ]
-    const ws = XLSX.utils.aoa_to_sheet(kpiData)
-    XLSX.utils.book_append_sheet(wb, ws, 'KPIs')
+    const ws = XLSX.utils.aoa_to_sheet(metricsData)
+    XLSX.utils.book_append_sheet(wb, ws, '11 Показатели')
 
     const result = parseChecklistXlsx(wb, 'АСП', '2026-04-01', 'file123')
 
     expect(result.sheets).toHaveLength(1)
-    expect(result.sheets[0].id).toBe('KPIs')
+    expect(result.sheets[0].id).toBe('11')
     expect(result.sheets[0].name).toBe('Показатели')
     expect(result.sheets[0].sections).toHaveLength(2)
-    expect(result.sheets[0].sections[0].id).toBe('KPIs.2')
+    expect(result.sheets[0].sections[0].id).toBe('11.1')
     expect(result.sheets[0].sections[0].name).toBe('Использование платформы')
     expect(result.sheets[0].sections[0].items).toHaveLength(2)
-    expect(result.sheets[0].sections[0].items[0].id).toBe('KPIs.2.1')
+    expect(result.sheets[0].sections[0].items[0].id).toBe('11.1.1')
     expect(result.sheets[0].sections[0].items[0].text).toBe('Средний срок хранения по проданным АМ')
     expect(result.sheets[0].sections[0].items[0].criteria).toBe('40')
-  })
-
-  it('parses KPI rows with a separate numeric index column', () => {
-    const wb = XLSX.utils.book_new()
-    const kpiData = [
-      ['', '', '', '', 'бенчмарк/рекомендация'],
-      ['', '', '', 'Отслеживаются следующие показатели', ''],
-      ['', '1. Использование платформы', 1, 'Средний срок хранения по проданным АМ', '40'],
-      ['', '', 2, 'Доля быстрых продаж в первые 15 дней публикации (0-15, выбыл, ниже 95%)', '0'],
-    ]
-    const ws = XLSX.utils.aoa_to_sheet(kpiData)
-    XLSX.utils.book_append_sheet(wb, ws, 'KPIs')
-
-    const result = parseChecklistXlsx(wb, 'АСП', '2026-04-01', 'file123')
-    const firstSection = result.sheets[0].sections[0]
-
-    expect(firstSection.items).toHaveLength(2)
-    expect(firstSection.items[1].text).toBe('Доля быстрых продаж в первые 15 дней публикации (0-15, выбыл, ниже 95%)')
-    expect(firstSection.items[1].criteria).toBe('0')
   })
 })
