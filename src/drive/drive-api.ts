@@ -6,6 +6,10 @@ const API_KEY = 'AIzaSyCrwBoqSBQDVFq5qf43WNBhoyA5NkboXQE'
 const XLSX_EXPORT_MIME = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
 const GOOGLE_SHEETS_MIME = 'application/vnd.google-apps.spreadsheet'
 
+function getPublicSpreadsheetExportUrl(fileId: string): string {
+  return `https://docs.google.com/spreadsheets/d/${fileId}/export?format=xlsx`
+}
+
 async function driveRequest(path: string, options: RequestInit = {}): Promise<Response> {
   const token = await getAccessToken()
   if (!token) throw new Error('Not authenticated')
@@ -54,7 +58,12 @@ export async function getFileMetadata(
 export async function downloadFile(fileId: string): Promise<ArrayBuffer> {
   const token = await getAccessToken()
   if (!token) {
-    throw new Error('Drive auth expired')
+    const publicResp = await fetch(getPublicSpreadsheetExportUrl(fileId))
+    if (!publicResp.ok) {
+      const details = await readErrorDetails(publicResp)
+      throw new Error(`Template export failed: ${publicResp.status}${details ? ` - ${details}` : ''}`)
+    }
+    return publicResp.arrayBuffer()
   }
   const exportPath = `/files/${fileId}/export?mimeType=${encodeURIComponent(XLSX_EXPORT_MIME)}`
   const resp = await driveRequest(exportPath)

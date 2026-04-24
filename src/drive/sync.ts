@@ -4,7 +4,7 @@ import { parseChecklistXlsx } from '../parser/xlsx-parser'
 import { saveStructure, getStructure } from '../db/structures'
 import { ASP_FALLBACK, NA_FALLBACK } from '../data/checklist-fallbacks'
 
-export const PARSER_SCHEMA_VERSION = '2026-04-23-kpi-id-stability'
+export const PARSER_SCHEMA_VERSION = '2026-04-24-public-template-refresh'
 
 const MASTER_FILES: Record<string, { type: 'АСП' | 'НА'; fileId: string }> = {}
 const FALLBACKS = {
