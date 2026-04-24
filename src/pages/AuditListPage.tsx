@@ -232,7 +232,7 @@ export default function AuditListPage() {
         <div className="card-subtitle">
           {authorLabel} · {new Date(a.updated).toLocaleDateString('ru')}
         </div>
-        {totalItems ? <ProgressBar filled={answered} total={totalItems} hideLabel /> : <div className="text-disabled mb-sm">Загружаю структуру чек-листа...</div>}
+        {scorePct !== null ? <ProgressBar filled={scorePct} total={100} hideLabel /> : totalItems ? <ProgressBar filled={answered} total={totalItems} hideLabel /> : <div className="text-disabled mb-sm">Загружаю структуру чек-листа...</div>}
         {scorePct !== null && (
           <div className="card-score">
             Результат: <strong>{scorePct}%</strong>
