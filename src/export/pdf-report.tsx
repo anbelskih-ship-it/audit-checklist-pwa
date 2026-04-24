@@ -1,8 +1,8 @@
 import { Document, Font, Page, StyleSheet, Text, View } from '@react-pdf/renderer'
 import type { Audit, ChecklistStructure } from '../types'
 import { buildPdfReportData } from './pdf-report-data'
-import { buildPdfIssueBlocks } from './pdf-report-layout'
 import { buildPdfSheetLayout } from './pdf-report-sheet-layout'
+import { buildPdfSectionLayout } from './pdf-report-section-layout'
 import ysGeoRegular from '../assets/fonts/ys-geo-regular.ttf'
 import ysGeoBold from '../assets/fonts/ys-geo-bold.ttf'
 
@@ -171,13 +171,6 @@ const styles = StyleSheet.create({
     border: `1 solid ${colors.border}`,
     backgroundColor: '#ffffff',
   },
-  issueGroupCard: {
-    marginBottom: PDF_LAYOUT_TOKENS.sheetCardMarginBottom,
-    padding: PDF_LAYOUT_TOKENS.sheetCardPadding,
-    borderRadius: 14,
-    border: `1 solid ${colors.border}`,
-    backgroundColor: '#ffffff',
-  },
   sheetHeader: {
     marginBottom: PDF_LAYOUT_TOKENS.sheetHeaderMarginBottom,
     paddingBottom: 8,
@@ -194,6 +187,13 @@ const styles = StyleSheet.create({
     lineHeight: 1.4,
   },
   issueGroup: {
+    marginBottom: PDF_LAYOUT_TOKENS.sheetCardMarginBottom,
+    padding: PDF_LAYOUT_TOKENS.sheetCardPadding,
+    borderRadius: 14,
+    border: `1 solid ${colors.border}`,
+    backgroundColor: '#ffffff',
+  },
+  issueGroupBody: {
     marginBottom: PDF_LAYOUT_TOKENS.issueGroupMarginBottom,
     paddingTop: 2,
   },
@@ -347,60 +347,72 @@ export function AuditPdfReport({ structure, audit }: Props) {
             </View>
 
             {layout.groups.map(group => (
-              <View
-                key={`${sheet.id}-${group.sectionName}`}
-                style={styles.issueGroupCard}
-                minPresenceAhead={PDF_PAGINATION_GUARDS.issueGroupMinPresenceAhead}
-              >
-                <View style={styles.issueGroup}>
-                  <Text style={styles.issueGroupTitle}>{group.sectionName}</Text>
-                  {group.issues.flatMap((issue, index) => (
-                    buildPdfIssueBlocks(issue).map((block, blockIndex) => {
-                      const issueItemStyle = block.isContinuation
-                        ? (block.density === 'compact'
-                          ? [styles.issueItem, styles.issueItemCompact, styles.issueItemContinuation]
-                          : [styles.issueItem, styles.issueItemContinuation])
-                        : (block.density === 'compact'
-                          ? [styles.issueItem, styles.issueItemCompact]
-                          : styles.issueItem)
+              (() => {
+                const section = buildPdfSectionLayout(group)
 
-                      const issueTextStyle = block.density === 'compact'
-                        ? [styles.issueText, styles.issueTextCompact]
-                        : styles.issueText
+                const renderIssueBlock = (
+                  block: ReturnType<typeof buildPdfSectionLayout>['lead']['blocks'][number],
+                  key: string,
+                ) => {
+                  const issueItemStyle = block.isContinuation
+                    ? (block.density === 'compact'
+                      ? [styles.issueItem, styles.issueItemCompact, styles.issueItemContinuation]
+                      : [styles.issueItem, styles.issueItemContinuation])
+                    : (block.density === 'compact'
+                      ? [styles.issueItem, styles.issueItemCompact]
+                      : styles.issueItem)
 
-                      const issueCommentLabelStyle = block.isContinuation
-                        ? [styles.issueCommentLabel, styles.issueCommentLabelContinuation]
-                        : styles.issueCommentLabel
+                  const issueTextStyle = block.density === 'compact'
+                    ? [styles.issueText, styles.issueTextCompact]
+                    : styles.issueText
 
-                      const issueCommentStyle = block.density === 'compact'
-                        ? [styles.issueComment, styles.issueCommentCompact]
-                        : styles.issueComment
+                  const issueCommentLabelStyle = block.isContinuation
+                    ? [styles.issueCommentLabel, styles.issueCommentLabelContinuation]
+                    : styles.issueCommentLabel
 
-                      return (
-                        <View
-                          key={`${sheet.id}-${group.sectionName}-${index}-${blockIndex}`}
-                          style={issueItemStyle}
-                          wrap={false}
-                        >
-                          <Text style={issueTextStyle}>
-                            {block.text}
+                  const issueCommentStyle = block.density === 'compact'
+                    ? [styles.issueComment, styles.issueCommentCompact]
+                    : styles.issueComment
+
+                  return (
+                    <View key={key} style={issueItemStyle} wrap={false}>
+                      <Text style={issueTextStyle}>
+                        {block.text}
+                      </Text>
+                      {block.comment ? (
+                        <>
+                          <Text style={issueCommentLabelStyle}>
+                            {block.isContinuation ? 'Продолжение комментария' : 'Комментарий консультанта'}
                           </Text>
-                          {block.comment ? (
-                            <>
-                              <Text style={issueCommentLabelStyle}>
-                                {block.isContinuation ? 'Продолжение комментария' : 'Комментарий консультанта'}
-                              </Text>
-                              <Text style={issueCommentStyle}>
-                                {block.comment}
-                              </Text>
-                            </>
-                          ) : null}
-                        </View>
-                      )
-                    })
-                  ))}
-                </View>
-              </View>
+                          <Text style={issueCommentStyle}>
+                            {block.comment}
+                          </Text>
+                        </>
+                      ) : null}
+                    </View>
+                  )
+                }
+
+                return (
+                  <View key={`${sheet.id}-${group.sectionName}`}>
+                    <View
+                      style={styles.issueGroup}
+                      minPresenceAhead={PDF_PAGINATION_GUARDS.issueGroupMinPresenceAhead}
+                      wrap={false}
+                    >
+                      <View style={styles.issueGroupBody}>
+                        <Text style={styles.issueGroupTitle}>{section.lead.sectionName}</Text>
+                        {section.lead.blocks.map((block, index) =>
+                          renderIssueBlock(block, `${sheet.id}-${group.sectionName}-lead-${index}`),
+                        )}
+                      </View>
+                    </View>
+                    {section.tail.map((block, index) =>
+                      renderIssueBlock(block, `${sheet.id}-${group.sectionName}-tail-${index}`),
+                    )}
+                  </View>
+                )
+              })()
             ))}
           </View>
           )
