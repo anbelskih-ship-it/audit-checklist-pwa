@@ -92,11 +92,19 @@ describe('exportAuditToGoogleSheet', () => {
     })
     listFilesInFolderMock.mockResolvedValue([])
     copySpreadsheetFileMock.mockResolvedValue('new-export')
-    copySheetToSpreadsheetMock.mockResolvedValue({ sheetId: 301, title: 'Copy of 11 Показатели', index: 1 })
+    copySheetToSpreadsheetMock
+      .mockResolvedValueOnce({ sheetId: 301, title: 'Copy of 11 Показатели', index: 1 })
+      .mockResolvedValueOnce({ sheetId: 302, title: 'Copy of Сводный результат', index: 2 })
     deleteFileMock.mockResolvedValue(undefined)
-    getSpreadsheetSheetsMock.mockResolvedValue([
-      { sheetId: 201, title: '11 Показатели', index: 0 },
-    ])
+    getSpreadsheetSheetsMock
+      .mockResolvedValueOnce([
+        { sheetId: 101, title: 'Сводный результат', index: 0 },
+        { sheetId: 201, title: '11 Показатели', index: 1 },
+      ])
+      .mockResolvedValueOnce([
+        { sheetId: 501, title: 'Сводный результат', index: 0 },
+        { sheetId: 601, title: '11 Показатели', index: 1 },
+      ])
     batchUpdateSpreadsheetMock.mockResolvedValue(undefined)
     clearSpreadsheetRangesMock.mockResolvedValue(undefined)
     updateSpreadsheetValuesMock.mockResolvedValue(undefined)
@@ -129,9 +137,13 @@ describe('exportAuditToGoogleSheet', () => {
     expect(getSpreadsheetSheetsMock).toHaveBeenNthCalledWith(1, 'template-file')
     expect(getSpreadsheetSheetsMock).toHaveBeenNthCalledWith(2, 'existing-export')
     expect(copySheetToSpreadsheetMock).toHaveBeenCalledWith('template-file', 201, 'existing-export')
+    expect(copySheetToSpreadsheetMock).toHaveBeenLastCalledWith('template-file', 101, 'existing-export')
     expect(batchUpdateSpreadsheetMock).toHaveBeenCalledWith('existing-export', expect.arrayContaining([
       expect.objectContaining({
-        deleteSheet: { sheetId: 201 },
+        deleteSheet: { sheetId: 501 },
+      }),
+      expect.objectContaining({
+        deleteSheet: { sheetId: 601 },
       }),
       expect.objectContaining({
         updateSheetProperties: expect.objectContaining({
@@ -143,6 +155,18 @@ describe('exportAuditToGoogleSheet', () => {
         }),
       }),
     ]))
+    expect(batchUpdateSpreadsheetMock).toHaveBeenLastCalledWith('existing-export', [
+      {
+        updateSheetProperties: {
+          properties: {
+            sheetId: 302,
+            title: 'Сводный результат',
+            index: 0,
+          },
+          fields: 'title,index',
+        },
+      },
+    ])
     expect(clearSpreadsheetRangesMock).toHaveBeenCalledWith('existing-export', expect.any(Array))
     expect(updateSpreadsheetValuesMock).toHaveBeenCalledWith('existing-export', expect.any(Array))
   })

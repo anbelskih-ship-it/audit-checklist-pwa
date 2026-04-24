@@ -141,18 +141,21 @@ async function rebuildSpreadsheetFromTemplate(
     getSpreadsheetSheets(targetSpreadsheetId),
   ])
 
-  const copiedSheets = await Promise.all(sourceSheets.map(async (sourceSheet) => ({
+  const summarySheet = sourceSheets.find((sheet) => sheet.title === 'Сводный результат')
+  const regularSheets = sourceSheets.filter((sheet) => sheet.title !== 'Сводный результат')
+
+  const copiedRegularSheets = await Promise.all(regularSheets.map(async (sourceSheet) => ({
     source: sourceSheet,
     copied: await copySheetToSpreadsheet(templateSpreadsheetId, sourceSheet.sheetId, targetSpreadsheetId),
   })))
 
-  const requests = [
+  const regularRequests = [
     ...targetSheets.map((sheet) => ({
       deleteSheet: {
         sheetId: sheet.sheetId,
       },
     })),
-    ...copiedSheets.map(({ source, copied }, index) => ({
+    ...copiedRegularSheets.map(({ source, copied }, index) => ({
       updateSheetProperties: {
         properties: {
           sheetId: copied.sheetId,
@@ -164,7 +167,28 @@ async function rebuildSpreadsheetFromTemplate(
     })),
   ]
 
-  await batchUpdateSpreadsheet(targetSpreadsheetId, requests)
+  await batchUpdateSpreadsheet(targetSpreadsheetId, regularRequests)
+
+  if (!summarySheet) return
+
+  const copiedSummarySheet = await copySheetToSpreadsheet(
+    templateSpreadsheetId,
+    summarySheet.sheetId,
+    targetSpreadsheetId,
+  )
+
+  await batchUpdateSpreadsheet(targetSpreadsheetId, [
+    {
+      updateSheetProperties: {
+        properties: {
+          sheetId: copiedSummarySheet.sheetId,
+          title: summarySheet.title,
+          index: 0,
+        },
+        fields: 'title,index',
+      },
+    },
+  ])
 }
 
 export interface ExportAuditResult {
