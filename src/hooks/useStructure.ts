@@ -6,10 +6,22 @@ import type { ChecklistStructure } from '../types'
 export async function loadStructureWithSync(
   type: 'АСП' | 'НА',
   canSync: boolean,
-  options?: { onFresh?: (structure: ChecklistStructure) => void }
+  options?: { expectedVersion?: string; onFresh?: (structure: ChecklistStructure) => void }
 ): Promise<ChecklistStructure | null> {
   const cached = await getStructure(type)
+  const expectedVersion = options?.expectedVersion
   if (cached) {
+    const versionMatches = !expectedVersion || cached.version === expectedVersion
+
+    if (!versionMatches && canSync) {
+      await syncStructures()
+      const refreshed = await getStructure(type)
+      if (refreshed) {
+        options?.onFresh?.(refreshed)
+      }
+      return refreshed || cached
+    }
+
     if (canSync) {
       void syncStructures()
         .then(async () => {
@@ -33,13 +45,15 @@ export async function loadStructureWithSync(
   return refreshed || cached || null
 }
 
-export function useStructure(type: 'АСП' | 'НА') {
+export function useStructure(type: 'АСП' | 'НА', expectedVersion?: string) {
   const [state, setState] = useState<{
     type: 'АСП' | 'НА'
+    expectedVersion?: string
     structure: ChecklistStructure | null
     loading: boolean
   }>({
     type,
+    expectedVersion,
     structure: null,
     loading: true,
   })
@@ -47,23 +61,30 @@ export function useStructure(type: 'АСП' | 'НА') {
   useEffect(() => {
     let active = true
 
+    setState((current) => (
+      current.type === type && current.expectedVersion === expectedVersion
+        ? current
+        : { type, expectedVersion, structure: null, loading: true }
+    ))
+
     loadStructureWithSync(type, typeof navigator !== 'undefined' ? navigator.onLine : false, {
+      expectedVersion,
       onFresh: (fresh) => {
         if (!active) return
-        setState({ type, structure: fresh, loading: false })
+        setState({ type, expectedVersion, structure: fresh, loading: false })
       },
     }).then(s => {
       if (!active) return
-      setState({ type, structure: s, loading: false })
+      setState({ type, expectedVersion, structure: s, loading: false })
     })
 
     return () => {
       active = false
     }
-  }, [type])
+  }, [expectedVersion, type])
 
   return {
-    structure: state.type === type ? state.structure : null,
-    loading: state.type !== type || state.loading,
+    structure: state.type === type && state.expectedVersion === expectedVersion ? state.structure : null,
+    loading: state.type !== type || state.expectedVersion !== expectedVersion || state.loading,
   }
 }

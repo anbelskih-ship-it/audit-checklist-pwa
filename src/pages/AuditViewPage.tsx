@@ -9,7 +9,7 @@ import { getSectionEvalItems, getSheetEvalItems } from '../utils/checklist-items
 export default function AuditViewPage() {
   const { auditId } = useParams<{ auditId: string }>()
   const { audit } = useAudit(auditId!)
-  const { structure } = useStructure(audit?.type || 'АСП')
+  const { structure } = useStructure(audit?.type || 'АСП', audit?.structureVersion)
   const [showOnlyIssues, setShowOnlyIssues] = useState(false)
   const [expandedSheet, setExpandedSheet] = useState<string | null>(null)
   const navigate = useNavigate()

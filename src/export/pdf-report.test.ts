@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { buildPdfReportData } from './pdf-report-data'
+import { PDF_LAYOUT_TOKENS, PDF_PAGINATION_GUARDS } from './pdf-report'
 import type { Audit, ChecklistStructure } from '../types'
 
 describe('buildPdfReportData', () => {
@@ -89,5 +90,18 @@ describe('buildPdfReportData', () => {
       text: 'Есть сценарий поиска кандидатов',
       comment: 'Нет единого сценария поиска',
     })
+  })
+
+  it('adds pagination guards so PDF blocks do not split awkwardly', () => {
+    expect(PDF_PAGINATION_GUARDS.sheetMinPresenceAhead).toBe(160)
+    expect(PDF_PAGINATION_GUARDS.issueGroupMinPresenceAhead).toBe(56)
+  })
+
+  it('uses tighter layout tokens for a cleaner first page rhythm', () => {
+    expect(PDF_LAYOUT_TOKENS.heroPadding).toBe(16)
+    expect(PDF_LAYOUT_TOKENS.heroMarginBottom).toBe(14)
+    expect(PDF_LAYOUT_TOKENS.metricCardPadding).toBe(12)
+    expect(PDF_LAYOUT_TOKENS.metricsRowMarginBottom).toBe(14)
+    expect(PDF_LAYOUT_TOKENS.sheetCardPadding).toBe(14)
   })
 })

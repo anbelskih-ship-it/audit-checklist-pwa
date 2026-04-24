@@ -91,4 +91,28 @@ describe('loadStructureWithSync', () => {
       expect(onFresh).toHaveBeenCalledWith(refreshed)
     })
   })
+
+  it('waits for sync when cached structure version does not match the audit version', async () => {
+    const cached: ChecklistStructure = {
+      type: 'АСП',
+      version: 'old',
+      driveFileId: 'file1',
+      sheets: [],
+    }
+    const refreshed: ChecklistStructure = {
+      ...cached,
+      version: 'new',
+    }
+
+    getStructureMock
+      .mockResolvedValueOnce(cached)
+      .mockResolvedValueOnce(refreshed)
+    syncStructuresMock.mockResolvedValue({ updated: ['АСП'] })
+
+    const result = await loadStructureWithSync('АСП', true, { expectedVersion: 'new' })
+
+    expect(syncStructuresMock).toHaveBeenCalledTimes(1)
+    expect(getStructureMock).toHaveBeenCalledTimes(2)
+    expect(result).toEqual(refreshed)
+  })
 })

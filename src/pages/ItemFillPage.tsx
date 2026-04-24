@@ -25,7 +25,7 @@ interface CommentDraft {
 export default function ItemFillPage() {
   const { auditId, itemId } = useParams<{ auditId: string; itemId: string }>()
   const { audit, saveAnswer } = useAudit(auditId!)
-  const { structure } = useStructure(audit?.type || 'АСП')
+  const { structure } = useStructure(audit?.type || 'АСП', audit?.structureVersion)
   const [searchOpen, setSearchOpen] = useState(false)
   const [sectionJumpOpen, setSectionJumpOpen] = useState(false)
   const [commentDrafts, setCommentDrafts] = useState<Record<string, CommentDraft>>({})

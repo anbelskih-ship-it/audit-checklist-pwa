@@ -27,6 +27,30 @@ const colors = {
   dangerSoft: '#fff0ee',
 }
 
+export const PDF_PAGINATION_GUARDS = {
+  sheetMinPresenceAhead: 160,
+  issueGroupMinPresenceAhead: 56,
+} as const
+
+export const PDF_LAYOUT_TOKENS = {
+  heroPadding: 16,
+  heroMarginBottom: 14,
+  heroTitleMarginBottom: 8,
+  metaItemMarginBottom: 6,
+  metricsRowMarginBottom: 14,
+  metricCardPadding: 12,
+  metricLabelMarginBottom: 4,
+  summaryPadding: 14,
+  summaryMarginBottom: 14,
+  sectionLeadMarginBottom: 10,
+  sheetCardPadding: 14,
+  sheetCardMarginBottom: 14,
+  sheetHeaderMarginBottom: 10,
+  issueGroupMarginBottom: 8,
+  issueItemPadding: 9,
+  issueItemMarginBottom: 6,
+} as const
+
 const styles = StyleSheet.create({
   page: {
     paddingTop: 34,
@@ -45,17 +69,17 @@ const styles = StyleSheet.create({
     color: colors.soft,
   },
   hero: {
-    marginBottom: 18,
-    padding: 18,
+    marginBottom: PDF_LAYOUT_TOKENS.heroMarginBottom,
+    padding: PDF_LAYOUT_TOKENS.heroPadding,
     borderRadius: 14,
     backgroundColor: colors.surface,
     border: `1 solid ${colors.border}`,
   },
   title: {
-    fontSize: 22,
+    fontSize: 20,
     fontWeight: 700,
-    lineHeight: 1.25,
-    marginBottom: 10,
+    lineHeight: 1.2,
+    marginBottom: PDF_LAYOUT_TOKENS.heroTitleMarginBottom,
   },
   metaGrid: {
     flexDirection: 'row',
@@ -66,7 +90,7 @@ const styles = StyleSheet.create({
   metaItem: {
     width: '50%',
     paddingHorizontal: 4,
-    marginBottom: 8,
+    marginBottom: PDF_LAYOUT_TOKENS.metaItemMarginBottom,
   },
   metaLabel: {
     fontSize: 8,
@@ -75,18 +99,18 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase',
   },
   metaValue: {
-    fontSize: 10,
+    fontSize: 9.5,
     color: colors.ink,
   },
   metricsRow: {
     flexDirection: 'row',
     marginHorizontal: -5,
-    marginBottom: 18,
+    marginBottom: PDF_LAYOUT_TOKENS.metricsRowMarginBottom,
   },
   metricCard: {
     flex: 1,
     marginHorizontal: 5,
-    padding: 14,
+    padding: PDF_LAYOUT_TOKENS.metricCardPadding,
     borderRadius: 14,
     border: `1 solid ${colors.border}`,
     backgroundColor: colors.surface,
@@ -100,23 +124,23 @@ const styles = StyleSheet.create({
     border: `1 solid ${colors.warning}`,
   },
   metricValue: {
-    fontSize: 24,
+    fontSize: 21,
     fontWeight: 700,
-    marginBottom: 4,
+    marginBottom: 3,
   },
   metricLabel: {
     fontSize: 9,
     color: colors.muted,
-    marginBottom: 6,
+    marginBottom: PDF_LAYOUT_TOKENS.metricLabelMarginBottom,
   },
   metricHint: {
-    fontSize: 8,
+    fontSize: 7.5,
     color: colors.soft,
-    lineHeight: 1.4,
+    lineHeight: 1.35,
   },
   summaryBox: {
-    marginBottom: 18,
-    padding: 16,
+    marginBottom: PDF_LAYOUT_TOKENS.summaryMarginBottom,
+    padding: PDF_LAYOUT_TOKENS.summaryPadding,
     borderRadius: 14,
     border: `1 solid ${colors.primary}`,
     backgroundColor: colors.surfaceAlt,
@@ -133,66 +157,66 @@ const styles = StyleSheet.create({
     color: colors.ink,
   },
   sectionLead: {
-    marginBottom: 12,
-    fontSize: 9,
-    lineHeight: 1.5,
+    marginBottom: PDF_LAYOUT_TOKENS.sectionLeadMarginBottom,
+    fontSize: 8.5,
+    lineHeight: 1.45,
     color: colors.muted,
   },
   sheetCard: {
-    marginBottom: 16,
-    padding: 16,
+    marginBottom: PDF_LAYOUT_TOKENS.sheetCardMarginBottom,
+    padding: PDF_LAYOUT_TOKENS.sheetCardPadding,
     borderRadius: 14,
     border: `1 solid ${colors.border}`,
     backgroundColor: '#ffffff',
   },
   sheetHeader: {
-    marginBottom: 12,
-    paddingBottom: 10,
+    marginBottom: PDF_LAYOUT_TOKENS.sheetHeaderMarginBottom,
+    paddingBottom: 8,
     borderBottom: `1 solid ${colors.border}`,
   },
   sheetTitle: {
-    fontSize: 15,
+    fontSize: 14,
     fontWeight: 700,
-    marginBottom: 4,
+    marginBottom: 3,
   },
   sheetMeta: {
-    fontSize: 9,
+    fontSize: 8.5,
     color: colors.muted,
-    lineHeight: 1.5,
+    lineHeight: 1.4,
   },
   issueGroup: {
-    marginBottom: 10,
+    marginBottom: PDF_LAYOUT_TOKENS.issueGroupMarginBottom,
     paddingTop: 2,
   },
   issueGroupTitle: {
-    fontSize: 10,
+    fontSize: 9.5,
     fontWeight: 700,
     color: colors.ink,
-    marginBottom: 6,
+    marginBottom: 5,
   },
   issueItem: {
-    marginBottom: 8,
-    padding: 10,
-    paddingLeft: 12,
+    marginBottom: PDF_LAYOUT_TOKENS.issueItemMarginBottom,
+    padding: PDF_LAYOUT_TOKENS.issueItemPadding,
+    paddingLeft: 11,
     borderRadius: 10,
     borderLeft: `3 solid ${colors.danger}`,
-    backgroundColor: colors.dangerSoft,
+    backgroundColor: '#fff5f3',
   },
   issueText: {
-    fontSize: 10,
-    lineHeight: 1.45,
+    fontSize: 9.5,
+    lineHeight: 1.4,
     color: colors.ink,
-    marginBottom: 4,
+    marginBottom: 3,
   },
   issueCommentLabel: {
-    fontSize: 8,
+    fontSize: 7.5,
     color: colors.soft,
-    marginBottom: 2,
+    marginBottom: 1,
     textTransform: 'uppercase',
   },
   issueComment: {
-    fontSize: 9,
-    lineHeight: 1.45,
+    fontSize: 8.5,
+    lineHeight: 1.35,
     color: colors.muted,
   },
 })
@@ -268,8 +292,8 @@ export function AuditPdfReport({ structure, audit }: Props) {
         </Text>
 
         {report.sheets.map(sheet => (
-          <View key={sheet.id} style={styles.sheetCard}>
-            <View style={styles.sheetHeader}>
+          <View key={sheet.id} style={styles.sheetCard} minPresenceAhead={PDF_PAGINATION_GUARDS.sheetMinPresenceAhead}>
+            <View style={styles.sheetHeader} wrap={false}>
               <Text style={styles.sheetTitle}>{sheet.name}</Text>
               <Text style={styles.sheetMeta}>
                 Заполнено: {sheet.metrics.filled}/{sheet.metrics.total}
@@ -282,10 +306,14 @@ export function AuditPdfReport({ structure, audit }: Props) {
             </View>
 
             {sheet.issuesBySection.map(group => (
-              <View key={`${sheet.id}-${group.sectionName}`} style={styles.issueGroup}>
+              <View
+                key={`${sheet.id}-${group.sectionName}`}
+                style={styles.issueGroup}
+                minPresenceAhead={PDF_PAGINATION_GUARDS.issueGroupMinPresenceAhead}
+              >
                 <Text style={styles.issueGroupTitle}>{group.sectionName}</Text>
                 {group.issues.map((issue, index) => (
-                  <View key={`${sheet.id}-${group.sectionName}-${index}`} style={styles.issueItem}>
+                  <View key={`${sheet.id}-${group.sectionName}-${index}`} style={styles.issueItem} wrap={false}>
                     <Text style={styles.issueText}>{issue.text}</Text>
                     {issue.comment ? (
                       <>

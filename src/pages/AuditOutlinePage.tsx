@@ -31,7 +31,7 @@ function EditAuditIcon() {
 export default function AuditOutlinePage() {
   const { auditId } = useParams<{ auditId: string }>()
   const { audit, loading: auditLoading } = useAudit(auditId!)
-  const { structure, loading: structLoading } = useStructure(audit?.type || 'АСП')
+  const { structure, loading: structLoading } = useStructure(audit?.type || 'АСП', audit?.structureVersion)
   const [expandedSheet, setExpandedSheet] = useState<string | null>(null)
   const [expandedSection, setExpandedSection] = useState<string | null>(null)
   const [viewMode, setViewMode] = useState<ViewMode>('edit')

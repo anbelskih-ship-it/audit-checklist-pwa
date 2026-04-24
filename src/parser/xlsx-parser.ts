@@ -15,6 +15,10 @@ function isKpiIntroRow(itemText: string): boolean {
   return /отслеживаются следующие показатели/i.test(itemText)
 }
 
+function isKpiIndexCell(value: string): boolean {
+  return /^\d+(?:[.,]\d+)?$/.test(value)
+}
+
 function parseKpiSheet(
   data: (string | number | null)[][]
 ): SheetBlock | null {
@@ -28,8 +32,14 @@ function parseKpiSheet(
     if (!row) continue
 
     const sectionName = row[1]?.toString()?.trim()
-    const itemText = row[2]?.toString()?.trim()
-    const benchmark = row[3]?.toString()?.trim() || ''
+    const rawItemCell = row[2]?.toString()?.trim() || ''
+    const shiftedItemCell = row[3]?.toString()?.trim() || ''
+    const shiftedBenchmarkCell = row[4]?.toString()?.trim() || ''
+    const hasSeparateIndexColumn = isKpiIndexCell(rawItemCell) && Boolean(shiftedItemCell)
+    const itemText = hasSeparateIndexColumn ? shiftedItemCell : rawItemCell
+    const benchmark = hasSeparateIndexColumn
+      ? shiftedBenchmarkCell
+      : shiftedItemCell || ''
 
     if (sectionName) {
       sectionCounter++
