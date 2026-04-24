@@ -204,6 +204,34 @@ describe('ItemFillPage', () => {
     })
   })
 
+  it('clears phrase highlight and persisted comment after deselecting the phrase', async () => {
+    useAuditRouteDataMock.mockReturnValue({
+      audit: createAudit({ value: null, comment: '' }),
+      auditLoading: false,
+      structure,
+      structureLoading: false,
+      saveAnswer: saveAnswerMock,
+    })
+
+    renderPage()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Фразы' }))
+    const phrase = screen.getByRole('button', { name: 'Нет регулярности' })
+
+    fireEvent.click(phrase)
+    fireEvent.click(phrase)
+
+    expect(screen.getByRole('textbox', { name: 'Комментарий' })).toHaveValue('')
+    expect(phrase).toHaveAttribute('aria-pressed', 'false')
+
+    await waitFor(() => {
+      expect(saveAnswerMock).toHaveBeenLastCalledWith('item-1', {
+        value: null,
+        comment: '',
+      })
+    })
+  })
+
   it('saves voice-driven comment changes after a final transcript', async () => {
     class FakeRecognition {
       static instances: FakeRecognition[] = []

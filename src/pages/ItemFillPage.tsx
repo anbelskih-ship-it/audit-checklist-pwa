@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback } from 'react'
+import { useState, useMemo, useCallback, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useSwipe } from '../hooks/useSwipe'
 import { useAuditRouteData } from '../routes/AuditRouteDataProvider'
@@ -27,6 +27,7 @@ export default function ItemFillPage() {
   const [searchOpen, setSearchOpen] = useState(false)
   const [sectionJumpOpen, setSectionJumpOpen] = useState(false)
   const [commentDrafts, setCommentDrafts] = useState<Record<string, CommentDraft>>({})
+  const lastSubmittedCommentsRef = useRef<Record<string, string>>({})
   const navigate = useNavigate()
 
   const allItems = useMemo(() => {
@@ -102,8 +103,14 @@ export default function ItemFillPage() {
   }
 
   const handleCommentBlur = async (nextComment = comment) => {
-    if (nextComment === (currentAnswer?.comment || '')) return
+    const serverComment = currentAnswer?.comment ?? ''
+    const pendingComment = itemId ? lastSubmittedCommentsRef.current[itemId] : undefined
+    const persistedComment = pendingComment !== undefined && pendingComment !== serverComment
+      ? pendingComment
+      : serverComment
+    if (nextComment === persistedComment) return
     const val = currentAnswer?.value ?? null
+    if (itemId) lastSubmittedCommentsRef.current[itemId] = nextComment
     await saveAnswer(current.item.id, { value: val, comment: nextComment })
   }
 
