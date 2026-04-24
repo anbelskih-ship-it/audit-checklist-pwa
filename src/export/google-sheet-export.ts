@@ -111,6 +111,24 @@ function buildSpreadsheetUpdates(
   return { clearRanges, updates }
 }
 
+function normalizeSheetRow(row: (string | number | null)[] | undefined): string[] {
+  return (row || []).map((cell) => cell == null ? '' : String(cell).trim())
+}
+
+function buildWorkbookLayoutSignature(
+  workbook: XLSX.WorkBook,
+  structure: ChecklistStructure,
+): string {
+  return structure.sheets.map((sheet) => {
+    const sheetName = workbook.SheetNames.find((name) => name.includes(sheet.id) || name.includes(sheet.name))
+    if (!sheetName) return `${sheet.id}:missing`
+    const ws = workbook.Sheets[sheetName]
+    const data: (string | number | null)[][] = XLSX.utils.sheet_to_json(ws, { header: 1 })
+    const firstRows = data.slice(0, 3).map(normalizeSheetRow)
+    return JSON.stringify([sheet.id, sheetName, firstRows])
+  }).join('|')
+}
+
 export interface ExportAuditResult {
   fileId: string
   fileName: string
@@ -156,6 +174,17 @@ export async function exportAuditToGoogleSheet(
 
   let fileId = await resolveExportFileId(audit, fileName)
   let action: 'created' | 'updated' = 'updated'
+
+  if (fileId) {
+    const existingBuffer = await downloadFile(fileId)
+    const existingWb = XLSX.read(existingBuffer, { type: 'array' })
+    const templateSignature = buildWorkbookLayoutSignature(templateWb, structure)
+    const existingSignature = buildWorkbookLayoutSignature(existingWb, structure)
+
+    if (templateSignature !== existingSignature) {
+      fileId = ''
+    }
+  }
 
   if (!fileId) {
     fileId = await copySpreadsheetFile(structure.driveFileId, EXPORT_FOLDER_ID, fileName)
