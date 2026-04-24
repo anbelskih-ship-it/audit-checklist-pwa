@@ -1,7 +1,7 @@
 import { useState } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
-import { useAudit } from '../hooks/useAudit'
+import { useNavigate } from 'react-router-dom'
 import { updateAuditMeta } from '../db/audits'
+import { useAuditRouteData } from '../routes/AuditRouteDataProvider'
 import type { Audit } from '../types'
 
 function AuditSettingsForm({ audit }: { audit: Audit }) {
@@ -63,9 +63,8 @@ function AuditSettingsForm({ audit }: { audit: Audit }) {
 }
 
 export default function AuditSettingsPage() {
-  const { auditId } = useParams<{ auditId: string }>()
   const navigate = useNavigate()
-  const { audit, loading } = useAudit(auditId!)
+  const { audit, auditLoading: loading } = useAuditRouteData()
 
   if (loading) return <div className="page center-content text-disabled">Загрузка...</div>
   if (!audit) return <div className="page center-content text-disabled">Аудит не найден</div>

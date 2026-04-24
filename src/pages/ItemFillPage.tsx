@@ -1,8 +1,7 @@
 import { useState, useMemo, useCallback } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { useAudit } from '../hooks/useAudit'
-import { useStructure } from '../hooks/useStructure'
 import { useSwipe } from '../hooks/useSwipe'
+import { useAuditRouteData } from '../routes/AuditRouteDataProvider'
 import ScoreToggle from '../components/ScoreToggle'
 import SearchDialog from '../components/SearchDialog'
 import ProgressBar from '../components/ProgressBar'
@@ -24,8 +23,7 @@ interface CommentDraft {
 
 export default function ItemFillPage() {
   const { auditId, itemId } = useParams<{ auditId: string; itemId: string }>()
-  const { audit, saveAnswer } = useAudit(auditId!)
-  const { structure } = useStructure(audit?.type || 'АСП', audit?.structureVersion)
+  const { audit, structure, saveAnswer } = useAuditRouteData()
   const [searchOpen, setSearchOpen] = useState(false)
   const [sectionJumpOpen, setSectionJumpOpen] = useState(false)
   const [commentDrafts, setCommentDrafts] = useState<Record<string, CommentDraft>>({})

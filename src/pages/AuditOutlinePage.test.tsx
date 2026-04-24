@@ -5,18 +5,13 @@ import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import AuditOutlinePage from './AuditOutlinePage'
 import type { Audit, ChecklistStructure } from '../types'
 
-const useAuditMock = vi.fn()
-const useStructureMock = vi.fn()
 const useAuthMock = vi.fn()
 const exportAuditToGoogleSheetMock = vi.fn()
 const saveAuditExportMetaMock = vi.fn()
+const useAuditRouteDataMock = vi.fn()
 
-vi.mock('../hooks/useAudit', () => ({
-  useAudit: (...args: unknown[]) => useAuditMock(...args),
-}))
-
-vi.mock('../hooks/useStructure', () => ({
-  useStructure: (...args: unknown[]) => useStructureMock(...args),
+vi.mock('../routes/AuditRouteDataProvider', () => ({
+  useAuditRouteData: (...args: unknown[]) => useAuditRouteDataMock(...args),
 }))
 
 vi.mock('../hooks/useAuth', () => ({
@@ -102,8 +97,13 @@ describe('AuditOutlinePage export', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     window.alert = vi.fn()
-    useAuditMock.mockReturnValue({ audit, loading: false })
-    useStructureMock.mockReturnValue({ structure, loading: false })
+    useAuditRouteDataMock.mockReturnValue({
+      audit,
+      auditLoading: false,
+      structure,
+      structureLoading: false,
+      saveAnswer: vi.fn(),
+    })
     useAuthMock.mockReturnValue({ login: vi.fn().mockResolvedValue('popup') })
   })
 

@@ -13,6 +13,7 @@ import AdminFollowupBotsPage from './pages/AdminFollowupBotsPage'
 import LoginPage from './pages/LoginPage'
 import VersionToast from './components/VersionToast'
 import InstallPrompt from './components/InstallPrompt'
+import { AuditRouteDataProvider } from './routes/AuditRouteDataProvider'
 import { configureMasterFiles, syncStructures } from './drive/sync'
 
 configureMasterFiles({
@@ -170,10 +171,12 @@ export default function App() {
               </RequireRole>
             )}
           />
-          <Route path="/audit/:auditId" element={<AuditOutlinePage />} />
-          <Route path="/audit/:auditId/settings" element={<AuditSettingsPage />} />
-          <Route path="/audit/:auditId/fill/:itemId" element={<ItemFillPage />} />
-          <Route path="/audit/:auditId/view" element={<AuditViewPage />} />
+          <Route path="/audit/:auditId" element={<AuditRouteDataProvider />}>
+            <Route index element={<AuditOutlinePage />} />
+            <Route path="settings" element={<AuditSettingsPage />} />
+            <Route path="fill/:itemId" element={<ItemFillPage />} />
+            <Route path="view" element={<AuditViewPage />} />
+          </Route>
           <Route path="*" element={<Navigate to="/" />} />
         </Routes>
         <InstallPrompt />

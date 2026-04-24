@@ -1,8 +1,7 @@
 import { useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { useAudit } from '../hooks/useAudit'
-import { useStructure } from '../hooks/useStructure'
 import { useAuth } from '../hooks/useAuth'
+import { useAuditRouteData } from '../routes/AuditRouteDataProvider'
 import ProgressBar from '../components/ProgressBar'
 import { fillBadgeColor, fillBadgeBg } from '../utils/colors'
 import { calcMetrics } from '../utils/metrics'
@@ -30,8 +29,7 @@ function EditAuditIcon() {
 
 export default function AuditOutlinePage() {
   const { auditId } = useParams<{ auditId: string }>()
-  const { audit, loading: auditLoading } = useAudit(auditId!)
-  const { structure, loading: structLoading } = useStructure(audit?.type || 'АСП', audit?.structureVersion)
+  const { audit, auditLoading, structure, structureLoading: structLoading } = useAuditRouteData()
   const [expandedSheet, setExpandedSheet] = useState<string | null>(null)
   const [expandedSection, setExpandedSection] = useState<string | null>(null)
   const [viewMode, setViewMode] = useState<ViewMode>('edit')

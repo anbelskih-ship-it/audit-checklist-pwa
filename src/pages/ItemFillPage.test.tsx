@@ -6,15 +6,10 @@ import ItemFillPage from './ItemFillPage'
 import type { Audit, ChecklistStructure } from '../types'
 
 const saveAnswerMock = vi.fn()
-const useAuditMock = vi.fn()
-const useStructureMock = vi.fn()
+const useAuditRouteDataMock = vi.fn()
 
-vi.mock('../hooks/useAudit', () => ({
-  useAudit: (...args: unknown[]) => useAuditMock(...args),
-}))
-
-vi.mock('../hooks/useStructure', () => ({
-  useStructure: (...args: unknown[]) => useStructureMock(...args),
+vi.mock('../routes/AuditRouteDataProvider', () => ({
+  useAuditRouteData: (...args: unknown[]) => useAuditRouteDataMock(...args),
 }))
 
 vi.mock('../hooks/useSwipe', () => ({
@@ -88,7 +83,6 @@ function renderPage() {
 describe('ItemFillPage', () => {
   beforeEach(() => {
     saveAnswerMock.mockReset()
-    useStructureMock.mockReturnValue({ structure, loading: false })
     Object.defineProperty(window, 'isSecureContext', {
       configurable: true,
       value: true,
@@ -96,9 +90,11 @@ describe('ItemFillPage', () => {
   })
 
   it('renders CommentComposer controls and keeps current answer comment in the field', () => {
-    useAuditMock.mockReturnValue({
+    useAuditRouteDataMock.mockReturnValue({
       audit: createAudit({ value: 1, comment: 'Текущий комментарий' }),
-      loading: false,
+      auditLoading: false,
+      structure,
+      structureLoading: false,
       saveAnswer: saveAnswerMock,
     })
 
@@ -110,9 +106,11 @@ describe('ItemFillPage', () => {
   })
 
   it('persists the latest local comment on blur', async () => {
-    useAuditMock.mockReturnValue({
+    useAuditRouteDataMock.mockReturnValue({
       audit: createAudit({ value: 0, comment: 'Старый комментарий' }),
-      loading: false,
+      auditLoading: false,
+      structure,
+      structureLoading: false,
       saveAnswer: saveAnswerMock,
     })
 
@@ -132,9 +130,11 @@ describe('ItemFillPage', () => {
 
   it('drops a stale local draft after the audit comment is refreshed from source of truth', async () => {
     let currentAudit = createAudit({ value: 0, comment: 'Старый комментарий' })
-    useAuditMock.mockImplementation(() => ({
+    useAuditRouteDataMock.mockImplementation(() => ({
       audit: currentAudit,
-      loading: false,
+      auditLoading: false,
+      structure,
+      structureLoading: false,
       saveAnswer: saveAnswerMock,
     }))
 
@@ -160,9 +160,11 @@ describe('ItemFillPage', () => {
   })
 
   it('passes the latest comment to handleScore after a composer phrase selection', async () => {
-    useAuditMock.mockReturnValue({
+    useAuditRouteDataMock.mockReturnValue({
       audit: createAudit({ value: null, comment: '' }),
-      loading: false,
+      auditLoading: false,
+      structure,
+      structureLoading: false,
       saveAnswer: saveAnswerMock,
     })
 
@@ -181,9 +183,11 @@ describe('ItemFillPage', () => {
   })
 
   it('saves phrase-driven comment changes without waiting for a later textarea blur', async () => {
-    useAuditMock.mockReturnValue({
+    useAuditRouteDataMock.mockReturnValue({
       audit: createAudit({ value: null, comment: '' }),
-      loading: false,
+      auditLoading: false,
+      structure,
+      structureLoading: false,
       saveAnswer: saveAnswerMock,
     })
 
@@ -222,9 +226,11 @@ describe('ItemFillPage', () => {
 
     ;(window as typeof window & { SpeechRecognition?: typeof FakeRecognition }).SpeechRecognition = FakeRecognition
 
-    useAuditMock.mockReturnValue({
+    useAuditRouteDataMock.mockReturnValue({
       audit: createAudit({ value: null, comment: '' }),
-      loading: false,
+      auditLoading: false,
+      structure,
+      structureLoading: false,
       saveAnswer: saveAnswerMock,
     })
 
@@ -257,9 +263,11 @@ describe('ItemFillPage', () => {
   })
 
   it('returns to the audit outline from the last item', async () => {
-    useAuditMock.mockReturnValue({
+    useAuditRouteDataMock.mockReturnValue({
       audit: createAudit({ value: 1, comment: '' }),
-      loading: false,
+      auditLoading: false,
+      structure,
+      structureLoading: false,
       saveAnswer: saveAnswerMock,
     })
 

@@ -5,15 +5,10 @@ import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import AuditViewPage from './AuditViewPage'
 import type { Audit, ChecklistStructure } from '../types'
 
-const useAuditMock = vi.fn()
-const useStructureMock = vi.fn()
+const useAuditRouteDataMock = vi.fn()
 
-vi.mock('../hooks/useAudit', () => ({
-  useAudit: (...args: unknown[]) => useAuditMock(...args),
-}))
-
-vi.mock('../hooks/useStructure', () => ({
-  useStructure: (...args: unknown[]) => useStructureMock(...args),
+vi.mock('../routes/AuditRouteDataProvider', () => ({
+  useAuditRouteData: (...args: unknown[]) => useAuditRouteDataMock(...args),
 }))
 
 vi.mock('../components/ProgressBar', () => ({
@@ -92,8 +87,13 @@ function renderPage() {
 describe('AuditViewPage', () => {
   beforeEach(() => {
     window.scrollTo = vi.fn()
-    useAuditMock.mockReturnValue({ audit, loading: false })
-    useStructureMock.mockReturnValue({ structure, loading: false })
+    useAuditRouteDataMock.mockReturnValue({
+      audit,
+      auditLoading: false,
+      structure,
+      structureLoading: false,
+      saveAnswer: vi.fn(),
+    })
   })
 
   it('shows issue details immediately when growth areas mode is enabled', () => {

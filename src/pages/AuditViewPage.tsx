@@ -1,15 +1,13 @@
 import { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { useAudit } from '../hooks/useAudit'
-import { useStructure } from '../hooks/useStructure'
+import { useAuditRouteData } from '../routes/AuditRouteDataProvider'
 import ProgressBar from '../components/ProgressBar'
 import { calcMetrics } from '../utils/metrics'
 import { getSectionEvalItems, getSheetEvalItems } from '../utils/checklist-items'
 
 export default function AuditViewPage() {
   const { auditId } = useParams<{ auditId: string }>()
-  const { audit } = useAudit(auditId!)
-  const { structure } = useStructure(audit?.type || 'АСП', audit?.structureVersion)
+  const { audit, structure } = useAuditRouteData()
   const [showOnlyIssues, setShowOnlyIssues] = useState(false)
   const [expandedSheet, setExpandedSheet] = useState<string | null>(null)
   const navigate = useNavigate()
