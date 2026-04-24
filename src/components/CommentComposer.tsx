@@ -61,11 +61,6 @@ function buildChunk(state: CommentComposerState, text: string): string {
   return `, ${chunk}`
 }
 
-function getPhraseSource(state: CommentComposerState): string {
-  if (state.mode === 'rewrite' && !state.rewriteStarted) return ''
-  return getCommittedComment(state)
-}
-
 function escapeRegExp(value: string): string {
   return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
 }
@@ -75,7 +70,7 @@ function hasPhrase(source: string, phrase: string): boolean {
 }
 
 function getSelectedPhrases(state: CommentComposerState): Set<string> {
-  const source = getPhraseSource(state)
+  const source = getVisibleComment(state)
   return new Set(PHRASES.map((phrase) => phrase.label).filter((phrase) => hasPhrase(source, phrase)))
 }
 
@@ -323,16 +318,18 @@ export default function CommentComposer({ value, onChange, onBlur }: CommentComp
     commitState(applyTextInput(composerStateRef.current, nextValue))
   }
 
-  const handlePhraseClick = (phrase: string) => {
+  const handlePhraseClick = (phrase: string, button?: HTMLButtonElement | null) => {
     const currentState = composerStateRef.current
     if (getSelectedPhrases(currentState).has(phrase)) {
       const nextValue = commitState(removePhraseSelection(currentState, phrase))
       onBlur?.(nextValue)
+      button?.blur()
       return
     }
 
     const nextValue = commitState(applyPhraseSelection(currentState, buildChunk(currentState, phrase)))
     onBlur?.(nextValue)
+    button?.blur()
   }
 
   const handleVoiceResult = (recognition: SpeechRecognitionLike, event: SpeechRecognitionEventLike) => {
@@ -448,7 +445,7 @@ export default function CommentComposer({ value, onChange, onBlur }: CommentComp
               type="button"
               className={`comment-composer__phrase ${phrase.wide ? 'comment-composer__phrase--wide' : ''} ${selectedPhrases.has(phrase.label) ? 'comment-composer__phrase--active' : ''}`}
               aria-pressed={selectedPhrases.has(phrase.label)}
-              onClick={() => handlePhraseClick(phrase.label)}
+              onClick={(event) => handlePhraseClick(phrase.label, event.currentTarget)}
             >
               <span className="comment-composer__phrase-label">{phrase.label}</span>
             </button>

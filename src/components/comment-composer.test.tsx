@@ -459,6 +459,64 @@ describe('CommentComposer', () => {
     expect(onBlur).toHaveBeenLastCalledWith('База')
   })
 
+  it('clears phrase highlight when external value is reset to empty', () => {
+    function ResetHarness() {
+      const [value, setValue] = useState('')
+
+      return (
+        <>
+          <button type="button" onClick={() => setValue('')}>Сбросить</button>
+          <CommentComposer value={value} onChange={setValue} />
+        </>
+      )
+    }
+
+    render(<ResetHarness />)
+
+    fireEvent.click(screen.getByRole('button', { name: 'Фразы' }))
+    const phrase = screen.getByRole('button', { name: 'Нет контроля' })
+    fireEvent.click(phrase)
+    expect(phrase).toHaveAttribute('aria-pressed', 'true')
+
+    fireEvent.click(screen.getByRole('button', { name: 'Сбросить' }))
+
+    expect(screen.getByRole('textbox', { name: 'Комментарий' })).toHaveValue('')
+    expect(phrase).toHaveAttribute('aria-pressed', 'false')
+  })
+
+  it('toggles every phrase consistently', () => {
+    const phrases = [
+      'Нет регламента',
+      'Нет отчётности',
+      'Нет процесса',
+      'Не обучены',
+      'Нет ответственного',
+      'Не зафиксировано',
+      'Нет регулярности',
+      'Нет контроля',
+      'Нет аналитики',
+      'Не актуально',
+      'Есть, не используется',
+      'Аутсорсинг',
+      'Внедряется',
+    ]
+
+    for (const phraseName of phrases) {
+      const { unmount } = render(<Harness initialValue="База" onBlur={vi.fn()} />)
+
+      fireEvent.click(screen.getByRole('button', { name: 'Фразы' }))
+      const phrase = screen.getByRole('button', { name: phraseName })
+
+      fireEvent.click(phrase)
+      fireEvent.click(phrase)
+
+      expect(phrase).toHaveAttribute('aria-pressed', 'false')
+      expect(screen.getByRole('textbox', { name: 'Комментарий' })).toHaveValue('База')
+
+      unmount()
+    }
+  })
+
   it('keeps short phrases compact and leaves long phrases wide in the given order', () => {
     render(<Harness />)
 

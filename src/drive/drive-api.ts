@@ -140,6 +140,23 @@ export async function copySpreadsheetFile(
   return data.id
 }
 
+export async function deleteFile(fileId: string): Promise<void> {
+  const token = await getAccessToken()
+  if (!token) throw new Error('Not authenticated')
+
+  const resp = await fetch(`${DRIVE_API}/files/${fileId}`, {
+    method: 'DELETE',
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  })
+
+  if (!resp.ok) {
+    const details = await readErrorDetails(resp)
+    throw new Error(`Delete failed: ${resp.status}${details ? ` - ${details}` : ''}`)
+  }
+}
+
 export async function updateFile(
   fileId: string,
   fileName: string,

@@ -3,6 +3,7 @@ import { findColumnByHeaders, ITEM_HEADERS, SKIP_SHEETS } from '../parser/xlsx-p
 import {
   clearSpreadsheetRanges,
   copySpreadsheetFile,
+  deleteFile,
   downloadFile,
   getFileMetadata,
   isGoogleSpreadsheetMime,
@@ -174,6 +175,7 @@ export async function exportAuditToGoogleSheet(
 
   let fileId = await resolveExportFileId(audit, fileName)
   let action: 'created' | 'updated' = 'updated'
+  let staleFileId = ''
 
   if (fileId) {
     const existingBuffer = await downloadFile(fileId)
@@ -182,11 +184,15 @@ export async function exportAuditToGoogleSheet(
     const existingSignature = buildWorkbookLayoutSignature(existingWb, structure)
 
     if (templateSignature !== existingSignature) {
+      staleFileId = fileId
       fileId = ''
     }
   }
 
   if (!fileId) {
+    if (staleFileId) {
+      await deleteFile(staleFileId)
+    }
     fileId = await copySpreadsheetFile(structure.driveFileId, EXPORT_FOLDER_ID, fileName)
     action = 'created'
   }

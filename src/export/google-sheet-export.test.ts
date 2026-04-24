@@ -4,6 +4,7 @@ import type { Audit, ChecklistStructure } from '../types'
 
 const clearSpreadsheetRangesMock = vi.fn()
 const copySpreadsheetFileMock = vi.fn()
+const deleteFileMock = vi.fn()
 const downloadFileMock = vi.fn()
 const getFileMetadataMock = vi.fn()
 const listFilesInFolderMock = vi.fn()
@@ -12,6 +13,7 @@ const updateSpreadsheetValuesMock = vi.fn()
 vi.mock('../drive/drive-api', () => ({
   clearSpreadsheetRanges: (...args: unknown[]) => clearSpreadsheetRangesMock(...args),
   copySpreadsheetFile: (...args: unknown[]) => copySpreadsheetFileMock(...args),
+  deleteFile: (...args: unknown[]) => deleteFileMock(...args),
   downloadFile: (...args: unknown[]) => downloadFileMock(...args),
   getFileMetadata: (...args: unknown[]) => getFileMetadataMock(...args),
   isGoogleSpreadsheetMime: (mimeType?: string) => mimeType === 'application/vnd.google-apps.spreadsheet',
@@ -84,6 +86,7 @@ describe('exportAuditToGoogleSheet', () => {
     })
     listFilesInFolderMock.mockResolvedValue([])
     copySpreadsheetFileMock.mockResolvedValue('new-export')
+    deleteFileMock.mockResolvedValue(undefined)
     clearSpreadsheetRangesMock.mockResolvedValue(undefined)
     updateSpreadsheetValuesMock.mockResolvedValue(undefined)
   })
@@ -110,6 +113,7 @@ describe('exportAuditToGoogleSheet', () => {
     const { exportAuditToGoogleSheet } = await import('./google-sheet-export')
     await exportAuditToGoogleSheet(audit, structure)
 
+    expect(deleteFileMock).toHaveBeenCalledWith('existing-export')
     expect(copySpreadsheetFileMock).toHaveBeenCalledWith('template-file', 'folder-1', 'АСП - ДЦ - Москва - 2026-04-30')
     expect(clearSpreadsheetRangesMock).toHaveBeenCalledWith('new-export', expect.any(Array))
     expect(updateSpreadsheetValuesMock).toHaveBeenCalledWith('new-export', expect.any(Array))
