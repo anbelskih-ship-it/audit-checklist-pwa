@@ -1760,6 +1760,7 @@ select {
 
 .comment-composer__phrase {
   appearance: none;
+  -webkit-tap-highlight-color: transparent;
   display: grid;
   place-items: center;
   width: 100%;
@@ -1796,13 +1797,14 @@ select {
   grid-column: 1 / -1;
 }
 
-.comment-composer__phrase:hover {
-  border-color: color-mix(in srgb, var(--color-primary) 28%, var(--color-border) 72%);
-  background: linear-gradient(180deg, color-mix(in srgb, var(--color-surface) 92%, var(--color-primary) 8%) 0%, color-mix(in srgb, var(--color-surface) 86%, var(--color-primary) 14%) 100%);
-}
-
 .comment-composer__phrase:active {
   transform: translateY(1px);
+}
+
+.comment-composer__phrase:focus-visible {
+  outline: none;
+  border-color: color-mix(in srgb, var(--color-primary) 34%, var(--color-border) 66%);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-primary) 10%, transparent 90%);
 }
 
 .comment-composer__phrase--active {
@@ -1810,6 +1812,22 @@ select {
   border-color: color-mix(in srgb, var(--color-primary) 48%, var(--color-border) 52%);
   color: var(--color-primary);
   box-shadow: 0 0 0 1px color-mix(in srgb, var(--color-primary) 12%, transparent 88%);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .comment-composer__phrase:hover {
+    border-color: color-mix(in srgb, var(--color-primary) 28%, var(--color-border) 72%);
+    background: linear-gradient(180deg, color-mix(in srgb, var(--color-surface) 92%, var(--color-primary) 8%) 0%, color-mix(in srgb, var(--color-surface) 86%, var(--color-primary) 14%) 100%);
+  }
+}
+
+@media (hover: none) {
+  .comment-composer__phrase:hover:not(.comment-composer__phrase--active) {
+    border-color: color-mix(in srgb, var(--color-border) 82%, var(--color-primary) 18%);
+    background: linear-gradient(180deg, color-mix(in srgb, var(--color-surface) 96%, var(--color-bg) 4%) 0%, color-mix(in srgb, var(--color-surface) 88%, var(--color-bg) 12%) 100%);
+    color: var(--color-text-primary);
+    box-shadow: 0 1px 0 color-mix(in srgb, var(--color-text-primary) 6%, transparent 94%);
+  }
 }
 
 .comment-composer__voice {
