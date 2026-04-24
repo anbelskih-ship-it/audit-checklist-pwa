@@ -2,20 +2,26 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import * as XLSX from 'xlsx'
 import type { Audit, ChecklistStructure } from '../types'
 
+const batchUpdateSpreadsheetMock = vi.fn()
 const clearSpreadsheetRangesMock = vi.fn()
 const copySpreadsheetFileMock = vi.fn()
+const copySheetToSpreadsheetMock = vi.fn()
 const deleteFileMock = vi.fn()
 const downloadFileMock = vi.fn()
 const getFileMetadataMock = vi.fn()
+const getSpreadsheetSheetsMock = vi.fn()
 const listFilesInFolderMock = vi.fn()
 const updateSpreadsheetValuesMock = vi.fn()
 
 vi.mock('../drive/drive-api', () => ({
+  batchUpdateSpreadsheet: (...args: unknown[]) => batchUpdateSpreadsheetMock(...args),
   clearSpreadsheetRanges: (...args: unknown[]) => clearSpreadsheetRangesMock(...args),
   copySpreadsheetFile: (...args: unknown[]) => copySpreadsheetFileMock(...args),
+  copySheetToSpreadsheet: (...args: unknown[]) => copySheetToSpreadsheetMock(...args),
   deleteFile: (...args: unknown[]) => deleteFileMock(...args),
   downloadFile: (...args: unknown[]) => downloadFileMock(...args),
   getFileMetadata: (...args: unknown[]) => getFileMetadataMock(...args),
+  getSpreadsheetSheets: (...args: unknown[]) => getSpreadsheetSheetsMock(...args),
   isGoogleSpreadsheetMime: (mimeType?: string) => mimeType === 'application/vnd.google-apps.spreadsheet',
   listFilesInFolder: (...args: unknown[]) => listFilesInFolderMock(...args),
   updateSpreadsheetValues: (...args: unknown[]) => updateSpreadsheetValuesMock(...args),
@@ -86,12 +92,17 @@ describe('exportAuditToGoogleSheet', () => {
     })
     listFilesInFolderMock.mockResolvedValue([])
     copySpreadsheetFileMock.mockResolvedValue('new-export')
+    copySheetToSpreadsheetMock.mockResolvedValue({ sheetId: 301, title: 'Copy of 11 Показатели', index: 1 })
     deleteFileMock.mockResolvedValue(undefined)
+    getSpreadsheetSheetsMock.mockResolvedValue([
+      { sheetId: 201, title: '11 Показатели', index: 0 },
+    ])
+    batchUpdateSpreadsheetMock.mockResolvedValue(undefined)
     clearSpreadsheetRangesMock.mockResolvedValue(undefined)
     updateSpreadsheetValuesMock.mockResolvedValue(undefined)
   })
 
-  it('recreates export file when existing spreadsheet layout is stale', async () => {
+  it('rebuilds stale export layout in the same spreadsheet file', async () => {
     const freshTemplate = makeWorkbook({
       '11 Показатели': [
         ['№', 'Шаги процесса / Этапы операций', '№№', 'Операции процесса', 'Комментарий Консультанта', 'Результат (1/0)'],
@@ -113,9 +124,26 @@ describe('exportAuditToGoogleSheet', () => {
     const { exportAuditToGoogleSheet } = await import('./google-sheet-export')
     await exportAuditToGoogleSheet(audit, structure)
 
-    expect(deleteFileMock).toHaveBeenCalledWith('existing-export')
-    expect(copySpreadsheetFileMock).toHaveBeenCalledWith('template-file', 'folder-1', 'АСП - ДЦ - Москва - 2026-04-30')
-    expect(clearSpreadsheetRangesMock).toHaveBeenCalledWith('new-export', expect.any(Array))
-    expect(updateSpreadsheetValuesMock).toHaveBeenCalledWith('new-export', expect.any(Array))
+    expect(copySpreadsheetFileMock).not.toHaveBeenCalled()
+    expect(deleteFileMock).not.toHaveBeenCalled()
+    expect(getSpreadsheetSheetsMock).toHaveBeenNthCalledWith(1, 'template-file')
+    expect(getSpreadsheetSheetsMock).toHaveBeenNthCalledWith(2, 'existing-export')
+    expect(copySheetToSpreadsheetMock).toHaveBeenCalledWith('template-file', 201, 'existing-export')
+    expect(batchUpdateSpreadsheetMock).toHaveBeenCalledWith('existing-export', expect.arrayContaining([
+      expect.objectContaining({
+        deleteSheet: { sheetId: 201 },
+      }),
+      expect.objectContaining({
+        updateSheetProperties: expect.objectContaining({
+          properties: expect.objectContaining({
+            sheetId: 301,
+            title: '11 Показатели',
+            index: 0,
+          }),
+        }),
+      }),
+    ]))
+    expect(clearSpreadsheetRangesMock).toHaveBeenCalledWith('existing-export', expect.any(Array))
+    expect(updateSpreadsheetValuesMock).toHaveBeenCalledWith('existing-export', expect.any(Array))
   })
 })

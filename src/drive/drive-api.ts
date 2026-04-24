@@ -199,6 +199,12 @@ export interface SpreadsheetValueUpdate {
   values: (string | number)[][]
 }
 
+export interface SpreadsheetSheetInfo {
+  sheetId: number
+  title: string
+  index: number
+}
+
 export async function clearSpreadsheetRanges(spreadsheetId: string, ranges: string[]): Promise<void> {
   const token = await getAccessToken()
   if (!token) throw new Error('Not authenticated')
@@ -242,5 +248,77 @@ export async function updateSpreadsheetValues(
   if (!resp.ok) {
     const details = await readErrorDetails(resp)
     throw new Error(`Batch update failed: ${resp.status}${details ? ` - ${details}` : ''}`)
+  }
+}
+
+export async function getSpreadsheetSheets(spreadsheetId: string): Promise<SpreadsheetSheetInfo[]> {
+  const token = await getAccessToken()
+  if (!token) throw new Error('Not authenticated')
+
+  const resp = await fetch(`${SHEETS_API}/${spreadsheetId}?fields=sheets.properties(sheetId,title,index)`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  })
+
+  if (!resp.ok) {
+    const details = await readErrorDetails(resp)
+    throw new Error(`Spreadsheet metadata failed: ${resp.status}${details ? ` - ${details}` : ''}`)
+  }
+
+  const data = await resp.json()
+  return (data.sheets || [])
+    .map((sheet: { properties?: Partial<SpreadsheetSheetInfo> }) => sheet.properties)
+    .filter((sheet: Partial<SpreadsheetSheetInfo> | undefined): sheet is SpreadsheetSheetInfo =>
+      typeof sheet?.sheetId === 'number' && typeof sheet.title === 'string' && typeof sheet.index === 'number')
+}
+
+export async function copySheetToSpreadsheet(
+  sourceSpreadsheetId: string,
+  sourceSheetId: number,
+  destinationSpreadsheetId: string,
+): Promise<SpreadsheetSheetInfo> {
+  const token = await getAccessToken()
+  if (!token) throw new Error('Not authenticated')
+
+  const resp = await fetch(`${SHEETS_API}/${sourceSpreadsheetId}/sheets/${sourceSheetId}:copyTo`, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      destinationSpreadsheetId,
+    }),
+  })
+
+  if (!resp.ok) {
+    const details = await readErrorDetails(resp)
+    throw new Error(`Sheet copy failed: ${resp.status}${details ? ` - ${details}` : ''}`)
+  }
+
+  return resp.json()
+}
+
+export async function batchUpdateSpreadsheet(
+  spreadsheetId: string,
+  requests: unknown[],
+): Promise<void> {
+  const token = await getAccessToken()
+  if (!token) throw new Error('Not authenticated')
+  if (!requests.length) return
+
+  const resp = await fetch(`${SHEETS_API}/${spreadsheetId}:batchUpdate`, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ requests }),
+  })
+
+  if (!resp.ok) {
+    const details = await readErrorDetails(resp)
+    throw new Error(`Spreadsheet batch update failed: ${resp.status}${details ? ` - ${details}` : ''}`)
   }
 }

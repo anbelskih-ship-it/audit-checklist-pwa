@@ -1,11 +1,13 @@
 import * as XLSX from 'xlsx'
 import { findColumnByHeaders, ITEM_HEADERS, SKIP_SHEETS } from '../parser/xlsx-parser'
 import {
+  batchUpdateSpreadsheet,
   clearSpreadsheetRanges,
   copySpreadsheetFile,
-  deleteFile,
+  copySheetToSpreadsheet,
   downloadFile,
   getFileMetadata,
+  getSpreadsheetSheets,
   isGoogleSpreadsheetMime,
   listFilesInFolder,
   updateSpreadsheetValues,
@@ -130,6 +132,41 @@ function buildWorkbookLayoutSignature(
   }).join('|')
 }
 
+async function rebuildSpreadsheetFromTemplate(
+  targetSpreadsheetId: string,
+  templateSpreadsheetId: string,
+): Promise<void> {
+  const [sourceSheets, targetSheets] = await Promise.all([
+    getSpreadsheetSheets(templateSpreadsheetId),
+    getSpreadsheetSheets(targetSpreadsheetId),
+  ])
+
+  const copiedSheets = await Promise.all(sourceSheets.map(async (sourceSheet) => ({
+    source: sourceSheet,
+    copied: await copySheetToSpreadsheet(templateSpreadsheetId, sourceSheet.sheetId, targetSpreadsheetId),
+  })))
+
+  const requests = [
+    ...targetSheets.map((sheet) => ({
+      deleteSheet: {
+        sheetId: sheet.sheetId,
+      },
+    })),
+    ...copiedSheets.map(({ source, copied }, index) => ({
+      updateSheetProperties: {
+        properties: {
+          sheetId: copied.sheetId,
+          title: source.title,
+          index,
+        },
+        fields: 'title,index',
+      },
+    })),
+  ]
+
+  await batchUpdateSpreadsheet(targetSpreadsheetId, requests)
+}
+
 export interface ExportAuditResult {
   fileId: string
   fileName: string
@@ -175,7 +212,7 @@ export async function exportAuditToGoogleSheet(
 
   let fileId = await resolveExportFileId(audit, fileName)
   let action: 'created' | 'updated' = 'updated'
-  let staleFileId = ''
+  let isStaleLayout = false
 
   if (fileId) {
     const existingBuffer = await downloadFile(fileId)
@@ -184,17 +221,15 @@ export async function exportAuditToGoogleSheet(
     const existingSignature = buildWorkbookLayoutSignature(existingWb, structure)
 
     if (templateSignature !== existingSignature) {
-      staleFileId = fileId
-      fileId = ''
+      isStaleLayout = true
     }
   }
 
   if (!fileId) {
-    if (staleFileId) {
-      await deleteFile(staleFileId)
-    }
     fileId = await copySpreadsheetFile(structure.driveFileId, EXPORT_FOLDER_ID, fileName)
     action = 'created'
+  } else if (isStaleLayout) {
+    await rebuildSpreadsheetFromTemplate(fileId, structure.driveFileId)
   }
 
   await clearSpreadsheetRanges(fileId, clearRanges)
